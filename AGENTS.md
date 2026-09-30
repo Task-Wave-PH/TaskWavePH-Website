@@ -43,6 +43,10 @@ Zod, Lucide React, Google Sheets via googleapis, Vercel, Cloudflare DNS, GitHub,
 Vitest, Playwright, Prettier, and ESLint. Use current stable compatible packages;
 retain compatible pinned versions in an existing repository.
 
+Prefer existing shadcn/ui components and variants wherever they fit the UI.
+Customize them with the TaskWavePH tokens and media-kit design guidance. Keep
+semantic sections, lists, and native anchor navigation when no component adds value.
+
 ## 4. Architecture
 
 The browser must never communicate directly with Google Sheets. All credentials

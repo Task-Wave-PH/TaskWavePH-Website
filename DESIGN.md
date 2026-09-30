@@ -316,3 +316,12 @@ error color `#B42318`. These are implementation colors, not additions to the fiv
 media-kit swatches. Blue buttons use full-opacity white text, including on hover.
 Motion is limited to interaction feedback with reduced-motion support. No dark
 mode or new animation dependency is introduced.
+
+### Component guidance
+
+Prefer shadcn/ui primitives where applicable, styled with the brand tokens rather
+than their default palette. The landing page uses shared button variants for its
+CTAs and secondary link, and Card/CardContent for the partnership and final CTA
+panels. The form reuses shadcn inputs, labels, checkbox, button, card, and alerts.
+Keep semantic sections, lists, original logo artwork, and native section anchors.
+Use components to support the approved layout and accessibility.

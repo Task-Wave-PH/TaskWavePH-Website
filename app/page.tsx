@@ -14,6 +14,9 @@ import {
   UserRound,
   Users,
 } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { ApplyLink } from "@/components/layout/apply-link";
@@ -143,7 +146,10 @@ export default async function Home({
                 <ApplyLink href={applyHref} />
                 <a
                   href="#about"
-                  className="inline-flex min-h-12 items-center gap-2 rounded-sm text-sm font-medium text-brand-navy hover:text-primary"
+                  className={cn(
+                    buttonVariants({ variant: "link" }),
+                    "min-h-12 gap-2 px-0 text-sm font-medium text-brand-navy hover:text-primary",
+                  )}
                 >
                   Meet TaskWavePH{" "}
                   <ArrowRight className="size-4" aria-hidden="true" />
@@ -307,37 +313,41 @@ export default async function Home({
               deliver support, marketing, and web solutions.
             </p>
           </div>
-          <div className="border-l-4 border-brand-cyan bg-secondary px-6 py-8 sm:px-8 sm:py-10">
-            <p className="text-2xl font-semibold leading-snug text-brand-navy sm:text-3xl">
-              Your Partner in Outsourcing.
-              <br />
-              <span className="text-primary">Your Advantage in Growth.</span>
-            </p>
-            <p className="mt-5 text-sm leading-relaxed text-muted-foreground">
-              We handle the tasks. You focus on growth.
-            </p>
-          </div>
+          <Card className="gap-0 rounded-none border-l-4 border-brand-cyan bg-secondary py-0 ring-0">
+            <CardContent className="px-6 py-8 sm:px-8 sm:py-10">
+              <p className="text-2xl font-semibold leading-snug text-brand-navy sm:text-3xl">
+                Your Partner in Outsourcing.
+                <br />
+                <span className="text-primary">Your Advantage in Growth.</span>
+              </p>
+              <p className="mt-5 text-sm leading-relaxed text-muted-foreground">
+                We handle the tasks. You focus on growth.
+              </p>
+            </CardContent>
+          </Card>
         </section>
 
         <section
           aria-labelledby="cta-title"
           className="mx-auto max-w-[1180px] px-5 pb-16 sm:px-8 sm:pb-20"
         >
-          <div className="flex flex-col items-start gap-7 rounded-2xl bg-primary px-6 py-10 sm:px-10 md:flex-row md:items-center md:justify-between md:gap-10">
-            <div>
-              <h2
-                id="cta-title"
-                className="text-2xl font-semibold leading-tight tracking-tight text-white sm:text-3xl"
-              >
-                A new chapter starts with you.
-              </h2>
-              <p className="mt-3 max-w-lg text-sm leading-relaxed text-white sm:text-base">
-                Get familiar with the application form and prepare for what’s
-                next.
-              </p>
-            </div>
-            <ApplyLink href={applyHref} light />
-          </div>
+          <Card className="gap-0 rounded-2xl bg-primary py-0 text-primary-foreground ring-0">
+            <CardContent className="flex flex-col items-start gap-7 px-6 py-10 sm:px-10 md:flex-row md:items-center md:justify-between md:gap-10">
+              <div>
+                <h2
+                  id="cta-title"
+                  className="text-2xl font-semibold leading-tight tracking-tight text-white sm:text-3xl"
+                >
+                  A new chapter starts with you.
+                </h2>
+                <p className="mt-3 max-w-lg text-sm leading-relaxed text-white sm:text-base">
+                  Get familiar with the application form and prepare for what’s
+                  next.
+                </p>
+              </div>
+              <ApplyLink href={applyHref} light />
+            </CardContent>
+          </Card>
         </section>
       </main>
       <Footer />

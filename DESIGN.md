@@ -325,3 +325,7 @@ CTAs and secondary link, and Card/CardContent for the partnership and final CTA
 panels. The form reuses shadcn inputs, labels, checkbox, button, card, and alerts.
 Keep semantic sections, lists, original logo artwork, and native section anchors.
 Use components to support the approved layout and accessibility.
+
+The browser tab icon (`app/icon.png`) uses an unchanged copy of the supplied
+transparent TW monogram. Next.js generates the icon metadata from this file;
+there is no added background or recoloring.

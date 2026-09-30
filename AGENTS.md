@@ -1,4 +1,18 @@
-# TaskWavePH MVP — Workspace & Repository Plan
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
+
+# TaskWavePH — Project Instructions
+
+Brand story, official colors, typography, taglines, and asset provenance are
+documented in [DESIGN.md](DESIGN.md). Read it before brand, copy, imagery, or UI
+work; local original references are under `docs/brand/` and `public/logo/`.
 
 ## 1. Project goal
 
@@ -227,7 +241,7 @@ secondary integration. Do not install Convex during the MVP.
 
 ## 28. Milestones
 
-1. Repository: framework, tooling, environment structure, README/WORKSPACE.
+1. Repository: framework, tooling, environment structure, README/AGENTS.
 2. Landing page: basic sections and mobile layout.
 3. Application form: fields, schema, tracking, consent, loading/errors.
 4. Sheets: service account, spreadsheet, server API/adapter, confirmed writes.
@@ -251,7 +265,8 @@ GraphQL, or premature backend complexity in this MVP.
 
 ## 31. Instructions for coding agents
 
-1. Read this file before changes; inspect existing code and reuse patterns.
+1. Read this file before changes; read [DESIGN.md](DESIGN.md) for branding, copy,
+   imagery, or UI work. Inspect existing code and reuse patterns.
 2. Keep changes scoped; avoid large dependencies without a reason.
 3. Do not add Convex unless specifically requested.
 4. Keep secrets server-side and Sheets isolated from UI code.
@@ -262,14 +277,30 @@ GraphQL, or premature backend complexity in this MVP.
 9. Test meaningful business logic; avoid unrelated changes.
 10. Document each new environment variable; retain future backend compatibility.
 
-## 32. Current implementation task — approved foundation
+## 32. Current project state — foundation complete
 
-Build the repository foundation, basic home/apply/success routes, draft privacy,
+The completed foundation includes basic home/apply/success routes, draft privacy,
 validated form, shared schema, tracking, environment validation, and tests.
 The form supports local validation using “Validate Application” and visibly
 states that it does not send or save data. Do not fake success or navigate to the
 confirmation after local validation. No submission endpoint or Sheets write yet.
 
-All lint/type/format/unit/e2e/build checks must pass before the next isolated
-Google Sheets feature. GitHub publishing, Google resources, deployment, DNS,
+The foundation passed lint/type/format/unit/e2e/build checks. Google Sheets
+integration remains the next isolated application feature. GitHub publishing, Google resources, deployment, DNS,
 and final production privacy policy are later milestones.
+
+## TaskWavePH project and brand instructions
+
+Read this file before making changes. Before branding, copy,
+imagery, typography, colors, or UI work, also read [DESIGN.md](DESIGN.md) and inspect
+the relevant supplied assets.
+
+- This file defines MVP scope and engineering constraints; DESIGN.md records
+  source-backed brand specifications and explicitly labeled design guidance.
+- Use the supplied company story, original logo artwork, and official tagline
+  "Outsource. Optimize. Grow." Keep original asset proportions and colors.
+- Label unsupported claims, missing specifications, and inferred guidance. Do not
+  turn mockup contacts, cultural slogans, or service categories into verified
+  company facts, employment promises, or current vacancies.
+- Existing site colors, Arial, and the Lucide Waves wordmark are foundation
+  placeholders. Apply official branding when that implementation is requested.

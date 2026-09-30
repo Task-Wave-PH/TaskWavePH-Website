@@ -3,7 +3,7 @@ import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { ApplicationForm } from "@/components/application/application-form";
 import { Card, CardContent } from "@/components/ui/card";
-import { getApplyHref, getTracking } from "@/features/applications/tracking";
+import { getTracking } from "@/features/applications/tracking";
 
 export const metadata: Metadata = {
   title: "Apply",
@@ -18,7 +18,7 @@ export default async function ApplyPage({
   const query = await searchParams;
   return (
     <>
-      <Header applyHref={getApplyHref(query)} />
+      <Header query={query} />
       <main
         id="main-content"
         className="mx-auto w-full max-w-3xl px-5 py-12 sm:px-8"
@@ -41,7 +41,7 @@ export default async function ApplyPage({
           </CardContent>
         </Card>
       </main>
-      <Footer />
+      <Footer query={query} />
     </>
   );
 }

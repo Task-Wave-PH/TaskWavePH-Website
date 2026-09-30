@@ -1,3 +1,4 @@
+import type { TrackingQuery } from "@/features/applications/tracking";
 import type { Metadata } from "next";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
@@ -8,10 +9,15 @@ export const metadata: Metadata = {
     "How TaskWavePH intends to use applicant information for recruitment.",
 };
 
-export default function PrivacyPage() {
+export default async function PrivacyPage({
+  searchParams,
+}: {
+  searchParams: Promise<TrackingQuery>;
+}) {
+  const query = await searchParams;
   return (
     <>
-      <Header />
+      <Header query={query} />
       <main
         id="main-content"
         className="mx-auto w-full max-w-3xl space-y-8 px-5 py-12 sm:px-8"
@@ -61,7 +67,7 @@ export default function PrivacyPage() {
           </p>
         </section>
       </main>
-      <Footer />
+      <Footer query={query} />
     </>
   );
 }

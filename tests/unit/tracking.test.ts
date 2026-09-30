@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { getApplyHref, getTracking } from "@/features/applications/tracking";
+import {
+  getApplyHref,
+  getTracking,
+  getTrackedHref,
+} from "@/features/applications/tracking";
 
 describe("campaign tracking", () => {
   it("keeps only allowlisted fields and pathname", () => {
@@ -19,6 +23,17 @@ describe("campaign tracking", () => {
       utm_campaign: "",
       landing_page: "/apply",
     });
+  });
+  it("preserves approved campaign values across informational pages", () => {
+    expect(
+      getTrackedHref("/careers", {
+        source: [" qr ", "ignored"],
+        utm_medium: "print",
+        name: "private",
+        email: "private",
+      }),
+    ).toBe("/careers?source=qr&utm_medium=print");
+    expect(getTrackedHref("/about", {})).toBe("/about");
   });
   it("trims and bounds parameters, using first repeated value", () => {
     expect(

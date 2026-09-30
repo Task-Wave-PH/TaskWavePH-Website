@@ -23,25 +23,36 @@ test("every Apply Now link preserves tracking and the page explains its availabi
   );
 });
 
-test("section links navigate to real content and keyboard users can skip navigation", async ({
-  page,
-}) => {
+test("page navigation and keyboard skip link work", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/");
   await page.keyboard.press("Tab");
   await expect(
     page.getByRole("link", { name: "Skip to content" }),
   ).toBeFocused();
-  for (const [label, id] of [
-    ["Areas of Work", "areas-of-work"],
-    ["How It Works", "how-it-works"],
-    ["About", "about"],
-    ["Meet TaskWavePH", "about"],
+  for (const [label, path] of [
+    ["Areas of Work", "/areas-of-work"],
+    ["How It Works", "/how-it-works"],
+    ["Careers", "/careers"],
+    ["About", "/about"],
   ]) {
-    await page.getByRole("link", { name: label, exact: true }).click();
-    await expect(page).toHaveURL(new RegExp(`#${id}$`));
-    await expect(page.locator(`#${id}`)).toBeInViewport();
+    await page
+      .getByRole("navigation", { name: "Main navigation" })
+      .getByRole("link", { name: label, exact: true })
+      .click();
+    await expect(page).toHaveURL(new RegExp(`${path}$`));
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    await expect(
+      page
+        .getByRole("navigation", { name: "Main navigation" })
+        .getByRole("link", { name: label, exact: true }),
+    ).toHaveAttribute("aria-current", "page");
   }
+  await page.goto("/");
+  await page
+    .getByRole("link", { name: "Meet TaskWavePH", exact: true })
+    .click();
+  await expect(page).toHaveURL(/\/about$/);
 });
 
 test("brand images and local fonts load; the hero CTA fits on mobile", async ({

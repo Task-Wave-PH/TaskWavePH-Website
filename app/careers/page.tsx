@@ -1,0 +1,84 @@
+import Link from "next/link";
+import { ContentPage } from "@/components/layout/content-page";
+import { Card, CardContent } from "@/components/ui/card";
+import { buttonVariants } from "@/components/ui/button";
+import {
+  getTrackedHref,
+  type TrackingQuery,
+} from "@/features/applications/tracking";
+import { pageMetadata } from "@/lib/page-metadata";
+
+export const metadata = pageMetadata(
+  "Careers",
+  "Explore career preparation with TaskWavePH. Applications are opening soon; the form currently provides a local preview only.",
+  "/careers",
+);
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<TrackingQuery>;
+}) {
+  const query = await searchParams;
+  return (
+    <ContentPage
+      query={query}
+      eyebrow={"Careers"}
+      title={"Make room for your next move."}
+      description={
+        "Explore our areas of work and prepare for a future application. Applications are opening soon; there are no confirmed vacancies listed here."
+      }
+    >
+      <section className="grid gap-8 lg:grid-cols-2">
+        <div>
+          <h2 className="text-2xl font-semibold">Start with your interests.</h2>
+          <p className="mt-4 leading-relaxed text-muted-foreground">
+            Our work spans customer support, digital marketing, web development,
+            virtual assistance, administration, and sales support. Explore the
+            areas where your experience and interests could contribute.
+          </p>
+          <Link
+            href={getTrackedHref("/areas-of-work", query)}
+            className={buttonVariants({
+              variant: "link",
+              className: "mt-4 min-h-11 px-0",
+            })}
+          >
+            Explore areas of work
+          </Link>
+        </div>
+        <Card className="bg-secondary ring-0">
+          <CardContent className="p-6 sm:p-8">
+            <h2 className="text-2xl font-semibold">
+              Your preparation checklist
+            </h2>
+            <ul className="mt-5 list-disc space-y-3 pl-5 leading-relaxed text-muted-foreground">
+              <li>Current email address and mobile number</li>
+              <li>City or location and position interests</li>
+              <li>Experience, employment status, and availability</li>
+              <li>An optional resume link you are comfortable sharing</li>
+              <li>Review the privacy notice before giving consent</li>
+            </ul>
+          </CardContent>
+        </Card>
+      </section>
+      <section className="max-w-3xl">
+        <h2 className="text-2xl font-semibold">Know what to expect.</h2>
+        <p className="mt-4 leading-relaxed text-muted-foreground">
+          The application preview lets you check your entries without sending or
+          saving personal information. It does not reserve a role or register an
+          application. When applications open, contact will depend on matching
+          an available opportunity.
+        </p>
+        <Link
+          href={getTrackedHref("/how-it-works", query)}
+          className={buttonVariants({
+            variant: "link",
+            className: "mt-4 min-h-11 px-0",
+          })}
+        >
+          See how it works
+        </Link>
+      </section>
+    </ContentPage>
+  );
+}

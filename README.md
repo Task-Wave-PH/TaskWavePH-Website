@@ -11,7 +11,7 @@ website now applies the approved white/blue landing design and official branding
 
 ## Current milestone
 
-Includes the branded landing page, applicant form, campaign tracking, confirmation
+Includes the branded landing page, dedicated areas-of-work/how-it-works/careers/about pages, applicant form, campaign tracking, confirmation
 route, draft privacy notice, shared validation, and tooling. The form only
 validates locally. It does not send or save applicant information or redirect to
 confirmation. Google Sheets and the application API are the next isolated feature.
@@ -128,3 +128,12 @@ Before enabling real submissions:
 7. Verify a production submission and a real QR scan before launch.
 
 No permanent database, Convex, authentication, admin dashboard, or CRM is added.
+
+## Public information pages
+
+`/areas-of-work` describes the six service areas, `/how-it-works` explains
+application preparation, `/careers` provides a career overview, and `/about`
+presents the media-kit company story. Home shows short previews. Shared navigation
+uses a shadcn Sheet on mobile and identifies the current page. Approved campaign
+parameters survive page navigation and Apply links. Careers does not list verified
+vacancies; applications remain a local preview without submission or storage.

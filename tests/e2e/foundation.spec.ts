@@ -78,14 +78,27 @@ test("privacy and confirmation routes have expected content and indexing", async
 for (const width of [360, 390, 430, 768, 1024, 1440]) {
   test(`pages fit a ${width}px viewport`, async ({ page }) => {
     await page.setViewportSize({ width, height: 850 });
-    for (const route of ["/", "/apply", "/privacy", "/apply/success"]) {
+    for (const route of [
+      "/",
+      "/areas-of-work",
+      "/how-it-works",
+      "/careers",
+      "/about",
+      "/apply",
+      "/privacy",
+      "/apply/success",
+    ]) {
       await page.goto(route);
       expect(
         await page.evaluate(
           () => document.documentElement.scrollWidth <= window.innerWidth,
         ),
       ).toBe(true);
-      if (route === "/") {
+      if (
+        ["/", "/areas-of-work", "/how-it-works", "/careers", "/about"].includes(
+          route,
+        )
+      ) {
         await page.locator("footer").scrollIntoViewIfNeeded();
         await expect(page.locator("footer img")).toHaveJSProperty(
           "complete",
@@ -93,7 +106,11 @@ for (const width of [360, 390, 430, 768, 1024, 1440]) {
         );
         await page.evaluate(() => document.fonts.ready);
         await page.screenshot({
-          path: test.info().outputPath(`landing-${width}.png`),
+          path: test
+            .info()
+            .outputPath(
+              `${route === "/" ? "landing" : route.slice(1)}-${width}.png`,
+            ),
           fullPage: true,
         });
       }

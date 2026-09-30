@@ -329,3 +329,12 @@ Use components to support the approved layout and accessibility.
 The browser tab icon (`app/icon.png`) uses an unchanged copy of the supplied
 transparent TW monogram. Next.js generates the icon metadata from this file;
 there is no added background or recoloring.
+
+### Dedicated information pages
+
+Home uses concise previews linking to Areas of Work, How It Works, Careers, and
+About. The dedicated pages retain the white/blue palette, Poppins, original
+artwork, and shadcn cards/buttons. Shared service descriptions and themes avoid
+divergent brand copy. Navigation highlights the current route and uses a shadcn
+Sheet on mobile with reduced-motion support. Careers remains an overview with
+explicit preview messaging rather than unverified vacancy listings.

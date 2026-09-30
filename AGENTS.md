@@ -63,6 +63,7 @@ actual organizational problem. Defer unused service and adapter stubs.
 ## 6. Routes
 
 - `/`: landing page.
+- `/areas-of-work`, `/how-it-works`, `/careers`, `/about`: dedicated information pages.
 - `/apply`: general form with source/campaign/UTM parameters.
 - `/apply/success`: submission confirmation, excluded from indexing.
 - `/privacy`: applicant privacy notice.
@@ -166,9 +167,10 @@ Do not promise contact for every applicant.
 
 ## 16. Landing page
 
-The eventual landing page includes header, hero/CTA, Why TaskWavePH,
-opportunities/roles, application process, about, final CTA, and footer.
-Keep the foundation basic. Do not invent vacancies, company statistics, or claims.
+The landing page includes a header, hero/CTA, short previews of work areas,
+application process, careers, and about, a final CTA, and footer. Dedicated pages
+expand these previews. Careers is an overview while applications are a preview.
+Do not invent vacancies, company statistics, or claims.
 
 ## 17. Mobile first
 
@@ -315,3 +317,8 @@ the relevant supplied assets.
 - The initial landing page uses the supplied logo, official palette, and Poppins.
   Retain source-backed branding and the local-validation preview until submission
   integration is implemented.
+
+Dedicated information pages use shared navigation with current-page indication
+and a shadcn mobile Sheet. Preserve only the five approved campaign parameters
+through page links. Keep the work areas and brand themes in shared source-backed
+content; do not add job management or imply that categories are open positions.

@@ -12,7 +12,7 @@ export function BrandLogo({
     // The 5:1 frame hides only the original canvas padding, retaining the full mark and tagline.
     <span
       className={cn(
-        "relative block aspect-[5/1] w-[170px] overflow-hidden sm:w-[210px]",
+        "relative block aspect-[5/1] w-[140px] overflow-hidden sm:w-[210px]",
         className,
       )}
     >
@@ -20,7 +20,7 @@ export function BrandLogo({
         src="/logo/taskwaveph-logo-transparent.png"
         alt="TaskWavePH"
         fill
-        sizes="(max-width: 639px) 170px, 210px"
+        sizes="(max-width: 639px) 140px, 210px"
         loading={eager ? "eager" : "lazy"}
         className="object-cover object-center"
       />

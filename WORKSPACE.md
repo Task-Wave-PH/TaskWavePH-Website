@@ -1,5 +1,9 @@
 # TaskWavePH MVP — Workspace & Repository Plan
 
+Brand story, official colors, typography, taglines, and asset provenance are
+documented in [DESIGN.md](DESIGN.md). Read it before brand, copy, imagery, or UI
+work; local original references are under `docs/brand/` and `public/logo/`.
+
 ## 1. Project goal
 
 Build a Philippine BPO/staffing and recruitment website. The MVP journey is:
@@ -251,7 +255,8 @@ GraphQL, or premature backend complexity in this MVP.
 
 ## 31. Instructions for coding agents
 
-1. Read this file before changes; inspect existing code and reuse patterns.
+1. Read this file before changes; read [DESIGN.md](DESIGN.md) for branding, copy,
+   imagery, or UI work. Inspect existing code and reuse patterns.
 2. Keep changes scoped; avoid large dependencies without a reason.
 3. Do not add Convex unless specifically requested.
 4. Keep secrets server-side and Sheets isolated from UI code.

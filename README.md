@@ -3,6 +3,12 @@
 Repository foundation for a Philippine BPO, staffing, and recruitment website.
 Read [WORKSPACE.md](WORKSPACE.md) before changing the project.
 
+For company positioning, official colors, Poppins typography, taglines, and logo
+usage, read [DESIGN.md](DESIGN.md). Original logo files are in `public/logo/`; the
+media kit, latest sticker sheet, and production brief are in `docs/brand/`. The
+reference distinguishes source specifications from implementation guidance. The
+website still uses foundation branding pending a separate implementation feature.
+
 ## Current milestone
 
 Includes a basic landing page, applicant form, campaign tracking, confirmation
@@ -65,6 +71,8 @@ free. They use synthetic applicant data and never write to Google Sheets.
 - `features/applications/`: shared schema, inferred input/output types, tracking.
 - `lib/`: server environment access and utility functions.
 - `tests/`: unit and browser tests.
+- `public/logo/`: original brand logo assets.
+- `docs/brand/`: original media-kit and merchandise references.
 
 Keep secrets and Google SDK usage in server modules. The future flow is
 `POST /api/applications` → application service → Sheets adapter. The shared form

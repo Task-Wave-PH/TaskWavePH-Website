@@ -1,7 +1,7 @@
 # TaskWavePH
 
 Repository foundation for a Philippine BPO, staffing, and recruitment website.
-Read [WORKSPACE.md](WORKSPACE.md) before changing the project.
+Read [AGENTS.md](AGENTS.md) before changing the project.
 
 For company positioning, official colors, Poppins typography, taglines, and logo
 usage, read [DESIGN.md](DESIGN.md). Original logo files are in `public/logo/`; the

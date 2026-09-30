@@ -1,6 +1,6 @@
 # TaskWavePH — Brand & Design Reference
 
-Read this document alongside [WORKSPACE.md](WORKSPACE.md) before changing brand
+Read this document alongside [AGENTS.md](AGENTS.md) before changing brand
 copy, logos, typography, colors, imagery, or UI. It translates the supplied media
 kit into a text reference for people and AI agents.
 
@@ -19,7 +19,7 @@ Reviewed on **October 1, 2026**, from the owner-supplied
 The media kit specifies the brand. The production brief adds usage constraints;
 sticker artwork supplies cultural messaging. When sources conflict, document the
 conflict and seek clarification before changing the brand specification.
-[WORKSPACE.md](WORKSPACE.md) governs product scope and engineering requirements.
+[AGENTS.md](AGENTS.md) governs product scope and engineering requirements.
 
 Sections labeled **media-kit specification** or **source copy** reproduce details
 observed in supplied artwork. **Website guidance** and **inferred voice** are
@@ -93,7 +93,7 @@ The materials suggest a clear, confident, professional, and people-focused voice
 Write direct sentences about support, reliable work, efficient processes, and
 growth. Use plain language for applicants and factual descriptions for clients.
 
-For recruitment, retain the approved confirmation language in WORKSPACE.md:
+For recruitment, retain the approved confirmation language in AGENTS.md:
 contact depends on matching an available opportunity. Cultural references to
 remote work or global opportunity do not promise every role is remote or global.
 
@@ -278,7 +278,7 @@ employee merchandise entitlements.
 
 ## 9. Instructions for future AI work
 
-1. Read WORKSPACE.md for product scope and this document for brand decisions.
+1. Read AGENTS.md for product scope and this document for brand decisions.
 2. Use the supplied company story, services, and official tagline faithfully.
 3. Use original artwork for brand identity. Do not regenerate, trace, recolor, or
    replace the logo without explicit direction; do not mistake UI icons for logos.

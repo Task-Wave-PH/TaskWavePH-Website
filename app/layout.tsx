@@ -1,6 +1,34 @@
 import type { Metadata } from "next";
+import localFont from "next/font/local";
 import { getSiteUrl } from "@/lib/env";
 import "./globals.css";
+
+const poppins = localFont({
+  src: [
+    {
+      path: "../public/fonts/poppins/Poppins-Regular.ttf",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../public/fonts/poppins/Poppins-Medium.ttf",
+      weight: "500",
+      style: "normal",
+    },
+    {
+      path: "../public/fonts/poppins/Poppins-SemiBold.ttf",
+      weight: "600",
+      style: "normal",
+    },
+    {
+      path: "../public/fonts/poppins/Poppins-Bold.ttf",
+      weight: "700",
+      style: "normal",
+    },
+  ],
+  variable: "--font-poppins",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
@@ -23,7 +51,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={poppins.variable}>
       <body className="flex min-h-dvh flex-col antialiased">
         <a
           href="#main-content"

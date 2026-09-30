@@ -7,11 +7,11 @@ For company positioning, official colors, Poppins typography, taglines, and logo
 usage, read [DESIGN.md](DESIGN.md). Original logo files are in `public/logo/`; the
 media kit, latest sticker sheet, and production brief are in `docs/brand/`. The
 reference distinguishes source specifications from implementation guidance. The
-website still uses foundation branding pending a separate implementation feature.
+website now applies the approved white/blue landing design and official branding.
 
 ## Current milestone
 
-Includes a basic landing page, applicant form, campaign tracking, confirmation
+Includes the branded landing page, applicant form, campaign tracking, confirmation
 route, draft privacy notice, shared validation, and tooling. The form only
 validates locally. It does not send or save applicant information or redirect to
 confirmation. Google Sheets and the application API are the next isolated feature.
@@ -72,6 +72,7 @@ free. They use synthetic applicant data and never write to Google Sheets.
 - `lib/`: server environment access and utility functions.
 - `tests/`: unit and browser tests.
 - `public/logo/`: original brand logo assets.
+- `public/fonts/poppins/`: locally hosted font weights and OFL license.
 - `docs/brand/`: original media-kit and merchandise references.
 
 Keep secrets and Google SDK usage in server modules. The future flow is

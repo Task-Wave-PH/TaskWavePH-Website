@@ -1,29 +1,41 @@
 import Link from "next/link";
-import { ArrowUpRight, Waves } from "lucide-react";
+import { BrandLogo } from "./brand-logo";
+import { ApplyLink } from "./apply-link";
 
-export function Header({ applyHref = "/apply" }: { applyHref?: string }) {
+export function Header({
+  applyHref = "/apply",
+  landingNavigation = false,
+}: {
+  applyHref?: string;
+  landingNavigation?: boolean;
+}) {
   return (
     <header className="border-b border-border bg-background">
       <nav
         aria-label="Main navigation"
-        className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-5 sm:px-8"
+        className="mx-auto flex max-w-[1180px] items-center justify-between gap-3 px-5 py-4 sm:px-8"
       >
         <Link
           href="/"
           aria-label="TaskWavePH home"
-          className="flex items-center gap-2 text-lg font-bold tracking-tight"
+          className="shrink-0 rounded-sm"
         >
-          <Waves className="size-6 text-primary" aria-hidden="true" />
-          <span>
-            TaskWave<span className="text-primary">PH</span>
-          </span>
+          <BrandLogo eager />
         </Link>
-        <Link
-          href={applyHref}
-          className="inline-flex min-h-11 items-center gap-1 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
-        >
-          Apply Now <ArrowUpRight className="size-4" aria-hidden="true" />
-        </Link>
+        {landingNavigation && (
+          <div className="hidden items-center gap-8 text-sm font-medium text-brand-navy lg:flex">
+            <a href="#areas-of-work" className="py-3 hover:text-primary">
+              Areas of Work
+            </a>
+            <a href="#how-it-works" className="py-3 hover:text-primary">
+              How It Works
+            </a>
+            <a href="#about" className="py-3 hover:text-primary">
+              About
+            </a>
+          </div>
+        )}
+        <ApplyLink href={applyHref} compact />
       </nav>
     </header>
   );

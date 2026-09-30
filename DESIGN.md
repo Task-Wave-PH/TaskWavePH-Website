@@ -293,8 +293,26 @@ employee merchandise entitlements.
 
 ### Current implementation status
 
-This change establishes documentation and local originals. The existing website
-still uses a Lucide Waves icon/text wordmark, Arial, and a foundation palette
-(including primary `#1D4ED8`). These are placeholders, not the media-kit brand
-specification. A future feature will apply the official logo, Poppins, palette,
-and company messaging while preserving the recruitment MVP behavior.
+The initial applicant-focused landing page applies the supplied logo, official
+palette, and locally hosted Poppins weights 400–700 across shared page styling.
+White surfaces, navy headings, blue CTAs, cyan decorative details, and light-gray
+sections follow the approved direction. The hero leads with “Make your next move.”
+and introduces the original TW monogram; services are areas of work rather than
+confirmed vacancies. Applications remain a local-validation preview.
+
+The original PNGs are preserved. A 5:1 CSS frame around the horizontal logo and a
+2:1 frame around the monogram hide only transparent canvas padding. These frames
+are implementation choices, not new official artwork or minimum-size rules.
+
+Poppins files and their OFL license are stored under `public/fonts/poppins/`,
+obtained from the [Google Fonts source](https://github.com/google/fonts/tree/main/ofl/poppins).
+`next/font/local` serves them without a runtime Google Fonts request. Unlike the
+original media-kit folder, the repository now includes these separately sourced
+font files; no new official logo variants have been created.
+
+UI support tokens include dark blue `#0759CB` for accessible button hover states,
+muted text `#526176`, pale surfaces `#EFF4FF` / `#EFF7FF`, and the existing form
+error color `#B42318`. These are implementation colors, not additions to the five
+media-kit swatches. Blue buttons use full-opacity white text, including on hover.
+Motion is limited to interaction feedback with reduced-motion support. No dark
+mode or new animation dependency is introduced.

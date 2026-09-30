@@ -277,17 +277,23 @@ GraphQL, or premature backend complexity in this MVP.
 9. Test meaningful business logic; avoid unrelated changes.
 10. Document each new environment variable; retain future backend compatibility.
 
-## 32. Current project state — foundation complete
+## 32. Current project state — foundation and landing page complete
 
-The completed foundation includes basic home/apply/success routes, draft privacy,
+The completed foundation includes home/apply/success routes, draft privacy,
 validated form, shared schema, tracking, environment validation, and tests.
 The form supports local validation using “Validate Application” and visibly
 states that it does not send or save data. Do not fake success or navigate to the
 confirmation after local validation. No submission endpoint or Sheets write yet.
 
 The foundation passed lint/type/format/unit/e2e/build checks. Google Sheets
-integration remains the next isolated application feature. GitHub publishing, Google resources, deployment, DNS,
-and final production privacy policy are later milestones.
+integration remains the next isolated application feature. The foundation and
+brand reference have been pushed to GitHub with a draft PR. Google resources,
+deployment, DNS, and final production privacy policy are later milestones.
+
+The landing page applies the original logo, Poppins, and the approved white/blue
+brand direction. Shared typography and palette also apply to the existing routes.
+The page clearly describes applications as opening soon and preserves tracking
+in each Apply Now link; it does not enable submission.
 
 ## TaskWavePH project and brand instructions
 
@@ -302,5 +308,6 @@ the relevant supplied assets.
 - Label unsupported claims, missing specifications, and inferred guidance. Do not
   turn mockup contacts, cultural slogans, or service categories into verified
   company facts, employment promises, or current vacancies.
-- Existing site colors, Arial, and the Lucide Waves wordmark are foundation
-  placeholders. Apply official branding when that implementation is requested.
+- The initial landing page uses the supplied logo, official palette, and Poppins.
+  Retain source-backed branding and the local-validation preview until submission
+  integration is implemented.

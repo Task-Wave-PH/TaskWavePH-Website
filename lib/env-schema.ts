@@ -14,4 +14,5 @@ export const submissionEnvSchema = z.object({
   CONVEX_SITE_URL: z.url().refine((value) => /^https?:\/\//.test(value)),
   CONVEX_SERVER_SECRET: z.string().min(32),
   TURNSTILE_SECRET_KEY: z.string().min(1),
+  NEXT_PUBLIC_TURNSTILE_SITE_KEY: z.string().min(1),
 });

@@ -16,7 +16,10 @@ export function getSubmissionEnv() {
     throw new Error("Submission backend configuration is incomplete.");
   if (
     process.env.NODE_ENV === "production" &&
-    /^1x/.test(result.data.TURNSTILE_SECRET_KEY)
+    (/^[123]x0{31}AA$/.test(result.data.TURNSTILE_SECRET_KEY) ||
+      /^[123]x0{20}(AA|AB|BB|FF)$/.test(
+        result.data.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
+      ))
   )
     throw new Error("Turnstile test key is not allowed in production.");
   if (process.env.NODE_ENV === "production") {

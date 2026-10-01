@@ -42,6 +42,9 @@ on October 1, 2026. This supersedes the original Sheets-only MVP constraints.
   Contacted, Closed. Notes are internal and bounded to 2,000 characters.
 - Record deletion deletes attached resumes. Clean unlinked uploads after one hour.
   Audit records contain metadata only; do not copy personal information or notes.
+- Staff review editors send their loaded status/notes snapshot; job editors send
+  their loaded updatedAt revision. Reject stale saves transactionally and preserve
+  unsaved entries. Never remount a dirty editor on reactive record updates.
 
 ## Pages and design
 

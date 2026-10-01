@@ -93,8 +93,27 @@ try {
     await new Promise((resolve) => setTimeout(resolve, 500));
   }
   assert.equal(baseline.ready, true);
+  const malformed = await fetch(`${process.env.CONVEX_SITE_URL}/submit`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.CONVEX_SERVER_SECRET}`,
+      "Content-Type": "multipart/form-data; boundary=synthetic-test",
+    },
+    body: "broken multipart",
+    signal: AbortSignal.timeout(30_000),
+  });
+  assert.equal(malformed.status, 400);
+  assert.deepEqual(await malformed.json(), { error: "INVALID_SUBMISSION" });
   jobId = run("jobs:save", { data }, true);
   run("jobs:setStatus", { id: jobId, status: "Published" }, true);
+  const revision = run("jobs:staffDetail", { id: jobId }, true).updatedAt;
+  run("jobs:save", { id: jobId, data, expectedUpdatedAt: revision }, true);
+  run(
+    "jobs:save",
+    { id: jobId, data, expectedUpdatedAt: revision },
+    true,
+    "EDIT_CONFLICT",
+  );
   const application = await submit("applications", {
     firstName: "Synthetic",
     lastName: "Admin test",
@@ -128,8 +147,21 @@ try {
       id: lead.id,
       status: "Contacted",
       notes: "Synthetic internal test note",
+      expected: { status: "New", notes: "" },
     },
     true,
+  );
+  run(
+    "admin:update",
+    {
+      kind: "businessLeads",
+      id: lead.id,
+      status: "Closed",
+      notes: "Synthetic stale note",
+      expected: { status: "New", notes: "" },
+    },
+    true,
+    "EDIT_CONFLICT",
   );
   assert.equal(stats().priorityLeads, baseline.priorityLeads + 1);
   assert.ok(
@@ -156,11 +188,24 @@ try {
       id: application.id,
       status: "Shortlisted",
       notes: "Synthetic review",
+      expected: { status: "New", notes: "" },
     },
     true,
   );
+  run(
+    "admin:update",
+    {
+      kind: "applications",
+      id: application.id,
+      status: "Closed",
+      notes: "Synthetic stale review",
+      expected: { status: "New", notes: "" },
+    },
+    true,
+    "EDIT_CONFLICT",
+  );
   console.log(
-    "Development Convex verified: complete metrics, actual applicant/enquiry saves, priority filtering, review, archive/restore, and blocked linked-job deletion.",
+    "Development Convex verified: safe malformed requests, complete metrics, actual applicant/enquiry saves, stale-edit rejection, priority filtering, review, archive/restore, and blocked linked-job deletion.",
   );
 } finally {
   try {

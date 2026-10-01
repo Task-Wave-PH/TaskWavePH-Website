@@ -100,7 +100,7 @@ export async function submitRequest(
       !verified.success ||
       (!(
         process.env.NODE_ENV !== "production" &&
-        env.TURNSTILE_SECRET_KEY.startsWith("1x") &&
+        env.TURNSTILE_SECRET_KEY === "1x0000000000000000000000000000000AA" &&
         ["localhost", "127.0.0.1"].includes(host)
       ) &&
         (verified.action !== "submission" || verified.hostname !== host))

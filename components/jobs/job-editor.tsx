@@ -54,7 +54,7 @@ export function JobEditor({
 }: {
   job?: JobView;
   preview?: boolean;
-  onSave: (data: JobInput) => Promise<void>;
+  onSave: (data: JobInput, expectedUpdatedAt?: number) => Promise<void>;
   onStatus?: (status: JobStatus) => Promise<void>;
   onDelete?: () => Promise<void>;
   deletionAllowed?: boolean;
@@ -64,12 +64,22 @@ export function JobEditor({
     handleSubmit,
     control,
     setValue,
-    formState: { errors, isSubmitting, isDirty },
+    reset,
+    formState: { errors, isSubmitting, isDirty, dirtyFields },
   } = useForm<JobInput>({
     resolver: zodResolver(jobSchema),
     defaultValues: job ?? defaults,
+    values: job ?? defaults,
+    resetOptions: { keepDirtyValues: true, keepDirty: true },
   });
   const values = useWatch({ control });
+  const [editVersion, setEditVersion] = useState(job?.updatedAt);
+  if (
+    !isDirty &&
+    !Object.keys(dirtyFields).length &&
+    editVersion !== job?.updatedAt
+  )
+    setEditVersion(job?.updatedAt);
   const [message, setMessage] = useState("");
   const [confirmation, setConfirmation] = useState<JobStatus>();
   const [busy, setBusy] = useState(false);
@@ -113,10 +123,16 @@ export function JobEditor({
             onSubmit={handleSubmit(async (data) => {
               setMessage("");
               try {
-                await onSave(data);
+                await onSave(data, editVersion);
+                reset(data, { keepDirtyValues: false, keepDirty: false });
                 setMessage("Posting saved.");
-              } catch {
-                setMessage("Unable to save. Check your access and try again.");
+              } catch (error) {
+                setMessage(
+                  error instanceof Error &&
+                    error.message.includes("EDIT_CONFLICT")
+                    ? "This posting changed while you were editing. Copy your changes, refresh, and review the latest posting before saving."
+                    : "Unable to save. Check your access and try again.",
+                );
               }
             })}
           >
@@ -131,6 +147,7 @@ export function JobEditor({
                 <div key={name} className="grid min-w-0 content-start gap-2">
                   <Label htmlFor={name}>{label}</Label>
                   <Input
+                    disabled={isSubmitting || busy}
                     id={name}
                     {...register(name)}
                     maxLength={max}
@@ -161,6 +178,7 @@ export function JobEditor({
                 <div key={name} className="grid min-w-0 content-start gap-2">
                   <Label htmlFor={name}>{label}</Label>
                   <Select
+                    disabled={isSubmitting || busy}
                     value={values[name]}
                     onValueChange={(value) => {
                       if (value)
@@ -198,6 +216,7 @@ export function JobEditor({
               <div key={name} className="space-y-2">
                 <Label htmlFor={name}>{label}</Label>
                 <Textarea
+                  disabled={isSubmitting || busy}
                   id={name}
                   {...register(name)}
                   rows={5}

@@ -39,11 +39,19 @@ export function ApplicantDetails({
   record: ApplicantView;
   backHref: string;
   resumeUrl?: string;
-  onSave: (status: ApplicantView["status"], notes: string) => Promise<void>;
+  onSave: (
+    status: ApplicantView["status"],
+    notes: string,
+    expected: Pick<ApplicantView, "status" | "notes">,
+  ) => Promise<void>;
   onDelete: () => Promise<void>;
 }) {
   const [status, setStatus] = useState(record.status);
   const [notes, setNotes] = useState(record.notes);
+  const [baseline, setBaseline] = useState({
+    status: record.status,
+    notes: record.notes,
+  });
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [confirm, setConfirm] = useState(false);
@@ -52,10 +60,16 @@ export function ApplicantDetails({
     setBusy(true);
     setMessage("");
     try {
-      await onSave(status, notes);
+      await onSave(status, notes, baseline);
+      setBaseline({ status, notes: notes.trim() });
+      setNotes(notes.trim());
       setMessage("Changes saved.");
-    } catch {
-      setMessage("Unable to save. Check your access and try again.");
+    } catch (error) {
+      setMessage(
+        error instanceof Error && error.message.includes("EDIT_CONFLICT")
+          ? "This review changed while you were editing. Copy your changes, refresh, and review the latest record before saving."
+          : "Unable to save. Check your access and try again.",
+      );
     } finally {
       setBusy(false);
     }
@@ -230,6 +244,7 @@ export function ApplicantDetails({
             <div className="grid gap-2">
               <Label htmlFor="applicant-status">Status</Label>
               <Select
+                disabled={busy}
                 value={status}
                 onValueChange={(v) => {
                   const value = applicationStatuses.find((s) => s === v);
@@ -254,6 +269,7 @@ export function ApplicantDetails({
             <div className="grid gap-2">
               <Label htmlFor="applicant-notes">Internal notes</Label>
               <Textarea
+                disabled={busy}
                 id="applicant-notes"
                 maxLength={2000}
                 value={notes}

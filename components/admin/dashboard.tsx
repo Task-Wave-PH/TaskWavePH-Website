@@ -289,8 +289,14 @@ function LiveApplicantEditor({ record }: { record: ApplicantView }) {
       resumeUrl={
         record.resumeFile ? `/api/admin/resumes/${record._id}` : undefined
       }
-      onSave={async (status, notes) => {
-        await update({ kind: "applications", id: record._id, status, notes });
+      onSave={async (status, notes, expected) => {
+        await update({
+          kind: "applications",
+          id: record._id,
+          status,
+          notes,
+          expected,
+        });
       }}
       onDelete={async () => {
         await remove({ kind: "applications", id: record._id });
@@ -308,8 +314,14 @@ function LiveLeadEditor({ record }: { record: LeadView }) {
     <LeadDetails
       record={record}
       backHref="/admin/businessLeads"
-      onSave={async (status, notes) => {
-        await update({ kind: "businessLeads", id: record._id, status, notes });
+      onSave={async (status, notes, expected) => {
+        await update({
+          kind: "businessLeads",
+          id: record._id,
+          status,
+          notes,
+          expected,
+        });
       }}
       onPriority={async (value) => {
         await priority({

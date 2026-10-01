@@ -83,6 +83,10 @@ and [Turnstile’s privacy notice](https://www.cloudflare.com/turnstile-privacy-
    `.env.local` are Cloudflare test keys. Test keys are prohibited in production.
    The browser widget uses action `submission`. Real keys must match the public
    site hostname and the server checks action and hostname.
+   Enabled submissions require both the browser site key and server secret.
+   Production rejects all documented dummy site and secret keys, including
+   failure and duplicate-token test keys. The localhost action/hostname exception
+   applies only to Cloudflare's exact always-pass secret key.
 7. Set `SUBMISSIONS_ENABLED=development` for dev-server-only submissions
    (disabled automatically in production builds). Start `npm run dev`.
    Submit synthetic data through `/apply` and `/business-enquiry`; review records
@@ -227,6 +231,22 @@ Sample details are at `/dev-preview/applications/sample-001`. Real submitted
 records appear only in authenticated `/admin/applications`; synthetic UI previews
 are not an authentication bypass and do not display private database records.
 Actual staff sign-in verification still requires Clerk development credentials.
+
+### Concurrent administrative edits
+
+Applicant and lead review screens send the status/notes snapshot loaded by the
+editor. The update transaction rejects `EDIT_CONFLICT` if either value changed
+since that snapshot. Job edits send their loaded `updatedAt` revision; revisions
+advance even for consecutive writes in one millisecond. Stale job saves are also
+rejected. Conflict messages preserve entries and ask staff to copy changes,
+refresh, and review the latest record. Job reactive updates preserve dirty fields;
+successful saves reset the editor's dirty state. Inputs are disabled during saves.
+These optional mutation arguments retain compatibility with trusted existing CLI
+tools; new staff editing interfaces must supply the expected snapshot/revision.
+
+Both Next.js and the authenticated Convex submission boundary use the bounded
+request-stream reader. Malformed multipart or JSON input receives a safe validation
+error, and oversized/stalled bodies stop before creating upload reservations.
 
 ## Careers and job postings
 

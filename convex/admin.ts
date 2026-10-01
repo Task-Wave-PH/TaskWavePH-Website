@@ -138,6 +138,7 @@ export const update = adminMutation({
     id: v.string(),
     status: v.string(),
     notes: v.string(),
+    expected: v.optional(v.object({ status: v.string(), notes: v.string() })),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
@@ -146,6 +147,12 @@ export const update = adminMutation({
     if (!id) throw new ConvexError("NOT_FOUND");
     const record = await ctx.db.get(id);
     if (!record) throw new ConvexError("NOT_FOUND");
+    if (
+      args.expected &&
+      (record.status !== args.expected.status ||
+        record.notes !== args.expected.notes)
+    )
+      throw new ConvexError("EDIT_CONFLICT");
     if (args.kind === "applications") {
       const valid = ["New", "Reviewed", "Shortlisted", "Closed"] as const;
       const status = valid.find((value) => value === args.status);

@@ -56,6 +56,118 @@ const options = {
   paginationOpts: { numItems: 20, cursor: null },
 };
 describe("Convex intake and administration", () => {
+  it("rejects stale applicant and lead reviews without overwriting newer notes", async () => {
+    const t = setup();
+    const admin = await staff(t);
+    const { row } = await save(t);
+    const expected = { status: row.status, notes: row.notes };
+    await admin.mutation(api.admin.update, {
+      kind: "applications",
+      id: row._id,
+      status: "Reviewed",
+      notes: "Newer review",
+      expected,
+    });
+    await expect(
+      admin.mutation(api.admin.update, {
+        kind: "applications",
+        id: row._id,
+        status: "Closed",
+        notes: "Stale review",
+        expected,
+      }),
+    ).rejects.toThrow("EDIT_CONFLICT");
+    expect(await t.run((ctx) => ctx.db.get(row._id))).toMatchObject({
+      status: "Reviewed",
+      notes: "Newer review",
+    });
+    const id = await t.run((ctx) =>
+      ctx.db.insert("businessLeads", {
+        data: {
+          company: "Sample Company",
+          contactName: "Sample Contact",
+          email: "sample@example.invalid",
+          phone: "",
+          companyWebsite: "",
+          services: ["Customer Support"],
+          message: "Sample business enquiry",
+          privacyConsent: true,
+          source: "",
+          campaign: "",
+          utm_source: "",
+          utm_medium: "",
+          utm_campaign: "",
+          landing_page: "/business-enquiry",
+        },
+        reference: "sample",
+        submittedAt: Date.now(),
+        status: "New",
+        notes: "",
+        submissionToken: "sample",
+        fingerprint: "sample",
+        consentVersion: "sample",
+      }),
+    );
+    await admin.mutation(api.admin.update, {
+      kind: "businessLeads",
+      id,
+      status: "Contacted",
+      notes: "Newer enquiry",
+      expected: { status: "New", notes: "" },
+    });
+    await expect(
+      admin.mutation(api.admin.update, {
+        kind: "businessLeads",
+        id,
+        status: "Closed",
+        notes: "Stale enquiry",
+        expected: { status: "New", notes: "" },
+      }),
+    ).rejects.toThrow("EDIT_CONFLICT");
+    expect(await t.run((ctx) => ctx.db.get(id))).toMatchObject({
+      status: "Contacted",
+      notes: "Newer enquiry",
+    });
+  });
+  it("returns safe validation errors for malformed authenticated submissions", async () => {
+    const t = setup();
+    vi.stubEnv("CONVEX_SERVER_SECRET", "test-secret");
+    try {
+      const headers = {
+        Authorization: "Bearer test-secret",
+        "x-rate-key": "a".repeat(64),
+      };
+      const malformed = await t.fetch("/submit", {
+        method: "POST",
+        headers: {
+          ...headers,
+          "Content-Type": "multipart/form-data; boundary=test",
+        },
+        body: "broken multipart",
+      });
+      expect(malformed.status).toBe(400);
+      expect(await malformed.json()).toEqual({ error: "INVALID_SUBMISSION" });
+      const body = new FormData();
+      body.set("kind", "applications");
+      body.set("submissionToken", crypto.randomUUID());
+      body.set("fields", "{broken");
+      const invalidJson = await t.fetch("/submit", {
+        method: "POST",
+        headers,
+        body,
+      });
+      expect(invalidJson.status).toBe(400);
+      expect(await invalidJson.json()).toEqual({ error: "INVALID_SUBMISSION" });
+      expect(
+        await t.run((ctx) => ctx.db.query("pendingUploads").first()),
+      ).toBeNull();
+      expect(
+        await t.run((ctx) => ctx.db.query("applications").first()),
+      ).toBeNull();
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
   it("normalizes data, generates a reference and makes retries idempotent", async () => {
     const t = setup();
     const saved = await save(t);

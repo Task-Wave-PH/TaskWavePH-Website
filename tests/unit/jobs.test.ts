@@ -38,6 +38,42 @@ const data = jobSchema.parse({
 const page = { paginationOpts: { numItems: 12, cursor: null } };
 afterEach(() => vi.unstubAllEnvs());
 describe("Jobs", () => {
+  it("rejects stale job edits and advances revisions within the same millisecond", async () => {
+    vi.useFakeTimers();
+    try {
+      const t = setup();
+      const admin = await staff(t);
+      const id = await admin.mutation(api.jobs.save, { data });
+      const first = await admin.query(api.jobs.staffDetail, { id });
+      await admin.mutation(api.jobs.save, {
+        id,
+        data: { ...data, title: "Newer title" },
+        expectedUpdatedAt: first!.updatedAt,
+      });
+      const second = await admin.query(api.jobs.staffDetail, { id });
+      expect(second!.updatedAt).toBeGreaterThan(first!.updatedAt);
+      await expect(
+        admin.mutation(api.jobs.save, {
+          id,
+          data: { ...data, title: "Stale title" },
+          expectedUpdatedAt: first!.updatedAt,
+        }),
+      ).rejects.toThrow("EDIT_CONFLICT");
+      expect((await admin.query(api.jobs.staffDetail, { id }))!.title).toBe(
+        "Newer title",
+      );
+      await admin.mutation(api.jobs.setStatus, { id, status: "Published" });
+      await expect(
+        admin.mutation(api.jobs.save, {
+          id,
+          data,
+          expectedUpdatedAt: second!.updatedAt,
+        }),
+      ).rejects.toThrow("EDIT_CONFLICT");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
   it("denies anonymous, unapproved and revoked staff writes", async () => {
     const t = setup();
     await expect(t.mutation(api.jobs.save, { data })).rejects.toThrow(

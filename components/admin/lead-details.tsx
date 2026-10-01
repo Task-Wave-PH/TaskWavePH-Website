@@ -27,7 +27,11 @@ export function LeadDetails({
 }: {
   record: LeadView;
   backHref: string;
-  onSave: (status: LeadView["status"], notes: string) => Promise<void>;
+  onSave: (
+    status: LeadView["status"],
+    notes: string,
+    expected: Pick<LeadView, "status" | "notes">,
+  ) => Promise<void>;
   onPriority: (priority: boolean) => Promise<void>;
   onDelete: () => Promise<void>;
 }) {
@@ -36,14 +40,22 @@ export function LeadDetails({
     [busy, setBusy] = useState(false),
     [message, setMessage] = useState("");
   const d = record.data;
+  const [baseline, setBaseline] = useState({
+    status: record.status,
+    notes: record.notes,
+  });
   async function perform(action: () => Promise<void>) {
     setBusy(true);
     setMessage("");
     try {
       await action();
       setMessage("Changes saved.");
-    } catch {
-      setMessage("Unable to save. Check your access and try again.");
+    } catch (error) {
+      setMessage(
+        error instanceof Error && error.message.includes("EDIT_CONFLICT")
+          ? "This enquiry changed while you were editing. Copy your changes, refresh, and review the latest record before saving."
+          : "Unable to save. Check your access and try again.",
+      );
     } finally {
       setBusy(false);
     }
@@ -165,6 +177,7 @@ export function LeadDetails({
             <div className="space-y-2">
               <Label htmlFor="lead-status">Status</Label>
               <Select
+                disabled={busy}
                 value={status}
                 onValueChange={(value) => {
                   if (value) setStatus(value as LeadView["status"]);
@@ -185,6 +198,7 @@ export function LeadDetails({
             <div className="space-y-2">
               <Label htmlFor="lead-notes">Internal notes</Label>
               <Textarea
+                disabled={busy}
                 id="lead-notes"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
@@ -198,7 +212,13 @@ export function LeadDetails({
             <Button
               className="min-h-11 w-full"
               disabled={busy}
-              onClick={() => perform(() => onSave(status, notes))}
+              onClick={() =>
+                perform(async () => {
+                  await onSave(status, notes, baseline);
+                  setBaseline({ status, notes: notes.trim() });
+                  setNotes(notes.trim());
+                })
+              }
             >
               {busy ? "Saving…" : "Save changes"}
             </Button>

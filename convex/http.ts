@@ -8,8 +8,11 @@ import { leadSchema } from "../features/leads/schema";
 import {
   submissionTokenSchema,
   validateResume,
-  MAX_REQUEST_BYTES,
 } from "../features/submissions/validation";
+import {
+  readSubmissionBody,
+  SubmissionBodyError,
+} from "../features/submissions/request-body";
 const http = httpRouter();
 const json = (data: object, status = 200) =>
   Response.json(data, { status, headers: { "Cache-Control": "no-store" } });
@@ -48,18 +51,24 @@ http.route({
     const secret = process.env.CONVEX_SERVER_SECRET;
     if (!secret || request.headers.get("authorization") !== `Bearer ${secret}`)
       return json({ error: "UNAUTHORIZED" }, 401);
-    const bytes = await request.arrayBuffer();
-    if (bytes.byteLength > MAX_REQUEST_BYTES)
-      return json({ error: "TOO_LARGE" }, 413);
-    const body = await new Request(request.url, {
-      method: "POST",
-      headers: { "Content-Type": request.headers.get("content-type") ?? "" },
-      body: bytes,
-    }).formData();
     let token: string | undefined;
     let storageId: import("./_generated/dataModel").Id<"_storage"> | undefined;
     let reference: string | undefined;
     try {
+      const contentType = request.headers.get("content-type") ?? "";
+      if (!/^multipart\/form-data\s*;/i.test(contentType))
+        return json({ error: "INVALID_SUBMISSION" }, 400);
+      const bytes = await readSubmissionBody(request);
+      let body: FormData;
+      try {
+        body = await new Request(request.url, {
+          method: "POST",
+          headers: { "Content-Type": contentType },
+          body: bytes,
+        }).formData();
+      } catch {
+        throw new SubmissionBodyError("INVALID_SUBMISSION", 400);
+      }
       const kind = body.get("kind");
       if (kind !== "applications" && kind !== "businessLeads")
         return json({ error: "INVALID_SUBMISSION" }, 400);
@@ -134,6 +143,8 @@ http.route({
           .runMutation(internal.intake.release, { token })
           .catch(() => {});
       }
+      if (error instanceof SubmissionBodyError)
+        return json({ error: error.code }, error.status);
       if (error instanceof ConvexError && error.data === "JOB_UNAVAILABLE")
         return json({ error: "JOB_UNAVAILABLE" }, 409);
       if (
@@ -163,7 +174,8 @@ http.route({
         return json({ error: "TOKEN_CONFLICT" }, 409);
       if (
         error instanceof Error &&
-        (error.name === "ZodError" || error.message === "INVALID_RESUME")
+        (["ZodError", "SyntaxError"].includes(error.name) ||
+          error.message === "INVALID_RESUME")
       )
         return json({ error: "INVALID_SUBMISSION" }, 400);
       console.error("Intake failed", {

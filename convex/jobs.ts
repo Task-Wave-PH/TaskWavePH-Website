@@ -118,14 +118,24 @@ export const staffDetail = adminQuery({
   },
 });
 export const save = adminMutation({
-  args: { id: v.optional(v.id("jobs")), data: jobInput },
+  args: {
+    id: v.optional(v.id("jobs")),
+    data: jobInput,
+    expectedUpdatedAt: v.optional(v.number()),
+  },
   returns: v.id("jobs"),
-  handler: async (ctx, { id, data }) => {
+  handler: async (ctx, { id, data, expectedUpdatedAt }) => {
     const parsed = jobSchema.safeParse(data);
     if (!parsed.success) throw new ConvexError("INVALID_JOB");
     const old = id ? await ctx.db.get(id) : null;
     if (id && !old) throw new ConvexError("NOT_FOUND");
-    const timestamp = Date.now();
+    if (
+      old &&
+      expectedUpdatedAt !== undefined &&
+      old.updatedAt !== expectedUpdatedAt
+    )
+      throw new ConvexError("EDIT_CONFLICT");
+    const timestamp = Math.max(Date.now(), (old?.updatedAt ?? 0) + 1);
     if (id) await ctx.db.patch(id, { ...parsed.data, updatedAt: timestamp });
     else
       id = await ctx.db.insert("jobs", {
@@ -160,7 +170,7 @@ export const setStatus = adminMutation({
         Object.keys(jobFields).map((k) => [k, job[k as keyof typeof job]]),
       ),
     );
-    const timestamp = Date.now();
+    const timestamp = Math.max(Date.now(), job.updatedAt + 1);
     await ctx.db.patch(id, {
       status,
       updatedAt: timestamp,

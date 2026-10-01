@@ -6,7 +6,7 @@ import {
 import { leadSchema } from "../../features/leads/schema";
 import { isAdminHostname, isLocalHostname } from "../../lib/admin-host";
 vi.mock("server-only", () => ({}));
-import { submissionsEnabled } from "../../lib/submission-env";
+import { submissionsEnabled, getSubmissionEnv } from "../../lib/submission-env";
 import { submitRequest } from "../../features/submissions/service";
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -38,6 +38,7 @@ function configure() {
   vi.stubEnv("CONVEX_SITE_URL", "https://example.convex.site");
   vi.stubEnv("CONVEX_SERVER_SECRET", "x".repeat(64));
   vi.stubEnv("TURNSTILE_SECRET_KEY", "test-secret");
+  vi.stubEnv("NEXT_PUBLIC_TURNSTILE_SITE_KEY", "test-site-key");
   vi.stubEnv("NEXT_PUBLIC_SITE_URL", "http://localhost:3000");
 }
 function stubBackendFetch(backend: typeof fetch) {
@@ -48,6 +49,33 @@ function stubBackendFetch(backend: typeof fetch) {
   );
 }
 describe("submission protections", () => {
+  it.each([
+    "1x0000000000000000000000000000000AA",
+    "2x0000000000000000000000000000000AA",
+    "3x0000000000000000000000000000000AA",
+  ])("rejects dummy secret %s in production", (secret) => {
+    configure();
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("TURNSTILE_SECRET_KEY", secret);
+    expect(() => getSubmissionEnv()).toThrow("test key");
+  });
+  it.each([
+    "1x00000000000000000000AA",
+    "2x00000000000000000000AB",
+    "1x00000000000000000000BB",
+    "2x00000000000000000000BB",
+    "3x00000000000000000000FF",
+  ])("rejects dummy browser key %s in production", (key) => {
+    configure();
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("NEXT_PUBLIC_TURNSTILE_SITE_KEY", key);
+    expect(() => getSubmissionEnv()).toThrow("test key");
+  });
+  it("requires a browser challenge key when submissions are configured", () => {
+    configure();
+    vi.stubEnv("NEXT_PUBLIC_TURNSTILE_SITE_KEY", "");
+    expect(() => getSubmissionEnv()).toThrow("configuration is incomplete");
+  });
   it("enables the development flag only on the development server", () => {
     vi.stubEnv("SUBMISSIONS_ENABLED", "development");
     vi.stubEnv("NODE_ENV", "development");

@@ -1,4 +1,3 @@
-import "server-only";
 import { MAX_REQUEST_BYTES } from "./validation";
 
 export class SubmissionBodyError extends Error {

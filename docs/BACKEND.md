@@ -219,8 +219,10 @@ An identical retry of a saved submission succeeds even after the role closes.
 `/dev-preview/jobs` supports sample creation/editing and status changes without
 Clerk. `/dev-preview/careers` shows only sample Published jobs and offers sample
 role details/applications. These previews never query or mutate private records,
-reset on reload, and are unavailable outside localhost development. No sample
-jobs are published into the actual public Careers page.
+reset on reload, and are unavailable outside localhost development. On localhost development, `/careers` shows the same labeled sample jobs when
+its unfiltered live list is empty. Sample admin edits persist across navigation to
+that page and reset on reload. Real published jobs take precedence; production
+and non-local hosts never show sample fallback data. Local Careers is noindex.
 
 Run `npm run test:preview` for sample job workflows. `npm run convex:jobs:smoke`
 verifies real development draft writes using a trusted temporary CLI identity,

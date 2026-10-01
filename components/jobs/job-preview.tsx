@@ -9,7 +9,10 @@ import { JobDetails } from "./job-details";
 import { JobTable, JobStatusFilter } from "./job-admin";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ApplicationForm } from "@/components/application/application-form";
-import { getTracking } from "@/features/applications/tracking";
+import {
+  getTracking,
+  type TrackingQuery,
+} from "@/features/applications/tracking";
 export function PreviewNotice() {
   return (
     <p className="rounded-lg border bg-secondary p-4 text-sm">
@@ -21,6 +24,10 @@ export function PreviewNotice() {
       ·{" "}
       <Link href="/dev-preview/jobs" className="text-primary underline">
         Manage sample jobs
+      </Link>{" "}
+      ·{" "}
+      <Link href="/careers" className="text-primary underline">
+        View Careers Page
       </Link>
     </p>
   );
@@ -91,7 +98,7 @@ export function PreviewJobAdmin({ id }: { id?: string }) {
     </>
   );
 }
-export function PreviewCareers() {
+export function PreviewCareers({ query = {} }: { query?: TrackingQuery }) {
   const { jobs } = usePreviewJobs();
   const [filters, setFilters] = useState({
     serviceArea: "all",
@@ -113,7 +120,7 @@ export function PreviewCareers() {
       <PreviewNotice />
       <JobList
         jobs={filtered.slice(0, limit)}
-        query={{}}
+        query={query}
         preview
         filters={{
           serviceArea:

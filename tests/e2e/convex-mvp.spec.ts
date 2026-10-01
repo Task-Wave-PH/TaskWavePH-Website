@@ -95,6 +95,7 @@ test("Careers handles empty or unavailable roles without inventing vacancies", a
     /No open roles are listed right now|We couldn’t load roles right now/,
   );
   await expect(page.getByRole("link", { name: /View Role/ })).toHaveCount(0);
+  await expect(page.getByText(/Sample jobs only/)).toHaveCount(0);
   await page.goto("/apply?jobId=forged&source=qr");
   await expect(page.getByRole("status")).toContainText(
     /We couldn’t load this role|This role is no longer accepting applications/,

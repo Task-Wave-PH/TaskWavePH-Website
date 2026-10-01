@@ -1,3 +1,5 @@
+import { isLocalPreview } from "@/lib/dev-preview";
+import { PreviewJobsProvider } from "@/components/jobs/preview-provider";
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { getSiteUrl } from "@/lib/env";
@@ -47,9 +49,10 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const localPreview = await isLocalPreview();
   return (
     <html lang="en" className={poppins.variable}>
       <body className="flex min-h-dvh flex-col antialiased">
@@ -59,7 +62,11 @@ export default function RootLayout({
         >
           Skip to content
         </a>
-        {children}
+        {localPreview ? (
+          <PreviewJobsProvider>{children}</PreviewJobsProvider>
+        ) : (
+          children
+        )}
       </body>
     </html>
   );

@@ -113,7 +113,7 @@ test("draft creation, publishing, role application, editing and closure work in 
   ).toHaveCount(0);
 });
 
-test("sample roles paginate, filter and remain separate from public Careers", async ({
+test("sample roles paginate, filter and appear on localhost Careers", async ({
   page,
 }) => {
   await page.goto("/dev-preview/careers");
@@ -142,7 +142,10 @@ test("sample roles paginate, filter and remain separate from public Careers", as
     "No open roles match these filters",
   );
   await page.goto("/careers");
-  await expect(page.getByText(/Sample Web Development Role/)).toHaveCount(0);
+  await expect(page.getByRole("link", { name: /View Role/ })).toHaveCount(12);
+  await expect(
+    page.getByText(/Local UI preview · Sample jobs only/),
+  ).toBeVisible();
 });
 
 test("careers preview and job editor fit supported screen widths", async ({
@@ -178,4 +181,48 @@ test("careers preview and job editor fit supported screen widths", async ({
       }
     }
   }
+});
+
+test("localhost Careers reflects sample admin publication and closure", async ({
+  page,
+}) => {
+  await page.goto("/dev-preview/jobs/new");
+  await fillJob(page, "Local Careers Test Role");
+  await page.getByRole("button", { name: "Save Posting", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Publish Posting", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Confirm", exact: true }).click();
+  await expect(
+    page.getByText("Published", { exact: true }).first(),
+  ).toBeVisible();
+  await page
+    .getByRole("link", { name: "View Careers Page", exact: true })
+    .click();
+  await expect(page).toHaveURL(/\/careers$/);
+  await expect(
+    page.getByRole("heading", { name: "Local Careers Test Role", exact: true }),
+  ).toBeVisible();
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
+    "content",
+    /noindex/,
+  );
+  await page
+    .getByRole("link", { name: "Manage sample jobs", exact: true })
+    .click();
+  await page
+    .getByRole("link", { name: "Local Careers Test Role", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Close Posting", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Confirm", exact: true }).click();
+  await expect(page.getByText("Closed", { exact: true }).first()).toBeVisible();
+  await page
+    .getByRole("link", { name: "View Careers Page", exact: true })
+    .click();
+  await expect(page).toHaveURL(/\/careers$/);
+  await expect(
+    page.getByRole("heading", { name: "Local Careers Test Role", exact: true }),
+  ).toHaveCount(0);
 });

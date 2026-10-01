@@ -103,5 +103,7 @@ add noindex, and send private/no-store responses. Host routing is not authorizat
   the server-resolved title snapshot. Reject new applications for unavailable jobs,
   while honoring identical retries of already saved submissions.
 - Public job reads expose only posting content; all administration retains Clerk
-  identity plus active staff approval. Preview jobs never write to the database.
+  identity plus active staff approval. Preview jobs never write to the database. On localhost development, Careers
+  shows labeled sample jobs when its unfiltered live list is empty; it shares
+  state with sample admin tools. Production never uses this fallback.
 - Sitemap includes only published job URLs, bounded to 5,000 postings.

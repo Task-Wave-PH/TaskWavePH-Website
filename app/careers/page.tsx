@@ -1,5 +1,7 @@
 import { submissionsEnabled } from "@/lib/submission-env";
 import Image from "next/image";
+import { isLocalPreview } from "@/lib/dev-preview";
+import { PreviewCareers } from "@/components/jobs/job-preview";
 import { JobList } from "@/components/jobs/job-list";
 import { publicJobsClient } from "@/features/jobs/server";
 import { api } from "@/convex/_generated/api";
@@ -19,11 +21,19 @@ import {
 } from "@/features/applications/tracking";
 import { pageMetadata } from "@/lib/page-metadata";
 
-export const metadata = pageMetadata(
+const careersMetadata = pageMetadata(
   "Careers",
   "Explore TaskWavePH careers, prepare your details, and learn what to expect when applying.",
   "/careers",
 );
+export async function generateMetadata() {
+  return {
+    ...careersMetadata,
+    ...((await isLocalPreview())
+      ? { robots: { index: false, follow: false } }
+      : {}),
+  };
+}
 export default async function Page({
   searchParams,
 }: {
@@ -64,6 +74,12 @@ export default async function Page({
     unavailable = true;
   }
 
+  const sampleFallback =
+    (await isLocalPreview()) &&
+    jobs.length === 0 &&
+    !serviceArea &&
+    !arrangement &&
+    !cursor;
   return (
     <ContentPage
       audience="applicant"
@@ -111,14 +127,18 @@ export default async function Page({
           />
         </div>
       </section>
-      <JobList
-        key={`${serviceArea}-${arrangement}-${cursor}`}
-        jobs={jobs}
-        query={query}
-        filters={{ serviceArea, arrangement }}
-        nextHref={nextHref}
-        unavailable={unavailable}
-      />
+      {sampleFallback ? (
+        <PreviewCareers query={query} />
+      ) : (
+        <JobList
+          key={`${serviceArea}-${arrangement}-${cursor}`}
+          jobs={jobs}
+          query={query}
+          filters={{ serviceArea, arrangement }}
+          nextHref={nextHref}
+          unavailable={unavailable}
+        />
+      )}
       <section className="grid gap-8 lg:grid-cols-2">
         <div>
           <h2 className="text-2xl font-semibold">Start with your interests.</h2>

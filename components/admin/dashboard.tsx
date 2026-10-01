@@ -18,6 +18,9 @@ import {
   applicationStatuses,
   leadStatuses,
 } from "@/features/submissions/validation";
+import { ApplicantDetails } from "./applicant-details";
+import { ExportButtons } from "./export-buttons";
+import type { ApplicantView } from "@/features/applications/admin-types";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SiteHeader } from "@/components/site-header";
 import { SectionCards } from "@/components/section-cards";
@@ -236,7 +239,8 @@ function Records({ kind }: { kind: Kind }) {
               ))}
             </TabsList>
             <h2 className="text-lg font-semibold md:sr-only">{title(kind)}</h2>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
+              {kind === "applications" && <ExportButtons status={status} />}
               <Label htmlFor="status-filter" className="text-sm">
                 Filter by status
               </Label>
@@ -321,7 +325,32 @@ function Details({ kind, id }: { kind: Kind; id: string }) {
   const record = useQuery(api.admin.detail, { kind, id });
   if (record === undefined) return <p role="status">Loading record…</p>;
   if (!record) return <p>Record not found.</p>;
+  if (kind === "applications")
+    return (
+      <LiveApplicantEditor key={record._id} record={record as ApplicantView} />
+    );
   return <Editor key={record._id} kind={kind} record={record} />;
+}
+function LiveApplicantEditor({ record }: { record: ApplicantView }) {
+  const update = useMutation(api.admin.update);
+  const remove = useMutation(api.admin.remove);
+  const router = useRouter();
+  return (
+    <ApplicantDetails
+      record={record}
+      backHref="/admin/applications"
+      resumeUrl={
+        record.resumeFile ? `/api/admin/resumes/${record._id}` : undefined
+      }
+      onSave={async (status, notes) => {
+        await update({ kind: "applications", id: record._id, status, notes });
+      }}
+      onDelete={async () => {
+        await remove({ kind: "applications", id: record._id });
+        router.push("/admin/applications");
+      }}
+    />
+  );
 }
 type RecordData = NonNullable<
   import("convex/server").FunctionReturnType<typeof api.admin.detail>

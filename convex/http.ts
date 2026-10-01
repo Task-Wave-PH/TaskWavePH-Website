@@ -127,16 +127,23 @@ http.route({
   method: "GET",
   handler: httpAction(async (ctx, request) => {
     try {
-      const id = new URL(request.url).searchParams.get("id") ?? "";
+      const params = new URL(request.url).searchParams;
+      const id = params.get("id") ?? "";
+      const mode = params.get("mode") ?? "download";
+      if (!["view", "download"].includes(mode))
+        return new Response("Invalid mode", { status: 400 });
       const file = await ctx.runQuery(internal.downloads.find, { id });
       if (!file) return new Response("Not found", { status: 404 });
       const blob = await ctx.storage.get(file.storageId);
       if (!blob) return new Response("Not found", { status: 404 });
-      await ctx.runMutation(internal.downloads.audit, { id });
+      await ctx.runMutation(internal.downloads.audit, {
+        id,
+        mode: mode as "view" | "download",
+      });
       return new Response(blob, {
         headers: {
           "Content-Type": "application/pdf",
-          "Content-Disposition": 'attachment; filename="resume.pdf"',
+          "Content-Disposition": `${mode === "view" ? "inline" : "attachment"}; filename="resume.pdf"`,
           "Cache-Control": "private, no-store",
           "X-Content-Type-Options": "nosniff",
           "X-Robots-Tag": "noindex",

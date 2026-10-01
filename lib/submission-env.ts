@@ -2,6 +2,8 @@ import "server-only";
 import { z } from "zod";
 import { submissionEnvSchema } from "./env-schema";
 export function submissionsEnabled() {
+  if (process.env.SUBMISSIONS_ENABLED === "development")
+    return process.env.NODE_ENV === "development";
   return (
     process.env.SUBMISSIONS_ENABLED === "true" &&
     (process.env.NODE_ENV !== "production" ||

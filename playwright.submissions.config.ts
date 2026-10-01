@@ -4,6 +4,7 @@ requireDevelopmentTarget();
 // Requires an already configured, running DEVELOPMENT Convex backend.
 export default defineConfig({
   testDir: "./tests/e2e",
+  outputDir: "test-results/submissions",
   testMatch: "**/submissions-live.spec.ts",
   workers: 1,
   use: { baseURL: "http://127.0.0.1:3101", trace: "retain-on-failure" },

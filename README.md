@@ -34,6 +34,10 @@ npm run build
 npm run test:e2e
 npm run convex:check
 npm run convex:smoke
+npm run convex:seed
+npm run convex:workflow
+# With the local development website on port 3000:
+npm run test:preview
 # With local Convex running:
 npm run test:submissions
 ```
@@ -48,3 +52,10 @@ on finalized privacy details and service configuration.
 Read [AGENTS.md](AGENTS.md) and [DESIGN.md](DESIGN.md). Preserve official artwork
 and source-backed company copy. Convex is the source of truth; Sheets sync,
 employees, applicant accounts, job management, payroll, and CRM are deferred.
+
+Applicant names open detail pages with profile, CV and submission tabs. Staff can
+review status/notes, view/download PDFs, delete records, and export all matching
+applicants to CSV or styled Excel. Local UI samples are available at
+`/dev-preview/applications`; they are separate from authenticated database records.
+Use `SUBMISSIONS_ENABLED=development` for local form writes without enabling
+production collection.

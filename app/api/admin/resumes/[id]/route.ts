@@ -1,12 +1,15 @@
 import { auth } from "@clerk/nextjs/server";
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const headers = {
     "Cache-Control": "private, no-store",
     "X-Robots-Tag": "noindex",
   };
+  const mode = new URL(request.url).searchParams.get("mode") ?? "download";
+  if (!["view", "download"].includes(mode))
+    return new Response("Invalid mode", { status: 400, headers });
   if (!process.env.CLERK_SECRET_KEY || !process.env.CONVEX_SITE_URL)
     return new Response("Unavailable", { status: 503, headers });
   try {
@@ -17,7 +20,7 @@ export async function GET(
     if (!token) return new Response("Unauthorized", { status: 401, headers });
     const { id } = await params;
     const response = await fetch(
-      `${process.env.CONVEX_SITE_URL}/resume?id=${encodeURIComponent(id)}`,
+      `${process.env.CONVEX_SITE_URL}/resume?id=${encodeURIComponent(id)}&mode=${mode}`,
       {
         headers: { Authorization: `Bearer ${token}` },
         cache: "no-store",
@@ -33,7 +36,7 @@ export async function GET(
       headers: {
         ...headers,
         "Content-Type": "application/pdf",
-        "Content-Disposition": 'attachment; filename="resume.pdf"',
+        "Content-Disposition": `${mode === "view" ? "inline" : "attachment"}; filename="resume.pdf"`,
         "X-Content-Type-Options": "nosniff",
       },
     });

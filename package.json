@@ -16,7 +16,11 @@
     "convex:check": "convex dev --once",
     "convex:configure": "node scripts/configure-convex.mjs",
     "convex:smoke": "node scripts/smoke-convex.mjs",
-    "test:submissions": "playwright test --config playwright.submissions.config.ts"
+    "test:submissions": "playwright test --config playwright.submissions.config.ts",
+    "convex:seed": "node scripts/seed-convex.mjs",
+    "convex:seed:cleanup": "node scripts/seed-convex.mjs --cleanup",
+    "test:preview": "playwright test --config playwright.preview.config.ts",
+    "convex:workflow": "node scripts/smoke-applicant-workflow.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
@@ -27,11 +31,13 @@
     "cn": "^0.4.0",
     "convex": "^1.46.0",
     "convex-helpers": "^0.1.124",
+    "exceljs": "^4.4.0",
     "lucide-react": "^1.49.0",
     "next": "16.3.8",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "react-hook-form": "^7.89.0",
+    "react-pdf": "^11.0.0",
     "recharts": "^3.8.0",
     "server-only": "^0.0.1",
     "shadcn": "^4.21.0",
@@ -56,5 +62,10 @@
   "engines": {
     "node": ">=22.12.0 <23",
     "npm": ">=10"
+  },
+  "overrides": {
+    "exceljs": {
+      "uuid": "^11.1.1"
+    }
   }
 }

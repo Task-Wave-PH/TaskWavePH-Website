@@ -11,7 +11,8 @@ use a new token. Failed requests never produce the success navigation.
 
 Staff use Clerk email/password authentication. Every administrative query,
 mutation, and download also checks `adminUsers`. Approved staff can review records,
-filter by status, edit notes, download PDF resumes, and permanently delete records.
+filter by status, edit notes/status, view and download PDF resumes, export applicants,
+and permanently delete records.
 The dashboard uses the brand palette and shadcn Sidebar/Select/Card primitives.
 
 ## Development environment
@@ -44,7 +45,8 @@ The dashboard uses the brand palette and shadcn Sidebar/Select/Card primitives.
    `.env.local` are Cloudflare test keys. Test keys are prohibited in production.
    The browser widget uses action `submission`. Real keys must match the public
    site hostname and the server checks action and hostname.
-7. Set `SUBMISSIONS_ENABLED=true` for local development only. Start `npm run dev`.
+7. Set `SUBMISSIONS_ENABLED=development` for dev-server-only submissions
+   (disabled automatically in production builds). Start `npm run dev`.
    Submit synthetic data through `/apply` and `/business-enquiry`; review records
    and resume downloads at `/admin`. Do not test with real applicant information.
 8. Run `npm run convex:smoke` to create a synthetic application with PDF and a
@@ -61,11 +63,13 @@ login. It does not provide working authentication.
 
 - Optional one PDF, maximum 2 MiB. Optional HTTP/HTTPS resume link remains.
 - Check file size, MIME declaration, and `%PDF-` signature on both server and
-  storage boundary. These checks are not antivirus scanning. Do not render uploads
-  inline; downloads use attachment headers and `nosniff`.
+  storage boundary. These checks are not antivirus scanning. The in-app viewer uses
+  React-PDF canvas/text rendering with a locally bundled PDF.js worker, disabled
+  eval, and disabled annotation links. Files are never embedded as arbitrary HTML.
+  Downloads use attachment headers and `nosniff`.
 - Store `Id<"_storage">`, filename, size, and MIME type. Never expose public
   Convex file URLs. Next.js forwards the staff JWT to an authenticated Convex
-  download action, which checks active staff approval and audits the download.
+  file action, which checks active staff approval and audits viewing/downloads.
 - Pending uploads expire after one hour. Cleanup runs every 15 minutes; bounded
   orphan scans run hourly to cover interruption between file storage and tracking.
   Attached resumes remain until their application is manually deleted.
@@ -137,6 +141,51 @@ if your normal development server already occupies port 3000.
 With `npm run dev` running, open `/dev-preview/login`,
 `/dev-preview/applications`, or `/dev-preview/businessLeads`. These use the
 shared login card and dashboard shell with explicitly labeled synthetic rows.
-They do not query Convex, authenticate, or save records. Routes require development
+They do not query Convex or authenticate. Sample applicant edits/deletions persist
+across client navigation until a full reload resets the preview. Routes require development
 mode and a localhost hostname and return 404 in production. Actual staff access
 continues to require configured Clerk keys and Convex staff approval.
+
+## Applicant details, CVs, and exports
+
+Click an applicant name to open the profile, CV, and submission tabs. Staff may
+change status and internal notes; submitted profile fields stay read-only. A
+confirmed deletion removes the record and its PDF. The list updates reactively.
+
+`GET /api/admin/resumes/[id]?mode=view|download` checks Clerk plus active Convex
+staff approval. Download is the default. The viewer renders one page at a time,
+with previous/next page, zoom, and fit controls. External resume links are opened
+separately, never fetched by the server or embedded.
+
+`GET /api/admin/applications/export?format=csv|xlsx&status=New` exports every
+matching row, including unloaded pages. Omit status for all applicants. Exports
+check approval on each bounded backend page and again before returning the file.
+They are uncached and contain applicant fields, tracking, consent, status/notes,
+and CV filename, but no storage IDs, private URLs, fingerprints, or submission
+tokens. CSV neutralizes formula prefixes; XLSX stores text as text, styles the
+headings/rows, freezes the first row, and adds filters. More than 5,000 matching
+records returns an error rather than a partial file. Concurrent changes mean an
+export is a paginated read, not a transactional database snapshot.
+
+## Synthetic development records and verification
+
+- `npm run convex:seed`: idempotently inserts 50 labeled sample applicants and
+  five separately stored valid two-page CVs.
+- `npm run convex:seed:cleanup`: deletes only the versioned seed records/files.
+- Both commands reject production targets and temporarily set the backend-only
+  `ALLOW_DEVELOPMENT_SEED` flag, resetting it afterward. Never enable that flag
+  on production. No seed function is a public API.
+- `npm run convex:workflow`: verifies local database pagination, filtered export,
+  details, status/notes updates, authorized CV metadata, deletion, and denied/revoked
+  access using a trusted CLI test identity, revoked afterward. It deletes one
+  seed applicant; rerun `convex:seed` to restore it. This does not verify real
+  Clerk password login.
+- With the localhost development site running on port 3000, `npm run test:preview`
+  verifies list/detail navigation, status/notes editing, PDF pages and download,
+  filtered CSV/XLSX exports including unloaded records, deletion, and mobile UI.
+- `npm run test:submissions` verifies real Next.js → local Convex writes.
+
+Sample details are at `/dev-preview/applications/sample-001`. Real submitted
+records appear only in authenticated `/admin/applications`; synthetic UI previews
+are not an authentication bypass and do not display private database records.
+Actual staff sign-in verification still requires Clerk development credentials.

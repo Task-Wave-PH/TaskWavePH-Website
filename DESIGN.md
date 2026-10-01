@@ -355,3 +355,9 @@ spacing are retained. Authenticated summaries and activity use the currently
 loaded records (including the selected filter), not database-wide totals.
 Development previews explicitly label synthetic data. Revenue and growth claims
 and unsupported template navigation are omitted.
+
+Applicant detail screens retain the dashboard-01 shell, with shadcn Cards and
+Tabs for profile, CV, and submission metadata. The review card edits status and
+notes; a shadcn Sheet confirms deletion. CVs use page/zoom controls and a separate
+download action. CSV/Excel export buttons sit beside the list status controls.
+Synthetic preview screens reuse the same applicant detail presentation.

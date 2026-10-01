@@ -1,4 +1,5 @@
 "use client";
+import { PreviewApplicantsList } from "./preview-applicants-list";
 import { useState } from "react";
 import { SectionCards } from "@/components/section-cards";
 import { ChartAreaInteractive } from "@/components/chart-area-interactive";
@@ -12,17 +13,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  applicationStatuses,
-  leadStatuses,
-} from "@/features/submissions/validation";
+import { leadStatuses } from "@/features/submissions/validation";
 export function PreviewDashboardContent({
   kind,
 }: {
   kind: "applications" | "businessLeads";
 }) {
+  if (kind === "applications") return <PreviewApplicantsList />;
+  return <BusinessPreview />;
+}
+function BusinessPreview() {
   const [status, setStatus] = useState("all");
-  const statuses = kind === "applications" ? applicationStatuses : leadStatuses;
+  const statuses = leadStatuses;
   const sampleRows = Array.from({ length: 360 }, (_, i) => ({
     status: statuses[i % statuses.length],
     submittedAt:
@@ -33,9 +35,7 @@ export function PreviewDashboardContent({
   );
   return (
     <>
-      <h1 className="sr-only">
-        {kind === "applications" ? "Applications" : "Business Leads"}
-      </h1>
+      <h1 className="sr-only">Business Leads</h1>
       <SectionCards rows={filtered} />
       <ChartAreaInteractive rows={filtered} preview />
       <Tabs
@@ -71,10 +71,7 @@ export function PreviewDashboardContent({
                 {filtered.slice(0, 8).map((row, index) => (
                   <TableRow key={index}>
                     <TableCell className="font-medium">
-                      {kind === "applications"
-                        ? "Sample applicant"
-                        : "Sample business"}{" "}
-                      {index + 1}
+                      Sample business {index + 1}
                     </TableCell>
                     <TableCell>sample-{index + 1}@example.invalid</TableCell>
                     <TableCell>

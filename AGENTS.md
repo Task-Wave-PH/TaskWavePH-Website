@@ -50,7 +50,7 @@ Use server components except for needed interactivity. Check 360, 390, 430, 768,
 1024, and 1440 pixel layouts, keyboard access, contrast, and reduced motion.
 
 Admin uses a branded shadcn Sidebar, paginated records, filters, detail editing,
-protected downloads, and confirmed deletion. No public sign-up or dashboard links.
+protected CV viewing/downloads, CSV/styled XLSX exports, and confirmed deletion. No public sign-up or dashboard links.
 Development uses /admin. Configured production admin hostname rewrites to this
 route tree; the public hostname blocks admin paths. Exclude admin from sitemap,
 add noindex, and send private/no-store responses. Host routing is not authorization.
@@ -74,3 +74,18 @@ add noindex, and send private/no-store responses. Host routing is not authorizat
 - Read the Convex expert skill before editing convex/. Use object-form functions,
   args/returns validators, proper generated imports, indexed reads, and pagination.
 - Keep this file and DESIGN.md accurate when scope or brand guidance changes.
+
+## Applicant review extension
+
+- Applicant profile fields are read-only; staff edit status and internal notes.
+- Render private PDFs with React-PDF and a local worker, without document scripts
+  or annotation navigation. Never expose public storage URLs.
+- Applicant exports include all matching status-filtered rows, with a 5,000-row
+  limit, bounded pagination, approval checks, CSV formula neutralization, and
+  explicit XLSX string cells. Export no tokens, fingerprints, or storage IDs.
+- Development preview state is synthetic and resets on reload. It must never
+  query private records or bypass authentication. All preview routes return 404
+  outside localhost development.
+- Seeds are internal, idempotent, version-marked, and development-only; cleanup
+  targets only owned synthetic records and attached files. Keep the backend seed
+  flag disabled after use and never enable it in production.

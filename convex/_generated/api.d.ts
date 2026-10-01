@@ -12,9 +12,11 @@ import type * as admin from "../admin.js";
 import type * as adminAccess from "../adminAccess.js";
 import type * as crons from "../crons.js";
 import type * as downloads from "../downloads.js";
+import type * as exports from "../exports.js";
 import type * as http from "../http.js";
 import type * as intake from "../intake.js";
 import type * as provision from "../provision.js";
+import type * as seed from "../seed.js";
 import type * as staffStatus from "../staffStatus.js";
 import type * as validators from "../validators.js";
 
@@ -29,9 +31,11 @@ declare const fullApi: ApiFromModules<{
   adminAccess: typeof adminAccess;
   crons: typeof crons;
   downloads: typeof downloads;
+  exports: typeof exports;
   http: typeof http;
   intake: typeof intake;
   provision: typeof provision;
+  seed: typeof seed;
   staffStatus: typeof staffStatus;
   validators: typeof validators;
 }>;

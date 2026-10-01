@@ -202,6 +202,19 @@ describe("Convex intake and administration", () => {
     expect(
       await admin.query(internal.downloads.find, { id: row!._id }),
     ).toMatchObject({ storageId });
+    const view = await admin.fetch(`/resume?id=${row!._id}&mode=view`);
+    expect(view.status).toBe(200);
+    expect(view.headers.get("content-disposition")).toContain("inline");
+    expect(
+      (
+        await t.run((ctx) =>
+          ctx.db
+            .query("adminActivity")
+            .withIndex("by_record", (q) => q.eq("record", row!._id))
+            .take(10),
+        )
+      ).some((a) => a.action === "resume_viewed"),
+    ).toBe(true);
     const download = await admin.fetch(`/resume?id=${row!._id}`);
     expect(download.status).toBe(200);
     expect(download.headers.get("content-disposition")).toContain("attachment");
@@ -260,5 +273,73 @@ describe("Convex intake and administration", () => {
     ).toBe(401);
     expect((await t.fetch("/resume?id=unknown")).status).toBe(403);
     vi.unstubAllEnvs();
+  });
+  it("exports all filtered pages, hides storage secrets and rechecks approval", async () => {
+    const t = setup();
+    const admin = await staff(t);
+    for (let i = 0; i < 25; i++)
+      await t.run((ctx) =>
+        ctx.db.insert("applications", {
+          data,
+          reference: `test-${i}`,
+          submittedAt: i,
+          consentVersion: "test",
+          status: i % 2 ? "New" : "Reviewed",
+          notes: "",
+          submissionToken: `test-${i}`,
+          fingerprint: "secret",
+        }),
+      );
+    const first = await admin.query(api.exports.page, {
+      status: "New",
+      paginationOpts: { numItems: 5, cursor: null },
+    });
+    const second = await admin.query(api.exports.page, {
+      status: "New",
+      paginationOpts: { numItems: 100, cursor: first.continueCursor },
+    });
+    expect(first.page.length + second.page.length).toBe(12);
+    expect(first.page[0]).not.toHaveProperty("fingerprint");
+    expect(first.page[0]).not.toHaveProperty("submissionToken");
+    await admin.mutation(api.exports.audit, { format: "csv", count: 12 });
+    await t.mutation(internal.provision.setStaff, {
+      subject: "user_staff",
+      active: false,
+    });
+    await expect(
+      admin.query(api.exports.page, {
+        paginationOpts: { numItems: 100, cursor: null },
+      }),
+    ).rejects.toThrow("FORBIDDEN");
+    await expect(
+      t.query(api.exports.page, {
+        paginationOpts: { numItems: 100, cursor: null },
+      }),
+    ).rejects.toThrow("UNAUTHORIZED");
+  });
+  it("creates idempotent development seeds and cleans only its own records", async () => {
+    const t = setup();
+    await expect(t.action(internal.seed.run, {})).rejects.toThrow(
+      "SEED_DISABLED",
+    );
+    vi.stubEnv("ALLOW_DEVELOPMENT_SEED", "true");
+    try {
+      await save(t);
+      expect(await t.action(internal.seed.run, {})).toEqual({ created: 50 });
+      expect(await t.action(internal.seed.run, {})).toEqual({ created: 0 });
+      const rows = await t.run((ctx) => ctx.db.query("applications").take(100));
+      const fileIds = rows.flatMap((r) =>
+        r.resumeFile ? [r.resumeFile.storageId] : [],
+      );
+      expect(fileIds.length).toBe(5);
+      expect(await t.mutation(internal.seed.cleanup, {})).toBe(50);
+      expect(
+        await t.run((ctx) => ctx.db.query("applications").take(100)),
+      ).toHaveLength(1);
+      for (const id of fileIds)
+        expect(await t.run((ctx) => ctx.storage.get(id))).toBeNull();
+    } finally {
+      vi.unstubAllEnvs();
+    }
   });
 });

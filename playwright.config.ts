@@ -4,7 +4,7 @@ const port = process.env.PLAYWRIGHT_PORT ?? "3000";
 const baseURL = `http://127.0.0.1:${port}`;
 export default defineConfig({
   testDir: "./tests/e2e",
-  testIgnore: "**/submissions-live.spec.ts",
+  testIgnore: ["**/submissions-live.spec.ts", "**/applicant-preview.spec.ts"],
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,

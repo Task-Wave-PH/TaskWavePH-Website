@@ -1,6 +1,12 @@
 import { test, expect } from "@playwright/test";
 test("local UI previews are unavailable in production", async ({ request }) => {
-  for (const page of ["login", "applications", "businessLeads"]) {
+  for (const page of [
+    "login",
+    "applications",
+    "businessLeads",
+    "applications/sample-001",
+    "sample-cv",
+  ]) {
     expect((await request.get(`/dev-preview/${page}`)).status()).toBe(404);
   }
 });
@@ -65,6 +71,9 @@ test("disabled submissions fail closed and administration is excluded from index
   );
   const admin = await request.get("/admin");
   expect(admin.headers()["cache-control"]).toContain("no-store");
+  expect(
+    (await request.get("/api/admin/applications/export?format=csv")).status(),
+  ).toBe(503);
   const download = await request.get("/api/admin/resumes/unknown");
   expect(download.status()).toBe(503);
   const sitemap = await request.get("/sitemap.xml");

@@ -6,6 +6,7 @@ import {
 import { leadSchema } from "../../features/leads/schema";
 import { isAdminHostname, isLocalHostname } from "../../lib/admin-host";
 vi.mock("server-only", () => ({}));
+import { submissionsEnabled } from "../../lib/submission-env";
 import { submitRequest } from "../../features/submissions/service";
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -40,6 +41,15 @@ function configure() {
   vi.stubEnv("NEXT_PUBLIC_SITE_URL", "http://localhost:3000");
 }
 describe("submission protections", () => {
+  it("enables the development flag only on the development server", () => {
+    vi.stubEnv("SUBMISSIONS_ENABLED", "development");
+    vi.stubEnv("NODE_ENV", "development");
+    expect(submissionsEnabled()).toBe(true);
+    vi.stubEnv("NODE_ENV", "production");
+    expect(submissionsEnabled()).toBe(false);
+    vi.stubEnv("NODE_ENV", "test");
+    expect(submissionsEnabled()).toBe(false);
+  });
   it("accepts a PDF and rejects empty, disguised and oversized files", async () => {
     await validateResume(new Blob(["%PDF-1.7"], { type: "application/pdf" }));
     for (const blob of [

@@ -13,13 +13,16 @@ export const find = internalQuery({
   },
 });
 export const audit = internalMutation({
-  args: { id: v.string() },
+  args: {
+    id: v.string(),
+    mode: v.optional(v.union(v.literal("view"), v.literal("download"))),
+  },
   returns: v.null(),
   handler: async (ctx, args) => {
     await ctx.db.insert("adminActivity", {
       actor: await requireAdmin(ctx),
       record: args.id,
-      action: "resume_downloaded",
+      action: args.mode === "view" ? "resume_viewed" : "resume_downloaded",
       timestamp: Date.now(),
     });
     return null;

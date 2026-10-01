@@ -53,6 +53,7 @@ export function ExportButtons({
     <div>
       <div className="flex flex-wrap gap-2">
         <Button
+          className="min-h-11 px-4"
           variant="outline"
           disabled={busy}
           onClick={() => exportFile("csv")}
@@ -60,6 +61,7 @@ export function ExportButtons({
           Export CSV
         </Button>
         <Button
+          className="min-h-11 px-4"
           variant="outline"
           disabled={busy}
           onClick={() => exportFile("xlsx")}

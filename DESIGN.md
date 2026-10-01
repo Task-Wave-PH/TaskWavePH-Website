@@ -393,3 +393,20 @@ Use shadcn Cards, Badges, Select filters, and clear role-specific application li
 Keep preparation guidance below the roles; do not invent employment benefits or
 vacancies. Staff-managed job content is separate from the service categories.
 Sample vacancies are confined to labeled localhost previews.
+
+## Layout spacing conventions
+
+These are website implementation choices, not media-kit specifications. Use
+explicit grid/flex gaps for grouped controls and navigation rather than relying
+on vertical margins on inline links. Public controls use at least 44px touch
+targets, with 48px primary form actions. Careers filters have matching 44px heights:
+stack on phones, use two field columns on tablets, and align fields/actions in
+one row on desktop. Keep labels 8px above their controls.
+
+Role metadata chips use 12px horizontal/4px vertical padding and wrap with
+8–12px gaps. Separate detail navigation, metadata, and content with 32px gaps.
+Role-card actions sit at the bottom of each card to align within a grid row.
+Single-content cards apply their padding once: zero outer vertical padding with
+24px content padding (32px where larger layouts already use it). Cards with
+headers/footers retain the shadcn structure. Admin toolbars wrap in logical groups,
+and back links have their own 44px target without stretching across the screen.

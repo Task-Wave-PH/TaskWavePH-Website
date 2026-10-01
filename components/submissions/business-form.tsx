@@ -91,6 +91,7 @@ export function BusinessForm({
                 name === "companyWebsite" ? 2000 : name === "phone" ? 30 : 254
               }
               {...register(name)}
+              className="min-h-12 text-base"
               aria-invalid={!!errors[name]}
               aria-describedby={errors[name] ? `${name}-error` : undefined}
             />
@@ -142,14 +143,16 @@ export function BusinessForm({
           maxLength={2000}
           {...register("message")}
           aria-invalid={!!errors.message}
+          className="text-base"
         />
       </FormField>
       <Controller
         control={control}
         name="privacyConsent"
         render={({ field }) => (
-          <label className="flex items-start gap-3 leading-relaxed">
+          <label className="flex items-start gap-3 rounded-lg border p-4 text-sm leading-relaxed">
             <Checkbox
+              className="mt-1 size-6 shrink-0"
               inputRef={field.ref}
               checked={field.value}
               onCheckedChange={field.onChange}
@@ -169,7 +172,7 @@ export function BusinessForm({
       )}
       <Link
         href={getTrackedHref("/privacy", tracking)}
-        className="inline-block text-primary underline"
+        className="inline-flex min-h-11 items-center text-primary underline underline-offset-4"
       >
         Read the privacy notice
       </Link>
@@ -201,7 +204,11 @@ export function BusinessForm({
           saved.
         </p>
       )}
-      <Button className="min-h-12" type="submit" disabled={isSubmitting}>
+      <Button
+        className="min-h-12 w-full px-6 text-base sm:w-auto"
+        type="submit"
+        disabled={isSubmitting}
+      >
         {isSubmitting
           ? "Please wait…"
           : enabled

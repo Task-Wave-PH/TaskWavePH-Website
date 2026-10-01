@@ -86,7 +86,7 @@ export function JobEditor({
     <>
       <Link
         href={preview ? "/dev-preview/jobs" : "/admin/jobs"}
-        className="text-primary underline"
+        className="inline-flex min-h-11 items-center self-start text-primary underline underline-offset-4"
       >
         Back to jobs
       </Link>
@@ -100,7 +100,7 @@ export function JobEditor({
         Use approved role information. New postings remain drafts until
         explicitly published. Salary is optional; all other fields are required.
       </p>
-      <Card>
+      <Card className="py-0">
         <CardContent className="p-6">
           <form
             noValidate
@@ -123,7 +123,7 @@ export function JobEditor({
                   ["salary", "Salary (optional)", 200],
                 ] as const
               ).map(([name, label, max]) => (
-                <div key={name} className="space-y-2">
+                <div key={name} className="grid min-w-0 content-start gap-2">
                   <Label htmlFor={name}>{label}</Label>
                   <Input
                     id={name}
@@ -153,8 +153,8 @@ export function JobEditor({
                   ["employmentType", "Employment Type", employmentTypes],
                 ] as const
               ).map(([name, label, options]) => (
-                <div key={name} className="space-y-2">
-                  <Label>{label}</Label>
+                <div key={name} className="grid min-w-0 content-start gap-2">
+                  <Label htmlFor={name}>{label}</Label>
                   <Select
                     value={values[name]}
                     onValueChange={(value) => {
@@ -167,7 +167,8 @@ export function JobEditor({
                   >
                     <SelectTrigger
                       aria-label={label}
-                      className="min-h-11 w-full"
+                      id={name}
+                      className="h-11! w-full"
                     >
                       <SelectValue />
                     </SelectTrigger>
@@ -210,7 +211,11 @@ export function JobEditor({
                 )}
               </div>
             ))}
-            <Button type="submit" disabled={isSubmitting || busy}>
+            <Button
+              type="submit"
+              className="min-h-11 px-5"
+              disabled={isSubmitting || busy}
+            >
               {isSubmitting ? "Saving…" : "Save Posting"}
             </Button>
           </form>
@@ -226,6 +231,7 @@ export function JobEditor({
           <div className="flex flex-wrap gap-3">
             {job.status !== "Published" && (
               <Button
+                className="min-h-11 px-5"
                 disabled={isSubmitting || busy || isDirty}
                 onClick={() => setConfirmation("Published")}
               >
@@ -234,6 +240,7 @@ export function JobEditor({
             )}
             {job.status !== "Closed" && (
               <Button
+                className="min-h-11 px-5"
                 variant="outline"
                 disabled={isSubmitting || busy || isDirty}
                 onClick={() => setConfirmation("Closed")}
@@ -243,6 +250,7 @@ export function JobEditor({
             )}
             {job.status !== "Draft" && (
               <Button
+                className="min-h-11 px-5"
                 variant="outline"
                 disabled={isSubmitting || busy || isDirty}
                 onClick={() => setConfirmation("Draft")}
@@ -275,7 +283,7 @@ export function JobEditor({
                 : "This posting will no longer appear publicly or accept new role-specific applications. Existing applications remain available."}
             </SheetDescription>
           </SheetHeader>
-          <div className="flex gap-3 p-6">
+          <div className="flex flex-wrap gap-3 p-6">
             <Button disabled={busy} onClick={changeStatus}>
               Confirm
             </Button>

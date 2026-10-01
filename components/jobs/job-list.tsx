@@ -63,7 +63,7 @@ export function JobList({
         </p>
       </div>
       <form
-        className="flex flex-col items-stretch gap-4 sm:flex-row sm:flex-wrap sm:items-end"
+        className="grid gap-4 sm:grid-cols-2 sm:items-end lg:grid-cols-[minmax(0,18rem)_minmax(0,18rem)_auto]"
         onSubmit={(event) => {
           event.preventDefault();
           if (onFilter) {
@@ -83,8 +83,12 @@ export function JobList({
             ["Work arrangement", arrangement, setArrangement, workArrangements],
           ] as const
         ).map(([label, value, setValue, options]) => (
-          <div key={label} className="min-w-0 space-y-2 sm:w-64">
-            <Label>{label}</Label>
+          <div key={label} className="grid min-w-0 gap-2">
+            <Label
+              htmlFor={`job-filter-${label === "Service area" ? "service" : "arrangement"}`}
+            >
+              {label}
+            </Label>
             <Select
               items={{
                 all: `All ${label.toLowerCase()}s`,
@@ -95,7 +99,11 @@ export function JobList({
               value={value}
               onValueChange={(v) => setValue(v ?? "all")}
             >
-              <SelectTrigger aria-label={label} className="min-h-11 w-full">
+              <SelectTrigger
+                id={`job-filter-${label === "Service area" ? "service" : "arrangement"}`}
+                aria-label={label}
+                className="h-11! w-full"
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -109,7 +117,10 @@ export function JobList({
             </Select>
           </div>
         ))}
-        <Button type="submit" className="min-h-11">
+        <Button
+          type="submit"
+          className="h-11 w-full px-5 sm:col-span-2 lg:col-span-1 lg:w-auto lg:justify-self-start"
+        >
           Filter Roles
         </Button>
       </form>
@@ -129,16 +140,28 @@ export function JobList({
       ) : (
         <div className="grid gap-5 md:grid-cols-2">
           {jobs.map((job) => (
-            <Card key={job._id}>
-              <CardContent className="space-y-4 p-6">
+            <Card key={job._id} className="py-0">
+              <CardContent className="flex flex-1 flex-col items-start gap-4 p-6">
                 <p className="text-sm font-medium text-primary">
                   {job.serviceArea}
                 </p>
-                <h3 className="text-xl font-semibold">{job.title}</h3>
+                <h3 className="break-words text-xl font-semibold">
+                  {job.title}
+                </h3>
                 <p className="text-sm text-muted-foreground">{job.location}</p>
                 <div className="flex flex-wrap gap-2">
-                  <Badge variant="secondary">{job.arrangement}</Badge>
-                  <Badge variant="outline">{job.employmentType}</Badge>
+                  <Badge
+                    variant="secondary"
+                    className="h-auto min-h-7 px-3 py-1 whitespace-normal"
+                  >
+                    {job.arrangement}
+                  </Badge>
+                  <Badge
+                    variant="outline"
+                    className="h-auto min-h-7 px-3 py-1 whitespace-normal"
+                  >
+                    {job.employmentType}
+                  </Badge>
                 </div>
                 {job.salary && <p className="text-sm">{job.salary}</p>}
                 <Link
@@ -148,7 +171,7 @@ export function JobList({
                   )}
                   className={buttonVariants({
                     variant: "outline",
-                    className: "min-h-11",
+                    className: "mt-auto min-h-11 px-5",
                   })}
                 >
                   View Role<span className="sr-only">: {job.title}</span>

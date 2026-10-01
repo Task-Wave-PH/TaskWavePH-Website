@@ -67,7 +67,7 @@ export default async function Page({
         <ul className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {themes.map(({ icon: Icon, title }) => (
             <li key={title}>
-              <Card className="h-full">
+              <Card className="h-full py-0">
                 <CardContent className="p-6">
                   <Icon aria-hidden="true" className="size-7 text-primary" />
                   <h3 className="mt-4 font-semibold">{title}</h3>
@@ -77,7 +77,7 @@ export default async function Page({
           ))}
         </ul>
       </section>
-      <Card className="rounded-none border-l-4 border-brand-cyan bg-secondary ring-0">
+      <Card className="py-0 rounded-none border-l-4 border-brand-cyan bg-secondary ring-0">
         <CardContent className="p-6 sm:p-8">
           <h2 className="text-2xl font-semibold">
             Your Partner in Outsourcing.

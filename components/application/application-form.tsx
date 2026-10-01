@@ -311,6 +311,7 @@ export function ApplicationForm({
         <Button
           type="button"
           variant="outline"
+          className="h-auto min-h-12 whitespace-normal px-6 py-3"
           onClick={() => {
             setSelectedJob(undefined);
             setValue("jobId", undefined);
@@ -345,7 +346,7 @@ export function ApplicationForm({
       <Button
         type="submit"
         disabled={isSubmitting}
-        className="min-h-12 w-full text-base sm:w-auto"
+        className="min-h-12 w-full px-6 text-base sm:w-auto"
       >
         {isSubmitting
           ? enabled

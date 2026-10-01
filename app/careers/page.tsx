@@ -100,7 +100,10 @@ export default async function Page({
           <div className="mt-6 flex flex-wrap gap-3">
             <Link
               href="#open-roles"
-              className={buttonVariants({ size: "lg", className: "min-h-12" })}
+              className={buttonVariants({
+                size: "lg",
+                className: "min-h-12 w-full px-6 sm:w-auto",
+              })}
             >
               Explore Open Roles
             </Link>
@@ -109,7 +112,7 @@ export default async function Page({
               className={buttonVariants({
                 variant: "outline",
                 size: "lg",
-                className: "min-h-12",
+                className: "min-h-12 w-full px-6 sm:w-auto",
               })}
             >
               General Application
@@ -157,7 +160,7 @@ export default async function Page({
             Explore areas of work
           </Link>
         </div>
-        <Card className="bg-secondary ring-0">
+        <Card className="bg-secondary py-0 ring-0">
           <CardContent className="p-6 sm:p-8">
             <h2 className="text-2xl font-semibold">
               Your preparation checklist

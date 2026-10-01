@@ -84,7 +84,10 @@ export function ApplicantDetails({
   );
   return (
     <>
-      <Link href={backHref} className="text-primary underline">
+      <Link
+        href={backHref}
+        className="inline-flex min-h-11 items-center self-start text-primary underline underline-offset-4"
+      >
         Back to applications
       </Link>
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -99,7 +102,7 @@ export function ApplicantDetails({
         <Badge variant="outline">{record.status}</Badge>
       </div>
       <Tabs defaultValue="profile" className="gap-4">
-        <TabsList className="h-auto! flex-wrap">
+        <TabsList className="h-auto! max-w-full flex-wrap gap-1">
           <TabsTrigger value="profile" className="min-h-11">
             Profile
           </TabsTrigger>
@@ -211,32 +214,39 @@ export function ApplicantDetails({
           <CardTitle>Recruitment review</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Label htmlFor="applicant-status">Status</Label>
-          <Select
-            value={status}
-            onValueChange={(v) => {
-              const value = applicationStatuses.find((s) => s === v);
-              if (value) setStatus(value);
-            }}
-          >
-            <SelectTrigger id="applicant-status" className="min-h-11">
-              <SelectValue>{status}</SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              {applicationStatuses.map((v) => (
-                <SelectItem key={v} value={v}>
-                  {v}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Label htmlFor="applicant-notes">Internal notes</Label>
-          <Textarea
-            id="applicant-notes"
-            maxLength={2000}
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-          />
+          <div className="grid gap-2">
+            <Label htmlFor="applicant-status">Status</Label>
+            <Select
+              value={status}
+              onValueChange={(v) => {
+                const value = applicationStatuses.find((s) => s === v);
+                if (value) setStatus(value);
+              }}
+            >
+              <SelectTrigger
+                id="applicant-status"
+                className="h-11! w-full sm:w-64"
+              >
+                <SelectValue>{status}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {applicationStatuses.map((v) => (
+                  <SelectItem key={v} value={v}>
+                    {v}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="applicant-notes">Internal notes</Label>
+            <Textarea
+              id="applicant-notes"
+              maxLength={2000}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+            />
+          </div>
           <div className="flex flex-wrap gap-3">
             <Button disabled={busy} onClick={save}>
               {busy ? "Please wait…" : "Save changes"}

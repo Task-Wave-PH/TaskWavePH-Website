@@ -32,7 +32,7 @@ export default async function Page({
           ? "Send your enquiry for our team to review."
           : "Enquiries are not open yet. This preview checks your entries without sending or saving them."}
       </p>
-      <Card>
+      <Card className="max-w-3xl py-0">
         <CardContent className="p-6 sm:p-8">
           <BusinessForm
             tracking={getTracking(query, "/business-enquiry")}

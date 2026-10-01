@@ -169,6 +169,47 @@ test("careers preview and job editor fit supported screen widths", async ({
         ),
       ).toBe(true);
       if (route === "/careers") {
+        const controls = [
+          page.getByRole("combobox", { name: "Service area", exact: true }),
+          page.getByRole("combobox", { name: "Work arrangement", exact: true }),
+          page.getByRole("button", { name: "Filter Roles", exact: true }),
+        ];
+        const boxes = await Promise.all(
+          controls.map((control) => control.boundingBox()),
+        );
+        for (const box of boxes) {
+          expect(box).not.toBeNull();
+          expect(box!.height).toBe(44);
+        }
+        if (width >= 1024) {
+          expect(Math.abs(boxes[0]!.y - boxes[1]!.y)).toBeLessThanOrEqual(1);
+          expect(Math.abs(boxes[0]!.y - boxes[2]!.y)).toBeLessThanOrEqual(1);
+        } else if (width < 640) {
+          expect(boxes[1]!.y).toBeGreaterThan(boxes[0]!.y + boxes[0]!.height);
+          expect(boxes[2]!.y).toBeGreaterThan(boxes[1]!.y + boxes[1]!.height);
+        }
+        if (width >= 768) {
+          const actions = page.getByRole("link", { name: /View Role/ });
+          const first = await actions.nth(0).boundingBox();
+          const second = await actions.nth(1).boundingBox();
+          expect(Math.abs(first!.y - second!.y)).toBeLessThanOrEqual(1);
+        }
+      }
+      if (route === "/dev-preview/careers/sample-job-001") {
+        const back = await page
+          .getByRole("link", { name: "Back to careers", exact: true })
+          .boundingBox();
+        const chips = await page
+          .locator('[data-slot="badge"]')
+          .first()
+          .boundingBox();
+        expect(back!.height).toBeGreaterThanOrEqual(44);
+        expect(chips!.y - (back!.y + back!.height)).toBeGreaterThanOrEqual(24);
+        await expect(
+          page.getByRole("link", { name: "Apply for This Role", exact: true }),
+        ).toBeVisible();
+      }
+      if (route === "/careers") {
         await page.locator("main img").scrollIntoViewIfNeeded();
         await expect(page.locator("main img")).toHaveJSProperty(
           "complete",

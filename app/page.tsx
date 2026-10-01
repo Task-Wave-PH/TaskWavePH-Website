@@ -155,7 +155,7 @@ export default async function Home({
           </p>
           <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {areas.map(({ icon: Icon, title, description }) => (
-              <Card key={title} className="h-full">
+              <Card key={title} className="h-full py-0">
                 <CardContent className="p-6">
                   <Icon aria-hidden="true" className="size-7 text-primary" />
                   <h3 className="mt-5 text-xl font-semibold">{title}</h3>

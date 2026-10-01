@@ -38,7 +38,7 @@ export function PreviewApplicantsList() {
         className="gap-4"
       >
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <TabsList className="h-auto! flex-wrap">
+          <TabsList className="h-auto! max-w-full flex-wrap gap-1">
             <TabsTrigger className="min-h-11" value="all">
               All records
             </TabsTrigger>

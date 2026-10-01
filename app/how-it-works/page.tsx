@@ -25,7 +25,7 @@ export default async function Page({
       <ol className="grid gap-6 md:grid-cols-3">
         {steps.map(({ icon: Icon, title, description }, index) => (
           <li key={title}>
-            <Card className="h-full">
+            <Card className="h-full py-0">
               <CardContent className="p-6 sm:p-8">
                 <div className="flex items-center gap-4">
                   <span

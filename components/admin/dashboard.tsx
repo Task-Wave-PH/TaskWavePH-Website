@@ -250,44 +250,48 @@ function Records({ kind }: { kind: Kind }) {
       >
         <section aria-label="Records" className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <TabsList className="hidden md:inline-flex">
-              <TabsTrigger value="all">All records</TabsTrigger>
+            <TabsList className="hidden h-auto! flex-wrap gap-1 md:inline-flex">
+              <TabsTrigger className="min-h-11" value="all">
+                All records
+              </TabsTrigger>
               {(kind === "applications"
                 ? applicationStatuses
                 : leadStatuses
               ).map((v) => (
-                <TabsTrigger key={v} value={v}>
+                <TabsTrigger className="min-h-11" key={v} value={v}>
                   {v}
                 </TabsTrigger>
               ))}
             </TabsList>
             <h2 className="text-lg font-semibold md:sr-only">{title(kind)}</h2>
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-end gap-4">
               {kind === "applications" && <ExportButtons status={status} />}
-              <Label htmlFor="status-filter" className="text-sm">
-                Filter by status
-              </Label>
-              <Select
-                value={status || "all"}
-                onValueChange={(value) =>
-                  setStatus(value === "all" ? "" : String(value))
-                }
-              >
-                <SelectTrigger id="status-filter" className="min-h-11">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All statuses</SelectItem>
-                  {(kind === "applications"
-                    ? applicationStatuses
-                    : leadStatuses
-                  ).map((value) => (
-                    <SelectItem key={value} value={value}>
-                      {value}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="grid gap-2">
+                <Label htmlFor="status-filter" className="text-sm">
+                  Filter by status
+                </Label>
+                <Select
+                  value={status || "all"}
+                  onValueChange={(value) =>
+                    setStatus(value === "all" ? "" : String(value))
+                  }
+                >
+                  <SelectTrigger id="status-filter" className="h-11! w-48">
+                    <SelectValue>{status || "All statuses"}</SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All statuses</SelectItem>
+                    {(kind === "applications"
+                      ? applicationStatuses
+                      : leadStatuses
+                    ).map((value) => (
+                      <SelectItem key={value} value={value}>
+                        {value}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
           <TabsContent value={status || "all"} className="space-y-4">
@@ -412,20 +416,23 @@ function Editor({ kind, record }: { kind: Kind; record: RecordData }) {
   }
   return (
     <>
-      <Link href={`/admin/${kind}`} className="text-primary underline">
+      <Link
+        href={`/admin/${kind}`}
+        className="inline-flex min-h-11 items-center self-start text-primary underline underline-offset-4"
+      >
         Back to {title(kind)}
       </Link>
-      <h1 className="mt-6 text-3xl font-semibold">
+      <h1 className="break-words text-3xl font-semibold">
         {kind === "applications" && "firstName" in record.data
           ? `${record.data.firstName} ${record.data.lastName}`
           : "company" in record.data
             ? record.data.company
             : "Record"}
       </h1>
-      <p className="mt-3 break-all text-sm text-muted-foreground">
+      <p className="break-all text-sm text-muted-foreground">
         {record.reference}
       </p>
-      <Card className="mt-6">
+      <Card className="py-0">
         <CardContent className="p-5 sm:p-8">
           <dl className="grid gap-5 sm:grid-cols-2">
             {Object.entries(record.data).map(([key, value]) => (
@@ -452,66 +459,73 @@ function Editor({ kind, record }: { kind: Kind; record: RecordData }) {
           )}
         </CardContent>
       </Card>
-      <div className="mt-8 space-y-4">
-        <Label htmlFor="record-status">Status</Label>
-        <Select
-          value={status}
-          onValueChange={(value) => setStatus(String(value))}
-        >
-          <SelectTrigger id="record-status" className="min-h-11">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {(kind === "applications" ? applicationStatuses : leadStatuses).map(
-              (value) => (
+      <div className="grid gap-4">
+        <div className="grid gap-2">
+          <Label htmlFor="record-status">Status</Label>
+          <Select
+            value={status}
+            onValueChange={(value) => setStatus(String(value))}
+          >
+            <SelectTrigger id="record-status" className="h-11! w-full sm:w-64">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {(kind === "applications"
+                ? applicationStatuses
+                : leadStatuses
+              ).map((value) => (
                 <SelectItem key={value} value={value}>
                   {value}
                 </SelectItem>
-              ),
-            )}
-          </SelectContent>
-        </Select>
-        <Label htmlFor="notes">Internal notes</Label>
-        <Textarea
-          id="notes"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          maxLength={2000}
-        />
-        <Button className="min-h-11" disabled={busy} onClick={save}>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="notes">Internal notes</Label>
+          <Textarea
+            id="notes"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            maxLength={2000}
+          />
+        </div>
+        <Button className="min-h-11 w-fit px-5" disabled={busy} onClick={save}>
           {busy ? "Please wait…" : "Save changes"}
         </Button>
         <p role="status">{message}</p>
         <Button
           variant="destructive"
-          className="min-h-11"
+          className="min-h-11 w-fit px-5"
           disabled={busy}
           onClick={() => setConfirm(true)}
         >
           Delete record
         </Button>
         {confirm && (
-          <Card>
+          <Card className="py-0">
             <CardContent className="space-y-4 p-5">
               <p>
                 Permanently delete this record and any attached resume? This
                 cannot be undone.
               </p>
-              <Button
-                variant="destructive"
-                disabled={busy}
-                onClick={erase}
-                className="min-h-11"
-              >
-                Confirm permanent deletion
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => setConfirm(false)}
-                className="ml-3 min-h-11"
-              >
-                Cancel
-              </Button>
+              <div className="flex flex-wrap gap-3">
+                <Button
+                  variant="destructive"
+                  disabled={busy}
+                  onClick={erase}
+                  className="min-h-11"
+                >
+                  Confirm permanent deletion
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setConfirm(false)}
+                  className="min-h-11"
+                >
+                  Cancel
+                </Button>
+              </div>
             </CardContent>
           </Card>
         )}

@@ -57,7 +57,7 @@ export default async function ApplyPage({
             </Link>
           </div>
         ) : (
-          <Card>
+          <Card className="py-0">
             <CardContent className="p-5 sm:p-8">
               <ApplicationForm
                 tracking={getTracking(query)}

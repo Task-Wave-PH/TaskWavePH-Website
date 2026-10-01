@@ -88,6 +88,7 @@ for (const width of [360, 390, 430, 768, 1024, 1440]) {
       "/business-enquiry",
       "/privacy",
       "/apply/success",
+      "/business-enquiry/success",
     ]) {
       await page.goto(route);
       expect(

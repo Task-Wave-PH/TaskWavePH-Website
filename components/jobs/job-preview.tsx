@@ -15,21 +15,38 @@ import {
 } from "@/features/applications/tracking";
 export function PreviewNotice() {
   return (
-    <p className="rounded-lg border bg-secondary p-4 text-sm">
-      Local UI preview · Sample jobs only · Not actual vacancies · Changes reset
-      on refresh.{" "}
-      <Link href="/dev-preview/careers" className="text-primary underline">
-        Preview Careers
-      </Link>{" "}
-      ·{" "}
-      <Link href="/dev-preview/jobs" className="text-primary underline">
-        Manage sample jobs
-      </Link>{" "}
-      ·{" "}
-      <Link href="/careers" className="text-primary underline">
-        View Careers Page
-      </Link>
-    </p>
+    <aside
+      aria-label="Sample jobs preview"
+      className="grid gap-3 rounded-lg border bg-secondary p-4 text-sm leading-relaxed"
+    >
+      <p>
+        Local UI preview · Sample jobs only · Not actual vacancies · Changes
+        reset on refresh.
+      </p>
+      <nav
+        aria-label="Sample job tools"
+        className="flex flex-wrap gap-x-5 gap-y-2"
+      >
+        <Link
+          href="/dev-preview/careers"
+          className="inline-flex min-h-11 items-center text-primary underline underline-offset-4"
+        >
+          Preview Careers
+        </Link>
+        <Link
+          href="/dev-preview/jobs"
+          className="inline-flex min-h-11 items-center text-primary underline underline-offset-4"
+        >
+          Manage sample jobs
+        </Link>
+        <Link
+          href="/careers"
+          className="inline-flex min-h-11 items-center text-primary underline underline-offset-4"
+        >
+          View Careers Page
+        </Link>
+      </nav>
+    </aside>
   );
 }
 export function PreviewJobAdmin({ id }: { id?: string }) {
@@ -76,7 +93,10 @@ export function PreviewJobAdmin({ id }: { id?: string }) {
       <PreviewNotice />
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-3xl font-semibold">Job Postings</h1>
-        <Link href="/dev-preview/jobs/new" className={buttonVariants()}>
+        <Link
+          href="/dev-preview/jobs/new"
+          className={buttonVariants({ className: "min-h-11 px-5" })}
+        >
           Create Job
         </Link>
       </div>

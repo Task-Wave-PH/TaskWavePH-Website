@@ -86,7 +86,10 @@ export function JobStatusFilter({
       value={value}
       onValueChange={(v) => onChange(v ?? "all")}
     >
-      <SelectTrigger aria-label="Posting status" className="min-h-11 w-48">
+      <SelectTrigger
+        aria-label="Posting status"
+        className="h-11! w-full sm:w-48"
+      >
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
@@ -111,7 +114,10 @@ function LiveList() {
     <>
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-3xl font-semibold">Job Postings</h1>
-        <Link href="/admin/jobs/new" className={buttonVariants()}>
+        <Link
+          href="/admin/jobs/new"
+          className={buttonVariants({ className: "min-h-11 px-5" })}
+        >
           Create Job
         </Link>
       </div>

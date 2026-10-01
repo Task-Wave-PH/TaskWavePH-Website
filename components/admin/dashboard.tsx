@@ -18,18 +18,24 @@ import {
   applicationStatuses,
   leadStatuses,
 } from "@/features/submissions/validation";
-import { BrandLogo } from "@/components/layout/brand-logo";
+import { AppSidebar } from "@/components/app-sidebar";
+import { SiteHeader } from "@/components/site-header";
+import { FileText, Handshake } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { usePathname } from "next/navigation";
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarHeader,
   SidebarInset,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
-  SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
 import {
@@ -111,6 +117,7 @@ function Navigation() {
               className="min-h-12 data-active:bg-primary data-active:text-white"
               onClick={() => setOpenMobile(false)}
             >
+              {kind === "applications" ? <FileText /> : <Handshake />}
               {title(kind)}
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -128,23 +135,19 @@ export function Dashboard({
 }) {
   return (
     <StaffGate>
-      <SidebarProvider>
-        <Sidebar>
-          <SidebarHeader className="border-b p-5">
-            <BrandLogo />
-          </SidebarHeader>
-          <SidebarContent>
-            <Navigation />
-          </SidebarContent>
-        </Sidebar>
+      <SidebarProvider
+        style={
+          {
+            "--sidebar-width": "calc(var(--spacing) * 72)",
+            "--header-height": "calc(var(--spacing) * 16)",
+          } as React.CSSProperties
+        }
+      >
+        <AppSidebar>
+          <Navigation />
+        </AppSidebar>
         <SidebarInset className="min-w-0">
-          <header className="flex items-center justify-between gap-4 border-b px-5 py-4">
-            <SidebarTrigger className="size-11" />
-            <p className="font-medium text-brand-navy">
-              TaskWavePH Administration
-            </p>
-            <UserButton />
-          </header>
+          <SiteHeader title={`TaskWavePH / ${title(kind)}`} />
           <div id="main-content" className="min-w-0 flex-1 p-5 sm:p-8">
             {id ? (
               <Details kind={kind} id={id} />
@@ -201,29 +204,43 @@ function Records({ kind }: { kind: Kind }) {
         {pagination !== "LoadingFirstPage" && !results.length && (
           <p>No records found.</p>
         )}
-        {results.map((row) => (
-          <Card key={row.id}>
-            <CardContent className="flex flex-wrap items-center justify-between gap-4 p-5">
-              <div className="min-w-0">
-                <Link
-                  href={`/admin/${kind}/${row.id}`}
-                  className="font-semibold text-primary underline underline-offset-4"
-                >
-                  {row.name}
-                </Link>
-                <p className="mt-2 break-all text-muted-foreground">
-                  {row.email}
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {new Date(row.submittedAt).toLocaleString()}
-                </p>
-              </div>
-              <span className="rounded-full bg-secondary px-3 py-2 text-sm font-medium">
-                {row.status}
-              </span>
-            </CardContent>
-          </Card>
-        ))}
+        {!!results.length && (
+          <div className="overflow-hidden rounded-xl border bg-card">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Submitted</TableHead>
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {results.map((row) => (
+                  <TableRow key={row.id}>
+                    <TableCell>
+                      <Link
+                        href={`/admin/${kind}/${row.id}`}
+                        className="font-semibold text-primary underline underline-offset-4"
+                      >
+                        {row.name}
+                      </Link>
+                    </TableCell>
+                    <TableCell>{row.email}</TableCell>
+                    <TableCell>
+                      {new Date(row.submittedAt).toLocaleString()}
+                    </TableCell>
+                    <TableCell>
+                      <span className="rounded-full bg-secondary px-3 py-1 text-sm font-medium">
+                        {row.status}
+                      </span>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
       </div>
       {pagination === "CanLoadMore" && (
         <Button className="mt-6 min-h-11" onClick={() => loadMore(20)}>

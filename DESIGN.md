@@ -346,3 +346,8 @@ resumes, and an admin dashboard. Disabled environments retain local previews.
 The dashboard uses shadcn Sidebar, Select, Cards, Buttons, and the official
 white/navy/blue/cyan tokens with Poppins. Staff authentication is confined to
 admin routes. Backend and deployment instructions are in `docs/BACKEND.md`.
+
+Staff sign-in adapts shadcn `login-03` with the original logo, a centered card,
+and Clerk authentication. Administration adapts `dashboard-01` with an inset
+sidebar, section header, and paginated record table. Demo charts, revenue figures,
+and placeholder navigation are omitted; only real MVP record actions are shown.

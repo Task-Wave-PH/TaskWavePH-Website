@@ -349,5 +349,9 @@ admin routes. Backend and deployment instructions are in `docs/BACKEND.md`.
 
 Staff sign-in adapts shadcn `login-03` with the original logo, a centered card,
 and Clerk authentication. Administration adapts `dashboard-01` with an inset
-sidebar, section header, and paginated record table. Demo charts, revenue figures,
-and placeholder navigation are omitted; only real MVP record actions are shown.
+sidebar, compact section header, four summary cards, interactive area chart,
+status tabs, and paginated record table. The dashboard-01 component structure and
+spacing are retained. Authenticated summaries and activity use the currently
+loaded records (including the selected filter), not database-wide totals.
+Development previews explicitly label synthetic data. Revenue and growth claims
+and unsupported template navigation are omitted.

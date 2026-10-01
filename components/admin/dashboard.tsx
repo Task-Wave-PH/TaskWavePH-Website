@@ -20,7 +20,11 @@ import {
 } from "@/features/submissions/validation";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SiteHeader } from "@/components/site-header";
-import { FileText, Handshake } from "lucide-react";
+import { SectionCards } from "@/components/section-cards";
+import { ChartAreaInteractive } from "@/components/chart-area-interactive";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { FileText, Handshake, LayoutDashboard } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -93,8 +97,20 @@ function Navigation({ preview = false }: { preview?: boolean }) {
   const pathname = usePathname();
   const { setOpenMobile } = useSidebar();
   return (
-    <nav aria-label="Admin navigation" className="p-3">
+    <nav aria-label="Admin navigation" className="px-2 py-3">
       <SidebarMenu>
+        <SidebarMenuItem>
+          <SidebarMenuButton
+            render={
+              <Link href={preview ? "/dev-preview/applications" : "/admin"} />
+            }
+            className="min-h-10"
+            onClick={() => setOpenMobile(false)}
+          >
+            <LayoutDashboard />
+            <span>Dashboard</span>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
         {(["applications", "businessLeads"] as const).map((kind) => (
           <SidebarMenuItem key={kind}>
             <SidebarMenuButton
@@ -114,7 +130,7 @@ function Navigation({ preview = false }: { preview?: boolean }) {
                 pathname.includes(kind) ||
                 (kind === "applications" && ["/admin", "/"].includes(pathname))
               }
-              className="min-h-12 data-active:bg-primary data-active:text-white"
+              className="min-h-10 data-active:bg-sidebar-accent data-active:text-sidebar-accent-foreground"
               onClick={() => setOpenMobile(false)}
             >
               {kind === "applications" ? <FileText /> : <Handshake />}
@@ -159,7 +175,7 @@ export function DashboardShell({
       style={
         {
           "--sidebar-width": "calc(var(--spacing) * 72)",
-          "--header-height": "calc(var(--spacing) * 16)",
+          "--header-height": "calc(var(--spacing) * 12)",
         } as React.CSSProperties
       }
     >
@@ -167,8 +183,11 @@ export function DashboardShell({
         <Navigation preview={preview} />
       </AppSidebar>
       <SidebarInset className="min-w-0">
-        <SiteHeader title={`TaskWavePH / ${title(kind)}`} />
-        <div id="main-content" className="min-w-0 flex-1 p-5 sm:p-8">
+        <SiteHeader title={`${title(kind)}`} />
+        <div
+          id="main-content"
+          className="@container/main flex min-w-0 flex-1 flex-col gap-4 px-4 py-4 md:gap-6 md:py-6 lg:px-6"
+        >
           {children}
         </div>
       </SidebarInset>
@@ -189,81 +208,112 @@ function Records({ kind }: { kind: Kind }) {
   );
   return (
     <>
-      <h1 className="text-3xl font-semibold">{title(kind)}</h1>
-      <Label htmlFor="status-filter" className="mt-6 mb-2 block">
-        Filter by status
-      </Label>
-      <Select
+      <h1 className="sr-only">{title(kind)}</h1>
+      <SectionCards
+        rows={results}
+        loading={pagination === "LoadingFirstPage"}
+      />
+      <ChartAreaInteractive
+        rows={results}
+        loading={pagination === "LoadingFirstPage"}
+      />
+      <Tabs
         value={status || "all"}
-        onValueChange={(value) =>
-          setStatus(value === "all" ? "" : String(value))
-        }
+        onValueChange={(v) => setStatus(v === "all" ? "" : String(v))}
+        className="gap-4"
       >
-        <SelectTrigger id="status-filter" className="min-h-11">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All statuses</SelectItem>
-          {(kind === "applications" ? applicationStatuses : leadStatuses).map(
-            (value) => (
-              <SelectItem key={value} value={value}>
-                {value}
-              </SelectItem>
-            ),
-          )}
-        </SelectContent>
-      </Select>
-      <div className="mt-6 space-y-4">
-        {pagination === "LoadingFirstPage" && (
-          <p role="status">Loading records…</p>
-        )}
-        {pagination !== "LoadingFirstPage" && !results.length && (
-          <p>No records found.</p>
-        )}
-        {!!results.length && (
-          <div className="overflow-hidden rounded-xl border bg-card">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Submitted</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {results.map((row) => (
-                  <TableRow key={row.id}>
-                    <TableCell>
-                      <Link
-                        href={`/admin/${kind}/${row.id}`}
-                        className="font-semibold text-primary underline underline-offset-4"
-                      >
-                        {row.name}
-                      </Link>
-                    </TableCell>
-                    <TableCell>{row.email}</TableCell>
-                    <TableCell>
-                      {new Date(row.submittedAt).toLocaleString()}
-                    </TableCell>
-                    <TableCell>
-                      <span className="rounded-full bg-secondary px-3 py-1 text-sm font-medium">
-                        {row.status}
-                      </span>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+        <section aria-label="Records" className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <TabsList className="hidden md:inline-flex">
+              <TabsTrigger value="all">All records</TabsTrigger>
+              {(kind === "applications"
+                ? applicationStatuses
+                : leadStatuses
+              ).map((v) => (
+                <TabsTrigger key={v} value={v}>
+                  {v}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+            <h2 className="text-lg font-semibold md:sr-only">{title(kind)}</h2>
+            <div className="flex items-center gap-3">
+              <Label htmlFor="status-filter" className="text-sm">
+                Filter by status
+              </Label>
+              <Select
+                value={status || "all"}
+                onValueChange={(value) =>
+                  setStatus(value === "all" ? "" : String(value))
+                }
+              >
+                <SelectTrigger id="status-filter" className="min-h-11">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All statuses</SelectItem>
+                  {(kind === "applications"
+                    ? applicationStatuses
+                    : leadStatuses
+                  ).map((value) => (
+                    <SelectItem key={value} value={value}>
+                      {value}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-        )}
-      </div>
-      {pagination === "CanLoadMore" && (
-        <Button className="mt-6 min-h-11" onClick={() => loadMore(20)}>
-          Load more
-        </Button>
-      )}
-      {pagination === "LoadingMore" && <p role="status">Loading more…</p>}
+          <TabsContent value={status || "all"} className="space-y-4">
+            {pagination === "LoadingFirstPage" && (
+              <p role="status">Loading records…</p>
+            )}
+            {pagination !== "LoadingFirstPage" && !results.length && (
+              <p>No records found.</p>
+            )}
+            {!!results.length && (
+              <div className="overflow-hidden rounded-xl border bg-card">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Submitted</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {results.map((row) => (
+                      <TableRow key={row.id}>
+                        <TableCell>
+                          <Link
+                            href={`/admin/${kind}/${row.id}`}
+                            className="font-semibold text-primary underline underline-offset-4"
+                          >
+                            {row.name}
+                          </Link>
+                        </TableCell>
+                        <TableCell>{row.email}</TableCell>
+                        <TableCell>
+                          {new Date(row.submittedAt).toLocaleString()}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{row.status}</Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </TabsContent>
+          {pagination === "CanLoadMore" && (
+            <Button className="mt-6 min-h-11" onClick={() => loadMore(20)}>
+              Load more
+            </Button>
+          )}
+          {pagination === "LoadingMore" && <p role="status">Loading more…</p>}
+        </section>
+      </Tabs>
     </>
   );
 }

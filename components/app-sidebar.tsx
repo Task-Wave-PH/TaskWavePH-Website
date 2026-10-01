@@ -18,11 +18,11 @@ export function AppSidebar({
 }) {
   return (
     <Sidebar collapsible="offcanvas" variant="inset">
-      <SidebarHeader className="border-b px-5 py-6">
-        <BrandLogo />
+      <SidebarHeader className="px-4 py-4">
+        <BrandLogo className="w-[160px] sm:w-[160px]" />
       </SidebarHeader>
       <SidebarContent>{children}</SidebarContent>
-      <SidebarFooter className="border-t p-4">
+      <SidebarFooter className="p-4">
         <div className="flex items-center gap-3">
           {preview ? (
             <span

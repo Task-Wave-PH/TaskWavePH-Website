@@ -4,15 +4,8 @@ import Link from "next/link";
 import { isLocalHostname } from "@/lib/admin-host";
 import { LoginForm } from "@/components/login-form";
 import { BrandLogo } from "@/components/layout/brand-logo";
+import { PreviewDashboardContent } from "@/components/admin/preview-dashboard-content";
 import { DashboardShell } from "@/components/admin/dashboard";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 
 export const dynamic = "force-dynamic";
 export const metadata = {
@@ -65,41 +58,7 @@ export default async function Page({
   return (
     <DashboardShell kind={kind} preview>
       {notice}
-      <h1 className="mb-6 text-3xl font-semibold">
-        {kind === "applications" ? "Applications" : "Business Leads"}
-      </h1>
-      <div className="overflow-hidden rounded-xl border bg-card">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Submitted</TableHead>
-              <TableHead>Status</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {["New", "Reviewed", "Closed"].map((status, index) => (
-              <TableRow key={status}>
-                <TableCell>
-                  {kind === "applications"
-                    ? `Sample applicant ${index + 1}`
-                    : `Sample business ${index + 1}`}
-                </TableCell>
-                <TableCell>sample-{index + 1}@example.invalid</TableCell>
-                <TableCell>1 Oct 2026</TableCell>
-                <TableCell>
-                  <span className="rounded-full bg-secondary px-3 py-1">
-                    {kind === "businessLeads" && status === "Reviewed"
-                      ? "Contacted"
-                      : status}
-                  </span>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+      <PreviewDashboardContent kind={kind} />
     </DashboardShell>
   );
 }

@@ -9,3 +9,7 @@ package-lock.json
 next-env.d.ts
 .env*
 *.tsbuildinfo
+
+convex/_generated/
+
+.next-verify

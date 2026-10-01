@@ -1,3 +1,4 @@
+import { submissionsEnabled } from "@/lib/submission-env";
 import Link from "next/link";
 import { ContentPage } from "@/components/layout/content-page";
 import { Card, CardContent } from "@/components/ui/card";
@@ -26,7 +27,9 @@ export default async function Page({
       eyebrow={"Your next step"}
       title={"Your next step, made simple."}
       description={
-        "A little preparation makes it easier to share your story when applications open."
+        submissionsEnabled()
+          ? "A little preparation makes it easier to share your story."
+          : "A little preparation makes it easier to share your story when applications open."
       }
     >
       <ol className="grid gap-6 md:grid-cols-3">
@@ -40,9 +43,15 @@ export default async function Page({
                   </span>
                   <Icon aria-hidden="true" className="size-6 text-primary" />
                 </div>
-                <h2 className="mt-5 text-xl font-semibold">{title}</h2>
+                <h2 className="mt-5 text-xl font-semibold">
+                  {submissionsEnabled() && title === "Apply when we open"
+                    ? "Submit your application"
+                    : title}
+                </h2>
                 <p className="mt-3 leading-relaxed text-muted-foreground">
-                  {description}
+                  {submissionsEnabled()
+                    ? description.replace("Once applications open, ", "")
+                    : description}
                 </p>
               </CardContent>
             </Card>
@@ -68,14 +77,14 @@ export default async function Page({
         </Link>
         <h2 className="mt-8 text-2xl font-semibold">What happens next?</h2>
         <p className="mt-4 leading-relaxed text-muted-foreground">
-          Once applications open, our recruitment team will review your
-          information and contact you if your profile matches an available
-          opportunity.
+          {submissionsEnabled()
+            ? "Our recruitment team will review your information and contact you if your profile matches an available opportunity."
+            : "Once applications open, our recruitment team will review your information and contact you if your profile matches an available opportunity."}
         </p>
         <p className="mt-4 leading-relaxed text-muted-foreground">
-          For now, the form checks your entries locally. It does not send or
-          save your information, and completing the preview is not a submitted
-          application.
+          {submissionsEnabled()
+            ? "You will see a confirmation only after your application is saved successfully."
+            : "For now, the form checks your entries locally. It does not send or save your information, and completing the preview is not a submitted application."}
         </p>
       </section>
     </ContentPage>

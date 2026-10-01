@@ -338,3 +338,11 @@ artwork, and shadcn cards/buttons. Shared service descriptions and themes avoid
 divergent brand copy. Navigation highlights the current route and uses a shadcn
 Sheet on mobile with reduced-motion support. Careers remains an overview with
 explicit preview messaging rather than unverified vacancy listings.
+
+### Convex and administration extension
+
+The owner approved real submission capability, business enquiries, optional PDF
+resumes, and an admin dashboard. Disabled environments retain local previews.
+The dashboard uses shadcn Sidebar, Select, Cards, Buttons, and the official
+white/navy/blue/cyan tokens with Poppins. Staff authentication is confined to
+admin routes. Backend and deployment instructions are in `docs/BACKEND.md`.

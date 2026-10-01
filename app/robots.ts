@@ -6,7 +6,12 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/apply/success", "/api/"],
+      disallow: [
+        "/admin",
+        "/business-enquiry/success",
+        "/apply/success",
+        "/api/",
+      ],
     },
     sitemap: new URL("/sitemap.xml", getSiteUrl()).toString(),
   };

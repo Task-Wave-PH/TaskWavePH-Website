@@ -85,6 +85,7 @@ for (const width of [360, 390, 430, 768, 1024, 1440]) {
       "/careers",
       "/about",
       "/apply",
+      "/business-enquiry",
       "/privacy",
       "/apply/success",
     ]) {

@@ -9,8 +9,10 @@ const eslintConfig = defineConfig([
   prettier,
   // Override default ignores of eslint-config-next.
   globalIgnores([
+    "convex/_generated/**",
     // Default ignores of eslint-config-next:
     ".next/**",
+    ".next-verify/**",
     "out/**",
     "build/**",
     "next-env.d.ts",

@@ -1,3 +1,4 @@
+import { submissionsEnabled } from "@/lib/submission-env";
 import type { Metadata } from "next";
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
@@ -44,7 +45,9 @@ export default async function Home({
       <Header query={query} />
       <main id="main-content">
         <div className="bg-secondary px-5 py-3 text-center text-xs leading-relaxed text-brand-navy sm:text-sm">
-          Applications are opening soon. You can preview the form.
+          {submissionsEnabled()
+            ? "Applications are open for submission."
+            : "Applications are opening soon. You can preview the form."}
         </div>
 
         <section
@@ -113,13 +116,17 @@ export default async function Home({
               },
               {
                 title: "Your next step, made simple.",
-                text: "Get to know our work, prepare your details, and learn what to expect when applications open.",
+                text: submissionsEnabled()
+                  ? "Get to know our work, prepare your details, and learn what to expect after submitting."
+                  : "Get to know our work, prepare your details, and learn what to expect when applications open.",
                 href: "/how-it-works",
                 label: "See how it works",
               },
               {
                 title: "Get ready for what’s next.",
-                text: "Find guidance for your career journey and prepare for the application preview. Applications are opening soon.",
+                text: submissionsEnabled()
+                  ? "Find guidance for your career journey and prepare your general application."
+                  : "Find guidance for your career journey and prepare for the application preview. Applications are opening soon.",
                 href: "/careers",
                 label: "Explore careers",
               },

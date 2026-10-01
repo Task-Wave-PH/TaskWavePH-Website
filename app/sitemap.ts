@@ -7,6 +7,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/areas-of-work",
     "/how-it-works",
     "/careers",
+    "/business-enquiry",
     "/about",
     "/apply",
     "/privacy",

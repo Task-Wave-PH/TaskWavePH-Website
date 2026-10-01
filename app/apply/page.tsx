@@ -1,3 +1,4 @@
+import { submissionsEnabled } from "@/lib/submission-env";
 import type { Metadata } from "next";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
@@ -32,12 +33,16 @@ export default async function ApplyPage({
           blank.
         </p>
         <div className="my-6 rounded-lg border border-primary/20 bg-primary/5 p-4 text-sm leading-relaxed">
-          Applications are not open yet. You can check your entries here, but
-          your information will not be sent or saved.
+          {submissionsEnabled()
+            ? "Submit your details for review. Contact depends on matching an available opportunity."
+            : "Applications are not open yet. You can check your entries here, but your information will not be sent or saved."}
         </div>
         <Card>
           <CardContent className="p-5 sm:p-8">
-            <ApplicationForm tracking={getTracking(query)} />
+            <ApplicationForm
+              tracking={getTracking(query)}
+              enabled={submissionsEnabled()}
+            />
           </CardContent>
         </Card>
       </main>

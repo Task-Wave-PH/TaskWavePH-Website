@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { getTrackedHref } from "@/features/applications/tracking";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -18,6 +19,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FormField } from "./form-field";
+import { useSubmission } from "@/components/submissions/use-submission";
+import { TurnstileChallenge } from "@/components/submissions/turnstile";
+import { validateResume } from "@/features/submissions/validation";
 import { SubmissionMessage } from "./submission-message";
 
 const textFields = [
@@ -80,16 +84,21 @@ const textFields = [
     type: "url",
     optional: true,
     maxLength: 2000,
-    hint: "A link to your resume; no file upload is needed.",
+    hint: "Optional alternative to uploading a PDF.",
   },
 ] as const;
 
 export function ApplicationForm({
   tracking,
+  enabled = false,
 }: {
   tracking: ApplicationTracking;
+  enabled?: boolean;
 }) {
   const [validated, setValidated] = useState(false);
+  const [file, setFile] = useState<File>();
+  const [fileError, setFileError] = useState("");
+  const submission = useSubmission("/api/applications", "/apply/success");
   const {
     register,
     control,
@@ -121,7 +130,21 @@ export function ApplicationForm({
       noValidate
       onChange={() => setValidated(false)}
       onSubmit={handleSubmit(
-        () => setValidated(true),
+        async (data) => {
+          if (fileError) {
+            setValidated(false);
+            return;
+          }
+          if (!enabled) {
+            setValidated(true);
+            return;
+          }
+          if (fileError) return;
+          await submission.submit(
+            { ...data, experience: data.experience?.toString() ?? "" },
+            file,
+          );
+        },
         () => setValidated(false),
       )}
       className="space-y-7"
@@ -213,7 +236,7 @@ export function ApplicationForm({
               provide for recruitment and employment-related purposes.
             </label>{" "}
             <Link
-              href="/privacy"
+              href={getTrackedHref("/privacy", tracking)}
               className="font-medium text-primary underline underline-offset-4"
             >
               Read the privacy notice.
@@ -230,6 +253,45 @@ export function ApplicationForm({
           </p>
         )}
       </div>
+      <FormField
+        id="resumeFile"
+        label="Resume PDF"
+        optional
+        hint="One PDF, up to 2 MB. A resume link can also be provided."
+        error={fileError}
+      >
+        <Input
+          id="resumeFile"
+          type="file"
+          accept="application/pdf,.pdf"
+          aria-invalid={!!fileError}
+          aria-describedby={
+            fileError ? "resumeFile-hint resumeFile-error" : "resumeFile-hint"
+          }
+          onChange={async (event) => {
+            const selected = event.target.files?.[0];
+            setFile(selected);
+            setFileError("");
+            if (selected)
+              try {
+                await validateResume(selected);
+              } catch {
+                setFileError("Choose a valid PDF no larger than 2 MB.");
+              }
+          }}
+        />
+      </FormField>
+      {enabled && (
+        <TurnstileChallenge
+          onToken={submission.setChallenge}
+          reset={submission.reset}
+        />
+      )}
+      {submission.error && (
+        <p role="alert" className="text-sm text-destructive">
+          {submission.error}
+        </p>
+      )}
       {trackingKeys.map((key) => (
         <input key={key} type="hidden" {...register(key)} />
       ))}
@@ -257,11 +319,18 @@ export function ApplicationForm({
         disabled={isSubmitting}
         className="min-h-12 w-full text-base sm:w-auto"
       >
-        {isSubmitting ? "Validating…" : "Validate Application"}
+        {isSubmitting
+          ? enabled
+            ? "Submitting…"
+            : "Validating…"
+          : enabled
+            ? "Submit Application"
+            : "Validate Application"}
       </Button>
       <p className="text-sm text-muted-foreground">
-        Applications are not open yet. This form checks your entries locally; it
-        does not send or save your information.
+        {enabled
+          ? "Your information is used for recruitment-related purposes."
+          : "Applications are not open yet. This form checks your entries locally; it does not send or save your information."}
       </p>
     </form>
   );

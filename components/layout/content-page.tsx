@@ -1,3 +1,4 @@
+import { submissionsEnabled } from "@/lib/submission-env";
 import type { ReactNode } from "react";
 import { Header } from "./header";
 import { Footer } from "./footer";
@@ -47,8 +48,9 @@ export function ContentPage({
                   Prepare for your next move.
                 </h2>
                 <p className="mt-3 max-w-xl leading-relaxed">
-                  Applications are opening soon. Preview the form; your
-                  information will not be sent or saved.
+                  {submissionsEnabled()
+                    ? "Submit your application for review. Contact depends on matching an available opportunity."
+                    : "Applications are opening soon. Preview the form; your information will not be sent or saved."}
                 </p>
               </div>
               <ApplyLink href={getApplyHref(query)} light />

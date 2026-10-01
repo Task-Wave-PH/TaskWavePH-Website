@@ -1,3 +1,4 @@
+import { submissionsEnabled } from "@/lib/submission-env";
 import Link from "next/link";
 import { ContentPage } from "@/components/layout/content-page";
 import { Card, CardContent } from "@/components/ui/card";
@@ -25,7 +26,9 @@ export default async function Page({
       eyebrow={"Careers"}
       title={"Make room for your next move."}
       description={
-        "Explore our areas of work and prepare for a future application. Applications are opening soon; there are no confirmed vacancies listed here."
+        submissionsEnabled()
+          ? "Explore our areas of work and submit a general application. There are no confirmed vacancies listed here."
+          : "Explore our areas of work and prepare for a future application. Applications are opening soon; there are no confirmed vacancies listed here."
       }
     >
       <section className="grid gap-8 lg:grid-cols-2">
@@ -55,7 +58,7 @@ export default async function Page({
               <li>Current email address and mobile number</li>
               <li>City or location and position interests</li>
               <li>Experience, employment status, and availability</li>
-              <li>An optional resume link you are comfortable sharing</li>
+              <li>An optional PDF resume (up to 2 MB) or resume link</li>
               <li>Review the privacy notice before giving consent</li>
             </ul>
           </CardContent>
@@ -64,10 +67,9 @@ export default async function Page({
       <section className="max-w-3xl">
         <h2 className="text-2xl font-semibold">Know what to expect.</h2>
         <p className="mt-4 leading-relaxed text-muted-foreground">
-          The application preview lets you check your entries without sending or
-          saving personal information. It does not reserve a role or register an
-          application. When applications open, contact will depend on matching
-          an available opportunity.
+          {submissionsEnabled()
+            ? "Submit your information for recruitment review. Applying does not reserve a role or guarantee contact. Our team will contact you if your profile matches an available opportunity."
+            : "The application preview lets you check your entries without sending or saving personal information. It does not reserve a role or register an application. When applications open, contact will depend on matching an available opportunity."}
         </p>
         <Link
           href={getTrackedHref("/how-it-works", query)}

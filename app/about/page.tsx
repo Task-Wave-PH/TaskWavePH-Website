@@ -96,6 +96,21 @@ export default async function Page({
           </Link>
         </CardContent>
       </Card>
+      <section>
+        <h2 className="text-2xl font-semibold">Support for your business</h2>
+        <p className="mt-4 text-muted-foreground">
+          Tell us about the services your company needs.
+        </p>
+        <Link
+          href={getTrackedHref("/business-enquiry", query)}
+          className={buttonVariants({
+            variant: "link",
+            className: "mt-4 min-h-11 px-0",
+          })}
+        >
+          Make a business enquiry
+        </Link>
+      </section>
     </ContentPage>
   );
 }

@@ -26,6 +26,8 @@ export const exportColumns = [
   "Landing Page",
   "Status",
   "Internal Notes",
+  "Job ID",
+  "Job Title at Application",
 ];
 export function exportValues(record: ApplicantView): (string | number)[] {
   const d = record.data;
@@ -55,6 +57,8 @@ export function exportValues(record: ApplicantView): (string | number)[] {
     d.landing_page,
     record.status,
     record.notes,
+    d.jobId ?? "",
+    d.jobTitle ?? "",
   ];
 }
 function csvCell(value: string | number) {

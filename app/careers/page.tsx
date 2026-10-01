@@ -1,10 +1,20 @@
 import { submissionsEnabled } from "@/lib/submission-env";
+import Image from "next/image";
+import { JobList } from "@/components/jobs/job-list";
+import { publicJobsClient } from "@/features/jobs/server";
+import { api } from "@/convex/_generated/api";
+import {
+  serviceAreas,
+  workArrangements,
+  type JobView,
+} from "@/features/jobs/schema";
 import Link from "next/link";
 import { ContentPage } from "@/components/layout/content-page";
 import { Card, CardContent } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import {
   getTrackedHref,
+  getApplyHref,
   type TrackingQuery,
 } from "@/features/applications/tracking";
 import { pageMetadata } from "@/lib/page-metadata";
@@ -20,18 +30,95 @@ export default async function Page({
   searchParams: Promise<TrackingQuery>;
 }) {
   const query = await searchParams;
+  const serviceArea = serviceAreas.find((s) => s === query.serviceArea);
+  const arrangement = workArrangements.find((s) => s === query.arrangement);
+  const cursor =
+    typeof query.cursor === "string" && query.cursor.length < 4000
+      ? query.cursor
+      : null;
+  let jobs: JobView[] = [];
+  let nextHref: string | undefined;
+  let unavailable = false;
+  try {
+    const client = publicJobsClient();
+    if (!client) unavailable = true;
+    else {
+      const result = await client.query(api.jobs.published, {
+        serviceArea,
+        arrangement,
+        paginationOpts: { numItems: 12, cursor },
+      });
+      jobs = result.page;
+      if (!result.isDone) {
+        const next = new URL(
+          getTrackedHref("/careers", query),
+          "https://taskwaveph.com",
+        );
+        if (serviceArea) next.searchParams.set("serviceArea", serviceArea);
+        if (arrangement) next.searchParams.set("arrangement", arrangement);
+        next.searchParams.set("cursor", result.continueCursor);
+        nextHref = next.pathname + next.search;
+      }
+    }
+  } catch {
+    unavailable = true;
+  }
+
   return (
     <ContentPage
       audience="applicant"
       query={query}
       eyebrow={"Careers"}
       title={"Make room for your next move."}
-      description={
-        submissionsEnabled()
-          ? "Explore our areas of work and submit a general application. There are no confirmed vacancies listed here."
-          : "Explore our areas of work and prepare for a future application. Applications are opening soon; there are no confirmed vacancies listed here."
-      }
+      description="Explore open roles, learn where your skills could contribute, and prepare your next step with TaskWavePH."
     >
+      <section className="grid items-center gap-8 md:grid-cols-2">
+        <div>
+          <h2 className="text-3xl font-semibold">
+            Philippine talent. Shared possibilities.
+          </h2>
+          <p className="mt-4 leading-relaxed text-muted-foreground">
+            Discover opportunities to contribute to the customer support,
+            digital, and business operations our clients rely on.
+          </p>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link
+              href="#open-roles"
+              className={buttonVariants({ size: "lg", className: "min-h-12" })}
+            >
+              Explore Open Roles
+            </Link>
+            <Link
+              href={getApplyHref(query)}
+              className={buttonVariants({
+                variant: "outline",
+                size: "lg",
+                className: "min-h-12",
+              })}
+            >
+              General Application
+            </Link>
+          </div>
+        </div>
+        <div className="rounded-3xl bg-secondary p-6">
+          <Image
+            src="/images/services/admin-business-support.webp"
+            alt=""
+            width={1254}
+            height={1254}
+            sizes="(max-width: 767px) calc(100vw - 88px), 500px"
+            className="h-auto w-full object-contain"
+          />
+        </div>
+      </section>
+      <JobList
+        key={`${serviceArea}-${arrangement}-${cursor}`}
+        jobs={jobs}
+        query={query}
+        filters={{ serviceArea, arrangement }}
+        nextHref={nextHref}
+        unavailable={unavailable}
+      />
       <section className="grid gap-8 lg:grid-cols-2">
         <div>
           <h2 className="text-2xl font-semibold">Start with your interests.</h2>
@@ -82,7 +169,7 @@ export default async function Page({
             saved.
           </li>
         </ol>
-        <h2 className="text-2xl font-semibold">Know what to expect.</h2>
+        <h2 className="mt-8 text-2xl font-semibold">Know what to expect.</h2>
         <p className="mt-4 leading-relaxed text-muted-foreground">
           {submissionsEnabled()
             ? "Submit your information for recruitment review. Applying does not reserve a role or guarantee contact. Our team will contact you if your profile matches an available opportunity."

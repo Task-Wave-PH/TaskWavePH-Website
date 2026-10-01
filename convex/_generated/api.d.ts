@@ -15,6 +15,8 @@ import type * as downloads from "../downloads.js";
 import type * as exports from "../exports.js";
 import type * as http from "../http.js";
 import type * as intake from "../intake.js";
+import type * as jobValidators from "../jobValidators.js";
+import type * as jobs from "../jobs.js";
 import type * as provision from "../provision.js";
 import type * as seed from "../seed.js";
 import type * as staffStatus from "../staffStatus.js";
@@ -34,6 +36,8 @@ declare const fullApi: ApiFromModules<{
   exports: typeof exports;
   http: typeof http;
   intake: typeof intake;
+  jobValidators: typeof jobValidators;
+  jobs: typeof jobs;
   provision: typeof provision;
   seed: typeof seed;
   staffStatus: typeof staffStatus;

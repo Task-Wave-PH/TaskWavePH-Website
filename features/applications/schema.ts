@@ -31,6 +31,12 @@ export const trackingSchema = z.object({
 });
 
 export const applicationSchema = z.object({
+  jobId: z
+    .string()
+    .trim()
+    .max(100)
+    .optional()
+    .transform((value) => value || undefined),
   firstName: z.string().trim().min(2, "Enter at least 2 characters.").max(100),
   lastName: z.string().trim().min(2, "Enter at least 2 characters.").max(100),
   email: z

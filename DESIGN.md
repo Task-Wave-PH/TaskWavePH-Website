@@ -384,3 +384,12 @@ The homepage keeps short summary cards. The dedicated Services page expands each
 service into an alternating image/text section with support examples to discuss,
 anchor navigation, and business enquiry links. Examples do not guarantee scope,
 availability, outcomes, or specific working arrangements.
+
+## Careers and job postings
+
+Careers addresses applicants and places published roles near the top. Reuse the
+administration team illustration as conceptual artwork beside the introduction.
+Use shadcn Cards, Badges, Select filters, and clear role-specific application links.
+Keep preparation guidance below the roles; do not invent employment benefits or
+vacancies. Staff-managed job content is separate from the service categories.
+Sample vacancies are confined to labeled localhost previews.

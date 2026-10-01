@@ -22,7 +22,7 @@ on October 1, 2026. This supersedes the original Sheets-only MVP constraints.
   another datastore, object store, CRM, employee management, or applicant login.
 - Public forms POST through Next.js services to the authenticated Convex HTTP
   adapter. Keep the shared secret server-side. Backend functions validate again.
-- Tables: applications, businessLeads, adminUsers, adminActivity, pendingUploads.
+- Tables: applications, businessLeads, jobs, adminUsers, adminActivity, pendingUploads.
   Convex rate-limiter component supplies persistent throttling.
 - Administrative functions require verified Clerk identity AND active adminUsers
   approval. Authentication alone grants no record access. Staff provisioning is
@@ -46,7 +46,7 @@ Careers and Apply retain the applicant journey. Shared CTAs must follow page aud
 
 Public routes: /, /areas-of-work, /how-it-works, /careers, /about, /apply,
 /business-enquiry, /privacy, and confirmation routes. Service areas are not verified
-vacancies. Do not invent roles, employee benefits, statistics, or contacts.
+vacancies; only approved staff-published job postings are vacancies. Do not invent roles, employee benefits, statistics, or contacts.
 
 Prefer existing shadcn primitives styled with official brand tokens. Preserve
 original logos, Poppins, navy/blue/cyan/white identity, and mobile-first layouts.
@@ -93,3 +93,15 @@ add noindex, and send private/no-store responses. Host routing is not authorizat
 - Seeds are internal, idempotent, version-marked, and development-only; cleanup
   targets only owned synthetic records and attached files. Keep the backend seed
   flag disabled after use and never enable it in production.
+
+## Job postings
+
+- Careers lists only Published jobs. Draft and Closed postings are private.
+- Approved staff create/edit bounded plain-text postings and explicitly confirm
+  publication or closure. Preserve closed postings and existing applications.
+- Optional application job IDs are validated inside the save transaction; store
+  the server-resolved title snapshot. Reject new applications for unavailable jobs,
+  while honoring identical retries of already saved submissions.
+- Public job reads expose only posting content; all administration retains Clerk
+  identity plus active staff approval. Preview jobs never write to the database.
+- Sitemap includes only published job URLs, bounded to 5,000 postings.

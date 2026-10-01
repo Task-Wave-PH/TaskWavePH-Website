@@ -100,7 +100,7 @@ test("dedicated pages have metadata, safe preview messaging, and sitemap entries
   }
   await page.goto("/careers");
   await expect(
-    page.getByText(/there are no confirmed vacancies listed here/),
+    page.getByRole("heading", { name: "Open roles", exact: true }),
   ).toBeVisible();
   const sitemap = await request.get("/sitemap.xml");
   expect(sitemap.ok()).toBe(true);

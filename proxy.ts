@@ -40,10 +40,11 @@ export default async function proxy(
     path !== "/icon.png"
   ) {
     if (
-      !["/", "/applications", "/businessLeads", "/sign-in"].some((prefix) =>
-        prefix === "/"
-          ? path === "/"
-          : path === prefix || path.startsWith(`${prefix}/`),
+      !["/", "/applications", "/businessLeads", "/jobs", "/sign-in"].some(
+        (prefix) =>
+          prefix === "/"
+            ? path === "/"
+            : path === prefix || path.startsWith(`${prefix}/`),
       )
     )
       return privateResponse(new NextResponse(null, { status: 404 }));

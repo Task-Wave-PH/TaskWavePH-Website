@@ -27,7 +27,12 @@ import { SectionCards } from "@/components/section-cards";
 import { ChartAreaInteractive } from "@/components/chart-area-interactive";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Handshake, LayoutDashboard } from "lucide-react";
+import {
+  FileText,
+  Handshake,
+  LayoutDashboard,
+  BriefcaseBusiness,
+} from "lucide-react";
 import {
   Table,
   TableBody,
@@ -55,7 +60,7 @@ import {
 type Kind = "applications" | "businessLeads";
 const title = (kind: Kind) =>
   kind === "applications" ? "Applications" : "Business Leads";
-function StaffGate({ children }: { children: React.ReactNode }) {
+export function StaffGate({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useConvexAuth();
   const { isLoaded } = useAuth();
   if (!isLoaded || isLoading)
@@ -141,6 +146,22 @@ function Navigation({ preview = false }: { preview?: boolean }) {
             </SidebarMenuButton>
           </SidebarMenuItem>
         ))}
+        <SidebarMenuItem>
+          <SidebarMenuButton
+            render={
+              <Link
+                href={preview ? "/dev-preview/jobs" : "/admin/jobs"}
+                aria-current={pathname.includes("/jobs") ? "page" : undefined}
+              />
+            }
+            isActive={pathname.includes("/jobs")}
+            className="min-h-10"
+            onClick={() => setOpenMobile(false)}
+          >
+            <BriefcaseBusiness />
+            <span>Jobs</span>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
       </SidebarMenu>
     </nav>
   );
@@ -165,11 +186,13 @@ export function Dashboard({
   );
 }
 export function DashboardShell({
+  sectionTitle,
   kind = "applications",
   preview = false,
   children,
 }: {
   kind?: Kind;
+  sectionTitle?: string;
   preview?: boolean;
   children: React.ReactNode;
 }) {
@@ -186,7 +209,7 @@ export function DashboardShell({
         <Navigation preview={preview} />
       </AppSidebar>
       <SidebarInset className="min-w-0">
-        <SiteHeader title={`${title(kind)}`} />
+        <SiteHeader title={sectionTitle ?? title(kind)} />
         <div
           id="main-content"
           className="@container/main flex min-w-0 flex-1 flex-col gap-4 px-4 py-4 md:gap-6 md:py-6 lg:px-6"

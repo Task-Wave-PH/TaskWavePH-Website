@@ -91,16 +91,20 @@ const textFields = [
 export function ApplicationForm({
   tracking,
   enabled = false,
+  job,
 }: {
   tracking: ApplicationTracking;
   enabled?: boolean;
+  job?: { id: string; title: string };
 }) {
+  const [selectedJob, setSelectedJob] = useState(job);
   const [validated, setValidated] = useState(false);
   const [file, setFile] = useState<File>();
   const [fileError, setFileError] = useState("");
   const submission = useSubmission("/api/applications", "/apply/success");
   const {
     register,
+    setValue,
     control,
     handleSubmit,
     formState: { errors, isSubmitting },
@@ -112,7 +116,8 @@ export function ApplicationForm({
       email: "",
       phone: "",
       location: "",
-      position: "",
+      position: job?.title ?? "",
+      ...(job ? { jobId: job.id } : {}),
       experience: "",
       employmentStatus: "",
       availability: "",
@@ -149,6 +154,15 @@ export function ApplicationForm({
       )}
       className="space-y-7"
     >
+      {selectedJob && (
+        <div className="rounded-lg border bg-secondary p-4">
+          <p className="font-medium">Applying for: {selectedJob.title}</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Your application will be linked to this role.
+          </p>
+        </div>
+      )}
+      <input type="hidden" {...register("jobId")} />
       <div className="grid gap-6 sm:grid-cols-2">
         {textFields.map((field) => {
           const error = errors[field.name]?.message;
@@ -163,6 +177,7 @@ export function ApplicationForm({
               hint={hint}
             >
               <Input
+                readOnly={field.name === "position" && !!selectedJob}
                 id={field.name}
                 {...register(field.name)}
                 type={"type" in field ? field.type : "text"}
@@ -291,6 +306,19 @@ export function ApplicationForm({
         <p role="alert" className="text-sm text-destructive">
           {submission.error}
         </p>
+      )}
+      {submission.jobUnavailable && selectedJob && (
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => {
+            setSelectedJob(undefined);
+            setValue("jobId", undefined);
+            setValidated(false);
+          }}
+        >
+          Continue as a General Application
+        </Button>
       )}
       {trackingKeys.map((key) => (
         <input key={key} type="hidden" {...register(key)} />

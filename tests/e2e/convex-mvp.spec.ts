@@ -6,6 +6,11 @@ test("local UI previews are unavailable in production", async ({ request }) => {
     "businessLeads",
     "applications/sample-001",
     "sample-cv",
+    "jobs",
+    "jobs/new",
+    "careers",
+    "careers/sample-job-001",
+    "job-apply?jobId=sample-job-001",
   ]) {
     expect((await request.get(`/dev-preview/${page}`)).status()).toBe(404);
   }
@@ -80,4 +85,27 @@ test("disabled submissions fail closed and administration is excluded from index
   const text = await sitemap.text();
   expect(text).not.toContain("/admin");
   expect(text).toContain("/business-enquiry");
+});
+
+test("Careers handles empty or unavailable roles without inventing vacancies", async ({
+  page,
+}) => {
+  await page.goto("/careers");
+  await expect(page.getByRole("status")).toContainText(
+    /No open roles are listed right now|We couldn’t load roles right now/,
+  );
+  await expect(page.getByRole("link", { name: /View Role/ })).toHaveCount(0);
+  await page.goto("/apply?jobId=forged&source=qr");
+  await expect(page.getByRole("status")).toContainText(
+    /We couldn’t load this role|This role is no longer accepting applications/,
+  );
+  await expect(page.getByLabel("First Name", { exact: true })).toHaveCount(0);
+  await page
+    .getByRole("link", {
+      name: "Continue with a general application",
+      exact: true,
+    })
+    .click();
+  await expect(page).toHaveURL(/\/apply\?source=qr$/);
+  await expect(page.getByLabel("First Name", { exact: true })).toBeVisible();
 });

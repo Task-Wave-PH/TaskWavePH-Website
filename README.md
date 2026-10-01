@@ -59,3 +59,11 @@ applicants to CSV or styled Excel. Local UI samples are available at
 `/dev-preview/applications`; they are separate from authenticated database records.
 Use `SUBMISSIONS_ENABLED=development` for local form writes without enabling
 production collection.
+
+### Job postings
+
+Careers now supports published roles, filters, role details, and job-associated
+applications. Staff publishing remains protected by Clerk and Convex approval.
+Try `/dev-preview/jobs` and `/dev-preview/careers` locally for sample posting
+workflows without authentication. See `docs/BACKEND.md` for configuration and
+limitations. Verify development draft writes with `npm run convex:jobs:smoke`.

@@ -189,3 +189,40 @@ Sample details are at `/dev-preview/applications/sample-001`. Real submitted
 records appear only in authenticated `/admin/applications`; synthetic UI previews
 are not an authentication bypass and do not display private database records.
 Actual staff sign-in verification still requires Clerk development credentials.
+
+## Careers and job postings
+
+The owner approved job management on October 1, 2026. The `jobs` table stores
+bounded plain-text title, service area, location, work arrangement, employment type,
+description, responsibilities, requirements, optional salary text, status, and
+publication/update timestamps. New jobs are Draft. Approved staff manage postings
+at `/admin/jobs`; publishing and closing require explicit confirmation. Closed
+records are retained, with metadata-only audit events.
+
+Public `/careers` reads Published jobs in pages of 12 with service/work arrangement
+filters. `/careers/[jobId]` shows the full role. Queries use indexes and return only
+public posting fields. Missing/unpublished roles return 404; backend outages show
+an unavailable state rather than invented vacancies. The dynamic sitemap includes
+only published roles, bounded to 5,000 postings. Production admin-host routing
+also supports `/jobs` and its child paths.
+
+Role-specific links use `/apply?jobId=...` plus approved tracking parameters. Job
+IDs are not tracking metadata. The form resolves the published title and makes the
+position read-only. Next and Convex validate the payload; the save transaction
+checks publication status and records the canonical title in `data.jobTitle` plus
+`data.jobId`. Existing records and general applications need no migration because
+these fields are optional. Exports append Job ID and Job Title at Application.
+If a role closes during submission, no application or resume is retained; entered
+information stays available and the applicant may continue as a general application.
+An identical retry of a saved submission succeeds even after the role closes.
+
+`/dev-preview/jobs` supports sample creation/editing and status changes without
+Clerk. `/dev-preview/careers` shows only sample Published jobs and offers sample
+role details/applications. These previews never query or mutate private records,
+reset on reload, and are unavailable outside localhost development. No sample
+jobs are published into the actual public Careers page.
+
+Run `npm run test:preview` for sample job workflows. `npm run convex:jobs:smoke`
+verifies real development draft writes using a trusted temporary CLI identity,
+then closes the synthetic draft and revokes approval. It never publishes a vacancy
+and does not verify real Clerk password login. Staff login still needs Clerk keys.

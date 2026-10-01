@@ -106,6 +106,8 @@ http.route({
           .runMutation(internal.intake.release, { token })
           .catch(() => {});
       }
+      if (error instanceof ConvexError && error.data === "JOB_UNAVAILABLE")
+        return json({ error: "JOB_UNAVAILABLE" }, 409);
       if (error instanceof ConvexError && error.data === "RATE_LIMITED")
         return json({ error: "RATE_LIMITED" }, 429);
       if (error instanceof ConvexError && error.data === "TOKEN_CONFLICT")

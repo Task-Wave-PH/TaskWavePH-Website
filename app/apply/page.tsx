@@ -1,10 +1,12 @@
 import { submissionsEnabled } from "@/lib/submission-env";
+import Link from "next/link";
+import { getPublishedJob } from "@/features/jobs/server";
 import type { Metadata } from "next";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { ApplicationForm } from "@/components/application/application-form";
 import { Card, CardContent } from "@/components/ui/card";
-import { getTracking } from "@/features/applications/tracking";
+import { getTracking, getApplyHref } from "@/features/applications/tracking";
 
 export const metadata: Metadata = {
   title: "Apply",
@@ -17,6 +19,9 @@ export default async function ApplyPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const query = await searchParams;
+  const jobId = typeof query.jobId === "string" ? query.jobId : undefined;
+  const result = jobId ? await getPublishedJob(jobId) : null;
+  const job = result?.job;
   return (
     <>
       <Header query={query} audience="applicant" />
@@ -37,14 +42,31 @@ export default async function ApplyPage({
             ? "Submit your details for review. Contact depends on matching an available opportunity."
             : "Applications are not open yet. You can check your entries here, but your information will not be sent or saved."}
         </div>
-        <Card>
-          <CardContent className="p-5 sm:p-8">
-            <ApplicationForm
-              tracking={getTracking(query)}
-              enabled={submissionsEnabled()}
-            />
-          </CardContent>
-        </Card>
+        {jobId && !job ? (
+          <div role="status" className="rounded-lg border p-6">
+            <p>
+              {result?.state === "unavailable"
+                ? "We couldn’t load this role right now. Please try again later."
+                : "This role is no longer accepting applications."}
+            </p>
+            <Link
+              href={getApplyHref(query)}
+              className="mt-4 inline-flex min-h-11 items-center text-primary underline"
+            >
+              Continue with a general application
+            </Link>
+          </div>
+        ) : (
+          <Card>
+            <CardContent className="p-5 sm:p-8">
+              <ApplicationForm
+                tracking={getTracking(query)}
+                job={job ? { id: job._id, title: job.title } : undefined}
+                enabled={submissionsEnabled()}
+              />
+            </CardContent>
+          </Card>
+        )}
       </main>
       <Footer query={query} />
     </>

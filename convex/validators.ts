@@ -8,6 +8,8 @@ export const trackingFields = {
   landing_page: v.string(),
 };
 export const applicationData = v.object({
+  jobId: v.optional(v.string()),
+  jobTitle: v.optional(v.string()),
   firstName: v.string(),
   lastName: v.string(),
   email: v.string(),

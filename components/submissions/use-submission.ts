@@ -8,11 +8,13 @@ export function useSubmission(endpoint: string, successPath: string) {
   const locked = useRef(false);
   const [challenge, setChallenge] = useState("");
   const [reset, setReset] = useState(0);
+  const [jobUnavailable, setJobUnavailable] = useState(false);
   const [error, setError] = useState("");
   async function submit(data: object, file?: File) {
     if (locked.current) return;
     locked.current = true;
     setError("");
+    setJobUnavailable(false);
     try {
       if (!challenge) {
         setError("Please complete the security check.");
@@ -36,14 +38,17 @@ export function useSubmission(endpoint: string, successPath: string) {
         router.push(successPath);
         return;
       }
+      setJobUnavailable(result.error === "JOB_UNAVAILABLE");
       setError(
-        result.error === "RATE_LIMITED"
-          ? "Too many attempts. Please try again later."
-          : result.error === "SUBMISSION_IN_PROGRESS"
-            ? "Your submission is still being processed. Please wait, then try again."
-            : result.error === "TOKEN_CONFLICT"
-              ? "Your details changed. Please review and submit again."
-              : "We couldn't submit your information right now. Please try again.",
+        result.error === "JOB_UNAVAILABLE"
+          ? "This role is no longer accepting applications. Your details are still here; you can continue as a general application."
+          : result.error === "RATE_LIMITED"
+            ? "Too many attempts. Please try again later."
+            : result.error === "SUBMISSION_IN_PROGRESS"
+              ? "Your submission is still being processed. Please wait, then try again."
+              : result.error === "TOKEN_CONFLICT"
+                ? "Your details changed. Please review and submit again."
+                : "We couldn't submit your information right now. Please try again.",
       );
       if (result.error === "TOKEN_CONFLICT") fingerprint.current = undefined;
     } catch {
@@ -56,5 +61,5 @@ export function useSubmission(endpoint: string, successPath: string) {
       setReset((v) => v + 1);
     }
   }
-  return { submit, challenge, setChallenge, reset, error };
+  return { submit, challenge, setChallenge, reset, error, jobUnavailable };
 }

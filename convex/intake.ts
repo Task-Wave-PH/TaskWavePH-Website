@@ -129,9 +129,18 @@ export const save = internalMutation({
       void _honeypot;
       if (args.resumeFile && pending.storageId !== args.resumeFile.storageId)
         throw new Error("Invalid attachment");
+      let jobTitle: string | undefined;
+      if (normalized.jobId) {
+        const jobId = ctx.db.normalizeId("jobs", normalized.jobId);
+        const job = jobId ? await ctx.db.get(jobId) : null;
+        if (job?.status !== "Published")
+          throw new ConvexError("JOB_UNAVAILABLE");
+        jobTitle = job.title;
+        normalized.position = job.title;
+      }
       await ctx.db.insert("applications", {
         ...common,
-        data: normalized,
+        data: { ...normalized, ...(jobTitle ? { jobTitle } : {}) },
         ...(args.resumeFile ? { resumeFile: args.resumeFile } : {}),
       });
     } else if (args.kind === "businessLeads" && "company" in args.data) {

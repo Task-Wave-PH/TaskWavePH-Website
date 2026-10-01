@@ -8,7 +8,31 @@ import {
   resumeFile,
   baseFields,
 } from "./validators";
+import { jobFields, jobStatus } from "./jobValidators";
 export default defineSchema({
+  jobs: defineTable({
+    ...jobFields,
+    status: jobStatus,
+    publishedAt: v.optional(v.number()),
+    updatedAt: v.number(),
+  })
+    .index("by_status_published", ["status", "publishedAt"])
+    .index("by_status_service_published", [
+      "status",
+      "serviceArea",
+      "publishedAt",
+    ])
+    .index("by_status_arrangement_published", [
+      "status",
+      "arrangement",
+      "publishedAt",
+    ])
+    .index("by_status_service_arrangement_published", [
+      "status",
+      "serviceArea",
+      "arrangement",
+      "publishedAt",
+    ]),
   applications: defineTable({
     data: applicationData,
     ...baseFields,

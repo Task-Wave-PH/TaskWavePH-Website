@@ -132,6 +132,8 @@ export function ApplicantDetails({
             <CardContent>
               {fields([
                 ["Position interested in", d.position],
+                ["Associated Job", d.jobTitle],
+                ["Job ID", d.jobId],
                 ["Years of experience", d.experience],
                 ["Employment status", d.employmentStatus],
                 ["Availability", d.availability],

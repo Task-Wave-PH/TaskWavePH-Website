@@ -100,6 +100,17 @@ for (const width of [360, 390, 430, 768, 1024, 1440]) {
           route,
         )
       ) {
+        if (route === "/areas-of-work") {
+          for (const image of await page.locator("main img").all()) {
+            await image.scrollIntoViewIfNeeded();
+            await expect(image).toHaveJSProperty("complete", true);
+            expect(
+              await image.evaluate(
+                (node) => (node as HTMLImageElement).naturalWidth,
+              ),
+            ).toBeGreaterThan(0);
+          }
+        }
         await page.locator("footer").scrollIntoViewIfNeeded();
         await expect(page.locator("footer img")).toHaveJSProperty(
           "complete",

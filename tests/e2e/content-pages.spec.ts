@@ -108,3 +108,52 @@ test("dedicated pages have metadata, safe preview messaging, and sitemap entries
   for (const route of routes)
     expect(xml).toContain(`http://localhost:3000${route}`);
 });
+
+test("service details have working anchors, illustrations, and tracked enquiry links", async ({
+  page,
+}) => {
+  await page.goto(`/areas-of-work?${query}&email=private@example.com`);
+  const navigation = page.getByRole("navigation", {
+    name: "Jump to a service",
+  });
+  await expect(navigation.getByRole("link")).toHaveCount(6);
+  await navigation
+    .getByRole("link", { name: "Digital Marketing", exact: true })
+    .click();
+  await expect(page).toHaveURL(new RegExp("#digital-marketing$"));
+  const section = page.locator("#digital-marketing");
+  await expect(section).toBeInViewport();
+  await expect(section.getByRole("heading", { level: 2 })).toHaveText(
+    "Keep your brand’s digital work moving.",
+  );
+  for (const id of [
+    "customer-support",
+    "digital-marketing",
+    "web-development",
+    "virtual-assistance",
+    "admin-business-support",
+    "lead-generation-sales",
+  ]) {
+    const service = page.locator(`#${id}`);
+    await service.scrollIntoViewIfNeeded();
+    const illustration = service.locator("img");
+    await expect(illustration).toHaveAttribute("alt", "");
+    await expect(illustration).toHaveJSProperty("complete", true);
+    expect(
+      await illustration.evaluate(
+        (node) => (node as HTMLImageElement).naturalWidth,
+      ),
+    ).toBeGreaterThan(0);
+    await expect(service.getByRole("listitem")).toHaveCount(3);
+    await expect(service.getByRole("link")).toHaveAttribute(
+      "href",
+      `/business-enquiry?${query}`,
+    );
+  }
+  await expect(
+    page.getByRole("link", {
+      name: "Discuss Your Business Needs",
+      exact: true,
+    }),
+  ).toHaveCount(1);
+});

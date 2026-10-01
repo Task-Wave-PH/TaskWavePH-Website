@@ -364,3 +364,23 @@ Tabs for profile, CV, and submission metadata. The review card edits status and
 notes; a shadcn Sheet confirms deletion. CVs use page/zoom controls and a separate
 download action. CSV/Excel export buttons sit beside the list status controls.
 Synthetic preview screens reuse the same applicant detail presentation.
+
+## Services page illustrations
+
+The Services page uses six AI-generated conceptual illustrations created on
+October 1, 2026 with the imagegen tool. They depict professionals performing
+service-related work; they are not photographs or portraits of actual TaskWavePH
+staff, clients, or facilities. These are website assets, not official media-kit
+artwork or new brand specifications.
+
+Assets live in `public/images/services/` as transparent WebP files. Digital
+Marketing established the reference style for the five companion images: natural
+human proportions, editorial rendering, navy/blue/cyan accents, abstract screens,
+and no text or logos. Preserve transparency and use `object-contain` so figures
+and furniture remain visible. Adjacent service text describes the meaning, so
+these decorative illustrations use empty alt text.
+
+The homepage keeps short summary cards. The dedicated Services page expands each
+service into an alternating image/text section with support examples to discuss,
+anchor navigation, and business enquiry links. Examples do not guarantee scope,
+availability, outcomes, or specific working arrangements.

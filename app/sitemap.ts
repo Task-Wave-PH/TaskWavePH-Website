@@ -41,6 +41,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       "/about",
       "/apply",
       "/privacy",
+      "/terms",
     ].map((path) => ({
       url: new URL(path, getSiteUrl()).toString(),
     })),

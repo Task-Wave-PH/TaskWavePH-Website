@@ -410,3 +410,26 @@ Single-content cards apply their padding once: zero outer vertical padding with
 24px content padding (32px where larger layouts already use it). Cards with
 headers/footers retain the shadcn structure. Admin toolbars wrap in logical groups,
 and back links have their own 44px target without stretching across the screen.
+
+## Trust pages, footer, and client workflow
+
+Privacy and Website Terms use a shared light policy layout with section navigation,
+an update date, and readable content. The footer keeps the original color logo on
+white, the approved tagline, and grouped company, service, and policy links. Cookie
+information uses shadcn Sheet and Buttons; it is an informational notice, not
+marketing consent. Preserve the distinction between draft policy status and approved
+production configuration.
+
+How It Works expands the existing Share needs / Discuss suitable support / Agree
+next steps journey into a connected numbered timeline and detailed discussion
+sections. Desktop connectors become vertical on mobile. This is inferred website
+guidance based on Reliable Teams, Efficient Processes, and Scalable Solutions; the
+media kit does not prescribe a client onboarding workflow or guarantee outcomes.
+
+Careers now uses `public/images/careers-opportunities.webp`, an AI-generated
+transparent conceptual illustration created October 1, 2026 with imagegen. It
+shows Filipino professionals with abstract career-path motifs; these are not
+verified staff portraits or employment promises. The original generated PNG is
+`exec-d6c6d176-6caa-481b-9e64-102f9b35f902.png`. The 1200px WebP retains alpha and
+the full composition. Use `object-contain` and empty alt text beside the career
+introduction. The six service illustrations remain dedicated to service sections.

@@ -121,10 +121,10 @@ export default async function Page({
         </div>
         <div className="rounded-3xl bg-secondary p-6">
           <Image
-            src="/images/services/admin-business-support.webp"
+            src="/images/careers-opportunities.webp"
             alt=""
-            width={1254}
-            height={1254}
+            width={1200}
+            height={1200}
             sizes="(max-width: 767px) calc(100vw - 88px), 500px"
             className="h-auto w-full object-contain"
           />

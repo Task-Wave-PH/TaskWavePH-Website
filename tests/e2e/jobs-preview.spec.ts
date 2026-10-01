@@ -16,6 +16,9 @@ test("draft creation, publishing, role application, editing and closure work in 
   page,
 }) => {
   await page.goto("/dev-preview/jobs");
+  await expect(
+    page.getByRole("complementary", { name: "Cookie notice", exact: true }),
+  ).toHaveCount(0);
   await page.getByRole("link", { name: "Create Job", exact: true }).click();
   await fillJob(page, "Sample Workflow Specialist");
   await page.getByRole("button", { name: "Save Posting", exact: true }).click();

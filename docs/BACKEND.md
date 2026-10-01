@@ -28,6 +28,31 @@ filter by status, edit notes/status, view and download PDF resumes, export appli
 and permanently delete records.
 The dashboard uses the brand palette and shadcn Sidebar/Select/Card primitives.
 
+## Cookie notice and policy pages
+
+Public footers provide Privacy Policy (`/privacy`), Website Terms (`/terms`), and a
+reopenable cookie-information Sheet. The public notice stores only
+`tw-cookie-notice=1` for 180 days, with Path=/, SameSite=Lax, and Secure on HTTPS.
+It remembers acknowledgment rather than optional tracking consent. No analytics
+or advertising integration is installed. Bump the version when the notice changes;
+older acknowledgments will display the updated notice. If storage is unavailable,
+dismissal works for the current mounted notice and may not survive navigation/reload.
+Admin and development-preview routes omit this public notice.
+
+Cookie acknowledgment does not preselect form consent, enable submissions, bypass
+Turnstile, or grant a confirmation receipt. Existing receipt cookies remain HttpOnly
+and expire after 10 minutes. Turnstile clearance cookies depend on its deployment
+configuration; do not claim a fixed cookie list/lifetime for third-party services.
+
+The privacy page validates and renders existing organization/contact/retention
+configuration. Production publication requires all three fields plus approved
+policy status; development remains labeled as a draft even with those fields set.
+Website Terms remain a development draft pending review. This work does not approve
+legal wording or enable production collection. Guidance references:
+[NPC privacy-notice guidance](https://privacy.gov.ph/wp-content/uploads/2023/05/compendium_2018_1519.pdf),
+[Cloudflare clearance documentation](https://developers.cloudflare.com/cloudflare-challenges/concepts/clearance/),
+and [Turnstile’s privacy notice](https://www.cloudflare.com/turnstile-privacy-policy/).
+
 ## Development environment
 
 1. Copy `.env.example` to `.env.local` if the file does not already exist. Never

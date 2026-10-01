@@ -48,7 +48,7 @@ How It Works, and About explain outsourcing services and lead to business enquir
 Careers and Apply retain the applicant journey. Shared CTAs must follow page audience.
 
 Public routes: /, /areas-of-work, /how-it-works, /careers, /about, /apply,
-/business-enquiry, /privacy, and confirmation routes. Service areas are not verified
+/business-enquiry, /privacy, /terms, and confirmation routes. Service areas are not verified
 vacancies; only approved staff-published job postings are vacancies. Do not invent roles, employee benefits, statistics, or contacts.
 
 Prefer existing shadcn primitives styled with official brand tokens. Preserve
@@ -96,6 +96,19 @@ add noindex, and send private/no-store responses. Host routing is not authorizat
 - Seeds are internal, idempotent, version-marked, and development-only; cleanup
   targets only owned synthetic records and attached files. Keep the backend seed
   flag disabled after use and never enable it in production.
+
+## Cookies and policy content
+
+- Public pages use an informational essential-cookie notice, not optional tracking
+  consent. A versioned acknowledgment cookie lasts 180 days. Keep it separate from
+  form consent and never add analytics or advertising integrations implicitly.
+- Footer cookie information can be reopened; admin and preview pages omit the notice.
+- Privacy content uses configured organization/contact/retention values and stays
+  a development draft until production privacy configuration is complete and approved.
+  Website Terms remain a draft pending owner review. Do not invent legal contacts,
+  retention periods, operational agreements, or compliance claims.
+- The How It Works timeline expands the existing three-step enquiry journey. It is
+  website guidance inspired by the brand, not an official media-kit onboarding process.
 
 ## Job postings
 

@@ -62,7 +62,7 @@ test("privacy has expected content and direct confirmation access returns to the
 }) => {
   await page.goto("/privacy");
   await expect(
-    page.getByRole("heading", { name: "Privacy notice", exact: true }),
+    page.getByRole("heading", { name: "Privacy Policy", exact: true }),
   ).toBeVisible();
   await expect(page.getByText(/Draft notice/)).toBeVisible();
   await page.goto("/apply/success");
@@ -89,6 +89,7 @@ for (const width of [360, 390, 430, 768, 1024, 1440]) {
       "/apply",
       "/business-enquiry",
       "/privacy",
+      "/terms",
       "/apply/success",
       "/business-enquiry/success",
     ]) {

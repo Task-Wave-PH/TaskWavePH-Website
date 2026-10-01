@@ -10,8 +10,8 @@ import { pageMetadata } from "@/lib/page-metadata";
 import { areas } from "@/lib/brand-content";
 
 export const metadata = pageMetadata(
-  "Areas of Work",
-  "Explore the business support services delivered by TaskWavePH and where your skills could contribute.",
+  "Services",
+  "Explore TaskWavePH outsourcing services for customer support, marketing, web development, administration, and sales support.",
   "/areas-of-work",
 );
 export default async function Page({
@@ -23,10 +23,10 @@ export default async function Page({
   return (
     <ContentPage
       query={query}
-      eyebrow={"Our work"}
-      title={"Where your skills can fit."}
+      eyebrow={"Our services"}
+      title={"Support for the work that moves your business."}
       description={
-        "Explore the work that supports our clients. These service areas describe what we do; they are not a list of current vacancies."
+        "Bring Philippine talent and business support into your operations. Explore our six service areas and tell us where your team needs help."
       }
     >
       <section aria-label="Service areas" className="grid gap-6 md:grid-cols-2">
@@ -43,25 +43,12 @@ export default async function Page({
         ))}
       </section>
       <section>
-        <h2 className="text-2xl font-semibold">Explore your next step.</h2>
+        <h2 className="text-2xl font-semibold">
+          Let’s discuss your priorities.
+        </h2>
         <p className="mt-4 max-w-2xl leading-relaxed text-muted-foreground">
-          Openings vary. Visit Careers for application preparation and the
-          current availability notice.
-        </p>
-        <Link
-          href={getTrackedHref("/careers", query)}
-          className={buttonVariants({
-            variant: "link",
-            className: "mt-4 min-h-11 px-0",
-          })}
-        >
-          Explore careers
-        </Link>
-      </section>
-      <section>
-        <h2 className="text-2xl font-semibold">Support for your business</h2>
-        <p className="mt-4 text-muted-foreground">
-          Tell us about the services your company needs.
+          Tell us about the tasks, processes, and goals your team needs support
+          with. We can discuss which services may fit your business.
         </p>
         <Link
           href={getTrackedHref("/business-enquiry", query)}

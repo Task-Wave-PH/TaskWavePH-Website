@@ -9,13 +9,17 @@ test("campaign tracking survives multiple page hops and reaches the form", async
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(`/?${query}&email=private@example.com`);
-  for (const label of ["Areas of Work", "Careers", "How It Works", "About"]) {
+  for (const label of ["Services", "Careers", "How It Works", "About"]) {
     await page
       .getByRole("navigation", { name: "Main navigation" })
       .getByRole("link", { name: label, exact: true })
       .click();
     await expect(page).toHaveURL((url) => url.search.slice(1) === query);
   }
+  await page
+    .getByRole("navigation", { name: "Main navigation" })
+    .getByRole("link", { name: "Careers", exact: true })
+    .click();
   await page.getByRole("link", { name: "Apply Now" }).first().click();
   await expect(page).toHaveURL(
     new RegExp(`/apply\\?${query.replaceAll("?", "\\?")}$`),
@@ -76,11 +80,23 @@ test("dedicated pages have metadata, safe preview messaging, and sitemap entries
       "content",
       /TaskWavePH/,
     );
-    await expect(
-      page.getByText(
-        "Applications are opening soon. Preview the form; your information will not be sent or saved.",
-      ),
-    ).toBeVisible();
+    if (route === "/careers") {
+      await expect(page.getByRole("link", { name: "Apply Now" })).toHaveCount(
+        2,
+      );
+      await expect(
+        page.getByText(
+          "Applications are opening soon. Preview the form; your information will not be sent or saved.",
+        ),
+      ).toBeVisible();
+    } else {
+      await expect(page.getByRole("link", { name: "Apply Now" })).toHaveCount(
+        0,
+      );
+      await expect(
+        page.getByRole("link", { name: "Discuss Your Business Needs" }),
+      ).toBeVisible();
+    }
   }
   await page.goto("/careers");
   await expect(

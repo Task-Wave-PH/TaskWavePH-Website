@@ -43,9 +43,12 @@ addresses, company size, client logos, or recruitment promises.
 ### Audience and MVP relationship
 
 The company brand primarily addresses businesses seeking outsourcing and support.
-The current website MVP primarily serves Philippine applicants arriving through
-QR codes and mobile channels. Explain the company using its broader positioning
-while keeping application pages focused on applicant needs.
+The public website primarily serves companies seeking TaskWavePH talents and
+business support services. Home, Services, How It Works, and About address clients
+and lead to the business enquiry form. Careers and Apply serve applicants arriving
+through QR codes and mobile channels. Keep recruitment notices and Apply Now calls
+to action on applicant pages. Use the approved tagline and service categories for
+client messaging; do not invent performance claims or partnership guarantees.
 
 Service categories describe what the company offers; they do not establish
 currently open jobs. Do not turn them into vacancy listings without hiring data.

@@ -1,8 +1,8 @@
 import { test, expect } from "@playwright/test";
 
-test("home CTA preserves only approved tracking", async ({ page }) => {
+test("career CTA preserves only approved tracking", async ({ page }) => {
   await page.goto(
-    "/?source=cite&campaign=job-fair-2026&utm_source=qr&utm_medium=print&utm_campaign=october&email=private@example.com",
+    "/careers?source=cite&campaign=job-fair-2026&utm_source=qr&utm_medium=print&utm_campaign=october&email=private@example.com",
   );
   await page.getByRole("link", { name: "Apply Now" }).first().click();
   await expect(page).toHaveURL(

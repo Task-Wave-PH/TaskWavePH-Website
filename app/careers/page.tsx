@@ -11,7 +11,7 @@ import { pageMetadata } from "@/lib/page-metadata";
 
 export const metadata = pageMetadata(
   "Careers",
-  "Explore career preparation with TaskWavePH. Applications are opening soon; the form currently provides a local preview only.",
+  "Explore TaskWavePH careers, prepare your details, and learn what to expect when applying.",
   "/careers",
 );
 export default async function Page({
@@ -22,6 +22,7 @@ export default async function Page({
   const query = await searchParams;
   return (
     <ContentPage
+      audience="applicant"
       query={query}
       eyebrow={"Careers"}
       title={"Make room for your next move."}
@@ -65,6 +66,22 @@ export default async function Page({
         </Card>
       </section>
       <section className="max-w-3xl">
+        <h2 className="text-2xl font-semibold">How to apply</h2>
+        <ol className="mt-4 list-decimal space-y-3 pl-5 leading-relaxed text-muted-foreground">
+          <li>
+            Explore our services and identify where your skills could
+            contribute.
+          </li>
+          <li>
+            Prepare your contact details, experience, availability, and optional
+            resume.
+          </li>
+          <li>
+            Complete the application and privacy consent when submissions are
+            enabled. A confirmation appears only after your information is
+            saved.
+          </li>
+        </ol>
         <h2 className="text-2xl font-semibold">Know what to expect.</h2>
         <p className="mt-4 leading-relaxed text-muted-foreground">
           {submissionsEnabled()
@@ -72,13 +89,13 @@ export default async function Page({
             : "The application preview lets you check your entries without sending or saving personal information. It does not reserve a role or register an application. When applications open, contact will depend on matching an available opportunity."}
         </p>
         <Link
-          href={getTrackedHref("/how-it-works", query)}
+          href={getTrackedHref("/privacy", query)}
           className={buttonVariants({
             variant: "link",
             className: "mt-4 min-h-11 px-0",
           })}
         >
-          See how it works
+          Read the privacy notice
         </Link>
       </section>
     </ContentPage>

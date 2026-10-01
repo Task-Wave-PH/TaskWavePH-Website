@@ -19,7 +19,7 @@ export default async function ApplyPage({
   const query = await searchParams;
   return (
     <>
-      <Header query={query} />
+      <Header query={query} audience="applicant" />
       <main
         id="main-content"
         className="mx-auto w-full max-w-3xl px-5 py-12 sm:px-8"

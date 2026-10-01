@@ -40,6 +40,10 @@ on October 1, 2026. This supersedes the original Sheets-only MVP constraints.
 
 ## Pages and design
 
+The public marketing audience is business clients. Home, Services (at /areas-of-work),
+How It Works, and About explain outsourcing services and lead to business enquiries.
+Careers and Apply retain the applicant journey. Shared CTAs must follow page audience.
+
 Public routes: /, /areas-of-work, /how-it-works, /careers, /about, /apply,
 /business-enquiry, /privacy, and confirmation routes. Service areas are not verified
 vacancies. Do not invent roles, employee benefits, statistics, or contacts.

@@ -23,12 +23,29 @@ export function Footer({ query = {} }: { query?: TrackingQuery }) {
             Outsourcing and business support, built around people.
           </p>
         </div>
-        <Link
-          href={getTrackedHref("/privacy", query)}
-          className="inline-flex min-h-11 items-center self-start underline underline-offset-4 hover:text-brand-navy sm:self-auto"
+        <nav
+          aria-label="Footer navigation"
+          className="flex flex-wrap gap-x-6 gap-y-2"
         >
-          Privacy notice
-        </Link>
+          <Link
+            href={getTrackedHref("/business-enquiry", query)}
+            className="inline-flex min-h-11 items-center underline underline-offset-4 hover:text-brand-navy"
+          >
+            Work with us
+          </Link>
+          <Link
+            href={getTrackedHref("/careers", query)}
+            className="inline-flex min-h-11 items-center underline underline-offset-4 hover:text-brand-navy"
+          >
+            Careers
+          </Link>
+          <Link
+            href={getTrackedHref("/privacy", query)}
+            className="inline-flex min-h-11 items-center self-start underline underline-offset-4 hover:text-brand-navy sm:self-auto"
+          >
+            Privacy notice
+          </Link>
+        </nav>
       </div>
     </footer>
   );

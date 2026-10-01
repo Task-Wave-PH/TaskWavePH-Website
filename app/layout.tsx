@@ -33,17 +33,17 @@ const poppins = localFont({
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
   title: {
-    default: "TaskWavePH | Recruitment & Staffing",
+    default: "TaskWavePH | Outsourcing & Business Support",
     template: "%s | TaskWavePH",
   },
   description:
-    "Explore BPO and staffing opportunities with TaskWavePH in the Philippines.",
+    "Philippine talent and business support services to help your company streamline operations and grow.",
   openGraph: {
     type: "website",
     locale: "en_PH",
     siteName: "TaskWavePH",
-    title: "TaskWavePH | Recruitment & Staffing",
-    description: "Take the next step in your career with TaskWavePH.",
+    title: "TaskWavePH | Outsourcing & Business Support",
+    description: "We handle the tasks. You focus on growth.",
   },
 };
 

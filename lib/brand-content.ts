@@ -24,57 +24,57 @@ export const areas = [
     icon: Headset,
     title: "Customer Support",
     description:
-      "Help people find answers and make every customer conversation count.",
+      "Support your customers with clear answers and attentive conversations.",
   },
   {
     icon: Megaphone,
     title: "Digital Marketing",
     description:
-      "Connect brands with their audiences through content, campaigns, and digital channels.",
+      "Connect your brand with its audience through content, campaigns, and digital channels.",
   },
   {
     icon: CodeXml,
     title: "Web Development",
     description:
-      "Build and improve the websites and digital experiences businesses rely on.",
+      "Build and improve the websites and digital experiences your business relies on.",
   },
   {
     icon: UserRound,
     title: "Virtual Assistance",
     description:
-      "Keep everyday tasks organized so teams can focus on their priorities.",
+      "Keep everyday tasks organized so your team can focus on its priorities.",
   },
   {
     icon: ChartPie,
     title: "Admin & Business Support",
     description:
-      "Support the processes, coordination, and details that keep businesses moving.",
+      "Support the processes, coordination, and details that keep your business moving.",
   },
   {
     icon: ChartNoAxesCombined,
     title: "Lead Generation & Sales Support",
     description:
-      "Help businesses discover prospects, build relationships, and support sales activities.",
+      "Support prospect research, relationship building, and your team’s sales activities.",
   },
 ];
 
 export const steps = [
   {
-    icon: Users,
-    title: "Explore your fit",
+    icon: ClipboardList,
+    title: "Share your business needs",
     description:
-      "Get to know our areas of work and think about where your skills can contribute.",
+      "Tell us about your priorities, the tasks you need help with, and the services that interest you.",
   },
   {
-    icon: ClipboardList,
-    title: "Prepare your details",
+    icon: Users,
+    title: "Discuss suitable support",
     description:
-      "Have your contact details, experience, and availability ready. A resume link is optional.",
+      "Explore how Philippine talent and our business support services could fit your team’s needs.",
   },
   {
     icon: Send,
-    title: "Apply when we open",
+    title: "Agree on the next steps",
     description:
-      "Once applications open, share your profile for review against available opportunities.",
+      "Discuss the scope, responsibilities, and working arrangements before moving forward together.",
   },
 ];

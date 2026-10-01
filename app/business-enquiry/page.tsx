@@ -21,6 +21,7 @@ export default async function Page({
   const enabled = submissionsEnabled();
   return (
     <ContentPage
+      showCta={false}
       query={query}
       eyebrow="Work with us"
       title="Let’s talk about your business."

@@ -19,7 +19,7 @@ import {
 } from "@/features/applications/tracking";
 
 const pages = [
-  ["Areas of Work", "/areas-of-work"],
+  ["Services", "/areas-of-work"],
   ["How It Works", "/how-it-works"],
   ["Careers", "/careers"],
   ["About", "/about"],
@@ -67,7 +67,7 @@ export function SiteNavigation({ query = {} }: { query?: TrackingQuery }) {
             <SheetHeader className="pr-16">
               <SheetTitle>Explore TaskWavePH</SheetTitle>
               <SheetDescription>
-                Learn about our work and your next step.
+                Explore our services, partnership process, and careers.
               </SheetDescription>
             </SheetHeader>
             <nav

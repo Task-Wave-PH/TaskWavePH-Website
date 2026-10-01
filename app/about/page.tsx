@@ -25,8 +25,10 @@ export default async function Page({
     <ContentPage
       query={query}
       eyebrow={"TaskWavePH"}
-      title={"People behind the progress."}
-      description={"Philippine talent. Global possibilities."}
+      title={"Your partner in business progress."}
+      description={
+        "Philippine talent and efficient processes supporting global businesses."
+      }
     >
       <section className="grid items-center gap-10 lg:grid-cols-2">
         <div>
@@ -92,7 +94,7 @@ export default async function Page({
               className: "mt-4 min-h-11 px-0",
             })}
           >
-            Discover our areas of work
+            Explore our services
           </Link>
         </CardContent>
       </Card>

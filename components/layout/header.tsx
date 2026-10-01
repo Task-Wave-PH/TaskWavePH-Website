@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BrandLogo } from "./brand-logo";
+import { BusinessLink } from "./business-link";
 import { ApplyLink } from "./apply-link";
 import { SiteNavigation } from "./site-navigation";
 import {
@@ -12,8 +13,10 @@ import {
 export function Header({
   applyHref,
   query = {},
+  audience = "business",
 }: {
   applyHref?: string;
+  audience?: "business" | "applicant";
   query?: TrackingQuery;
 }) {
   return (
@@ -30,7 +33,14 @@ export function Header({
           <BrandLogo eager />
         </Link>
         <SiteNavigation query={getTracking(query)} />
-        <ApplyLink href={applyHref ?? getApplyHref(query)} compact />
+        {audience === "applicant" ? (
+          <ApplyLink href={applyHref ?? getApplyHref(query)} compact />
+        ) : (
+          <BusinessLink
+            href={getTrackedHref("/business-enquiry", query)}
+            compact
+          />
+        )}
       </nav>
     </header>
   );

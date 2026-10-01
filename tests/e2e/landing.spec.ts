@@ -1,22 +1,24 @@
 import { test, expect } from "@playwright/test";
 
-test("every Apply Now link preserves tracking and the page explains its availability", async ({
+test("client CTAs preserve tracking and the home page markets services", async ({
   page,
 }) => {
   const query =
     "source=cite&campaign=job-fair-2026&utm_source=qr&utm_medium=print&utm_campaign=october";
   await page.goto(`/?${query}&email=private@example.com`);
-  await expect(
-    page.getByText("Applications are opening soon. You can preview the form."),
-  ).toBeVisible();
-  const links = page.getByRole("link", { name: "Apply Now" });
-  await expect(links).toHaveCount(3);
+  await expect(page.getByText(/Applications are opening soon/)).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Apply Now" })).toHaveCount(0);
+  const links = page.getByRole("link", { name: "Discuss Your Business Needs" });
+  await expect(links).toHaveCount(2);
   for (const link of await links.all()) {
-    await expect(link).toHaveAttribute("href", `/apply?${query}`);
+    await expect(link).toHaveAttribute("href", `/business-enquiry?${query}`);
   }
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-    "Make your next move.",
+    "Outsource.Optimize.Grow.",
   );
+  await expect(
+    page.getByRole("heading", { name: "Reliable Teams", exact: true }),
+  ).toHaveCSS("color", "rgb(255, 255, 255)");
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
     "href",
     "http://localhost:3000",
@@ -31,7 +33,7 @@ test("page navigation and keyboard skip link work", async ({ page }) => {
     page.getByRole("link", { name: "Skip to content" }),
   ).toBeFocused();
   for (const [label, path] of [
-    ["Areas of Work", "/areas-of-work"],
+    ["Services", "/areas-of-work"],
     ["How It Works", "/how-it-works"],
     ["Careers", "/careers"],
     ["About", "/about"],
@@ -69,7 +71,7 @@ test("brand images and local fonts load; the hero CTA fits on mobile", async ({
   await expect(
     page
       .locator("section[aria-labelledby='hero-title']")
-      .getByRole("link", { name: "Apply Now" }),
+      .getByRole("link", { name: "Discuss Your Business Needs" }),
   ).toBeInViewport();
   await expect(page.getByAltText("TaskWavePH TW wave monogram")).toBeVisible();
   await page.locator("footer").scrollIntoViewIfNeeded();
@@ -86,7 +88,7 @@ test("brand images and local fonts load; the hero CTA fits on mobile", async ({
   await page.emulateMedia({ reducedMotion: "reduce" });
   expect(
     await page
-      .getByRole("link", { name: "Apply Now" })
+      .getByRole("link", { name: "Discuss Your Business Needs" })
       .first()
       .evaluate((node) => getComputedStyle(node).transitionProperty),
   ).toBe("none");

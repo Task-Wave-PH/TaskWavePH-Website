@@ -21,7 +21,7 @@ export default async function SuccessPage({
   const query = await searchParams;
   return (
     <>
-      <Header query={query} />
+      <Header query={query} audience="applicant" />
       <main
         id="main-content"
         className="mx-auto w-full max-w-2xl px-5 py-20 sm:px-8"

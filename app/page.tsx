@@ -12,7 +12,7 @@ import {
   type TrackingQuery,
 } from "@/features/applications/tracking";
 import { getSiteUrl } from "@/lib/env";
-import { areas, themes, steps } from "@/lib/brand-content";
+import { areas, themes, steps, companyLocation } from "@/lib/brand-content";
 
 const title = "TaskWavePH | Outsourcing & Business Support";
 const description =
@@ -70,7 +70,7 @@ export default async function Home({
                 into your business with TaskWavePH’s outsourcing and business
                 support services.
               </p>
-              <div className="mt-8 flex flex-wrap items-center gap-4">
+              <div className="mt-8 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-4">
                 <BusinessLink href={enquiryHref} />
                 <Link
                   href={getTrackedHref("/areas-of-work", query)}
@@ -128,6 +128,9 @@ export default async function Home({
                 marketing, and web solutions through skilled professionals and
                 efficient processes.
               </p>
+              <p className="mt-4 text-sm font-medium text-brand-navy">
+                Based in {companyLocation}.
+              </p>
               <Link
                 href={getTrackedHref("/about", query)}
                 className={buttonVariants({
@@ -143,7 +146,7 @@ export default async function Home({
         </section>
         <section
           aria-labelledby="services-title"
-          className="mx-auto max-w-[1180px] px-5 py-16 sm:px-8 sm:py-20"
+          className="mx-auto max-w-[1180px] px-5 py-12 sm:px-8 sm:py-16 lg:py-20"
         >
           <p className="text-sm font-semibold text-primary">Our services</p>
           <h2 id="services-title" className="mt-3 text-3xl font-semibold">
@@ -181,17 +184,20 @@ export default async function Home({
           aria-labelledby="themes-title"
           className="bg-brand-navy text-white"
         >
-          <div className="mx-auto max-w-[1180px] px-5 py-14 sm:px-8">
+          <div className="mx-auto max-w-[1180px] px-5 py-12 sm:px-8 sm:py-16 lg:py-20">
             <h2 id="themes-title" className="text-3xl font-semibold text-white">
               People and processes behind your progress.
             </h2>
             <ul className="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-              {themes.map(({ icon: Icon, title }) => (
+              {themes.map(({ icon: Icon, title, description }) => (
                 <li key={title}>
                   <Icon aria-hidden="true" className="size-7 text-brand-cyan" />
                   <h3 className="mt-4 text-lg font-medium text-white">
                     {title}
                   </h3>
+                  <p className="mt-3 text-sm leading-relaxed text-white/80">
+                    {description}
+                  </p>
                 </li>
               ))}
             </ul>
@@ -199,7 +205,7 @@ export default async function Home({
         </section>
         <section
           aria-labelledby="steps-title"
-          className="mx-auto max-w-[1180px] px-5 py-16 sm:px-8 sm:py-20"
+          className="mx-auto max-w-[1180px] px-5 py-12 sm:px-8 sm:py-16 lg:py-20"
         >
           <h2 id="steps-title" className="text-3xl font-semibold">
             Let’s find the support your business needs.
@@ -230,7 +236,7 @@ export default async function Home({
         </section>
         <section
           aria-labelledby="cta-title"
-          className="mx-auto max-w-[1180px] px-5 pb-16 sm:px-8 sm:pb-20"
+          className="mx-auto max-w-[1180px] px-5 pb-12 sm:px-8 sm:pb-16 lg:pb-20"
         >
           <Card className="bg-primary py-0 text-primary-foreground ring-0">
             <CardContent className="flex flex-col items-start gap-7 px-6 py-10 sm:px-10 md:flex-row md:items-center md:justify-between">

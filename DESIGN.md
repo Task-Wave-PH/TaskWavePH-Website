@@ -433,3 +433,20 @@ verified staff portraits or employment promises. The original generated PNG is
 `exec-d6c6d176-6caa-481b-9e64-102f9b35f902.png`. The 1200px WebP retains alpha and
 the full composition. Use `object-contain` and empty alt text beside the career
 introduction. The six service illustrations remain dedicated to service sections.
+
+## Public layout and motion polish
+
+The owner confirmed **Dagupan City, Pangasinan, Philippines** as the company
+location. Use this city-level location on Home, About, and the footer; it does not
+establish a street address, office hours, or visitor arrangements.
+
+Public navigation is sticky, with a 72px header below 1024px and an 80px header
+from 1024px. Phones and tablets show only the original logo and menu button;
+the audience-specific action is inside the mobile Sheet. Anchor and focus targets
+leave 16px below the header; sticky policy navigation uses the same offset.
+
+Use 20px mobile gutters, 32px from 640px, and the existing 1180px maximum width.
+Major sections use 48px mobile, 64px tablet, and 80px desktop spacing. Use short
+color/background transitions and smooth anchor scrolling, respecting reduced
+motion. Page navigation retains normal Next.js behavior without page fades.
+Brand-theme descriptions are website guidance, not additional media-kit claims.

@@ -86,6 +86,7 @@ test("brand images and local fonts load; the hero CTA fits on mobile", async ({
   ).toContain("poppins");
   expect(externalFontRequests).toEqual([]);
   await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(page.locator("html")).toHaveCSS("scroll-behavior", "auto");
   expect(
     await page
       .getByRole("link", { name: "Discuss Your Business Needs" })

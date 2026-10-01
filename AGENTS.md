@@ -123,3 +123,13 @@ add noindex, and send private/no-store responses. Host routing is not authorizat
   shows labeled sample jobs when its unfiltered live list is empty; it shares
   state with sample admin tools. Production never uses this fallback.
 - Sitemap includes only published job URLs, bounded to 5,000 postings.
+
+## Public navigation and confirmed location
+
+- Public headers remain sticky. Below 1024px show the logo and menu button only;
+  put the audience-specific CTA inside the mobile menu. Retain tracking and keyboard
+  access, and offset anchor/error focus targets below the header.
+- The owner confirmed Dagupan City, Pangasinan, Philippines. Use the shared company
+  location; do not infer a street address, office hours, or visitor arrangements.
+- Keep motion subtle: smooth anchors and short interaction transitions, disabled
+  for reduced motion. Keep standard Next.js route navigation.

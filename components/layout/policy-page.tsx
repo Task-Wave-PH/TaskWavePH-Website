@@ -49,7 +49,7 @@ export function PolicyPage({
           <aside className="min-w-0">
             <nav
               aria-label="On this page"
-              className="rounded-xl border bg-secondary/40 p-5 lg:sticky lg:top-6"
+              className="rounded-xl border bg-secondary/40 p-5 lg:sticky lg:top-[calc(var(--public-header-height)+16px)]"
             >
               <h2 className="mb-3 text-sm font-semibold">On this page</h2>
               <ol className="grid gap-1 sm:grid-cols-2 lg:grid-cols-1">

@@ -13,10 +13,30 @@ import {
 } from "lucide-react";
 
 export const themes = [
-  { icon: Users, title: "Reliable Teams" },
-  { icon: Settings2, title: "Efficient Processes" },
-  { icon: ChartNoAxesCombined, title: "Scalable Solutions" },
-  { icon: Globe2, title: "Global Impact" },
+  {
+    icon: Users,
+    title: "Reliable Teams",
+    description:
+      "Skilled people who bring care, clear communication, and attention to everyday work.",
+  },
+  {
+    icon: Settings2,
+    title: "Efficient Processes",
+    description:
+      "Organized tasks and clear responsibilities that help keep your operations moving.",
+  },
+  {
+    icon: ChartNoAxesCombined,
+    title: "Scalable Solutions",
+    description:
+      "Support shaped around your priorities, with room to discuss changing business needs.",
+  },
+  {
+    icon: Globe2,
+    title: "Global Impact",
+    description:
+      "Philippine talent supporting the customers, teams, and digital experiences of global businesses.",
+  },
 ];
 
 export const areas = [
@@ -78,3 +98,6 @@ export const steps = [
       "Discuss the scope, responsibilities, and working arrangements before moving forward together.",
   },
 ];
+
+// Owner-confirmed company location; not a street address or visitor information.
+export const companyLocation = "Dagupan City, Pangasinan, Philippines";

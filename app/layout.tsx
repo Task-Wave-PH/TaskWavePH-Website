@@ -54,7 +54,7 @@ export default async function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   const localPreview = await isLocalPreview();
   return (
-    <html lang="en" className={poppins.variable}>
+    <html lang="en" data-scroll-behavior="smooth" className={poppins.variable}>
       <body className="flex min-h-dvh flex-col antialiased">
         <a
           href="#main-content"

@@ -38,6 +38,9 @@ test("mobile menu supports keyboard dismissal, focus restoration, and page navig
   await page.keyboard.press("Enter");
   const dialog = page.getByRole("dialog", { name: "Explore TaskWavePH" });
   await expect(dialog).toBeVisible();
+  await expect(
+    dialog.getByRole("link", { name: "Work With Us", exact: true }),
+  ).toHaveAttribute("href", `/business-enquiry?${query}`);
   await expect
     .poll(() =>
       dialog.evaluate((node) => node.contains(document.activeElement)),
@@ -54,6 +57,9 @@ test("mobile menu supports keyboard dismissal, focus restoration, and page navig
   await expect(
     dialog.getByRole("link", { name: "Careers", exact: true }),
   ).toHaveAttribute("aria-current", "page");
+  await expect(
+    dialog.getByRole("link", { name: "Apply Now", exact: true }),
+  ).toHaveAttribute("href", `/apply?${query}`);
   await dialog.getByRole("button", { name: "Close", exact: true }).click();
   await expect(trigger).toBeFocused();
 });
@@ -123,6 +129,11 @@ test("service details have working anchors, illustrations, and tracked enquiry l
   await expect(page).toHaveURL(new RegExp("#digital-marketing$"));
   const section = page.locator("#digital-marketing");
   await expect(section).toBeInViewport();
+  await expect
+    .poll(() =>
+      section.evaluate((node) => Math.round(node.getBoundingClientRect().top)),
+    )
+    .toBe(96);
   await expect(section.getByRole("heading", { level: 2 })).toHaveText(
     "Keep your brand’s digital work moving.",
   );

@@ -20,10 +20,10 @@ export function Header({
   query?: TrackingQuery;
 }) {
   return (
-    <header className="border-b border-border bg-background">
+    <header className="sticky top-0 z-30 border-b border-border bg-background">
       <nav
         aria-label="Main navigation"
-        className="mx-auto flex max-w-[1180px] items-center justify-between gap-2 px-4 py-4 sm:gap-3 sm:px-8"
+        className="mx-auto flex h-[72px] max-w-[1180px] items-center justify-between gap-3 px-5 sm:px-8 lg:h-20"
       >
         <Link
           href={getTrackedHref("/", query)}
@@ -32,15 +32,25 @@ export function Header({
         >
           <BrandLogo eager />
         </Link>
-        <SiteNavigation query={getTracking(query)} />
-        {audience === "applicant" ? (
-          <ApplyLink href={applyHref ?? getApplyHref(query)} compact />
-        ) : (
-          <BusinessLink
-            href={getTrackedHref("/business-enquiry", query)}
-            compact
-          />
-        )}
+        <SiteNavigation
+          query={getTracking(query)}
+          audience={audience}
+          ctaHref={
+            audience === "applicant"
+              ? (applyHref ?? getApplyHref(query))
+              : getTrackedHref("/business-enquiry", query)
+          }
+        />
+        <div className="hidden lg:block">
+          {audience === "applicant" ? (
+            <ApplyLink href={applyHref ?? getApplyHref(query)} compact />
+          ) : (
+            <BusinessLink
+              href={getTrackedHref("/business-enquiry", query)}
+              compact
+            />
+          )}
+        </div>
       </nav>
     </header>
   );

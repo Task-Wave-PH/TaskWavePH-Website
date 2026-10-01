@@ -52,7 +52,7 @@ export default async function Page({
               id={id}
               aria-labelledby={`${id}-title`}
               tabIndex={-1}
-              className="scroll-mt-8 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-8 focus-visible:outline-primary"
+              className="rounded-sm focus-visible:outline-2 focus-visible:outline-offset-8 focus-visible:outline-primary"
             >
               <div className="grid items-center gap-8 lg:grid-cols-2 lg:gap-16">
                 <div

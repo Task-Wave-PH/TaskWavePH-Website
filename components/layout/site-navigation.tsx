@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu } from "lucide-react";
+import { Menu, ArrowUpRight } from "lucide-react";
+import { buttonVariants } from "@/components/ui/button";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -25,7 +26,15 @@ const pages = [
   ["About", "/about"],
 ] as const;
 
-export function SiteNavigation({ query = {} }: { query?: TrackingQuery }) {
+export function SiteNavigation({
+  query = {},
+  audience,
+  ctaHref,
+}: {
+  query?: TrackingQuery;
+  audience: "business" | "applicant";
+  ctaHref: string;
+}) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const links = (mobile: boolean) =>
@@ -63,7 +72,7 @@ export function SiteNavigation({ query = {} }: { query?: TrackingQuery }) {
           >
             <Menu aria-hidden="true" className="size-5" />
           </SheetTrigger>
-          <SheetContent className="w-[min(100vw,360px)] bg-background motion-reduce:animate-none">
+          <SheetContent className="w-[min(100vw,360px)] overflow-y-auto bg-background motion-reduce:animate-none">
             <SheetHeader className="pr-16">
               <SheetTitle>Explore TaskWavePH</SheetTitle>
               <SheetDescription>
@@ -75,6 +84,16 @@ export function SiteNavigation({ query = {} }: { query?: TrackingQuery }) {
               className="px-4 text-brand-navy"
             >
               {links(true)}
+              <div className="mt-6 border-t pt-6 pb-6">
+                <Link
+                  href={ctaHref}
+                  onClick={() => setOpen(false)}
+                  className={buttonVariants({ className: "min-h-12 w-full" })}
+                >
+                  {audience === "applicant" ? "Apply Now" : "Work With Us"}
+                  <ArrowUpRight aria-hidden="true" className="size-4" />
+                </Link>
+              </div>
             </nav>
           </SheetContent>
         </Sheet>

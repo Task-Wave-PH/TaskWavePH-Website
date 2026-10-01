@@ -33,7 +33,7 @@ export function ContentPage({
       <Header query={query} audience={audience} />
       <main id="main-content">
         <section className="bg-secondary">
-          <div className="mx-auto max-w-[1180px] px-5 py-14 sm:px-8 sm:py-20">
+          <div className="mx-auto max-w-[1180px] px-5 py-12 sm:px-8 sm:py-16 lg:py-20">
             <p className="text-sm font-semibold uppercase tracking-wider text-primary">
               {eyebrow}
             </p>
@@ -45,7 +45,7 @@ export function ContentPage({
             </p>
           </div>
         </section>
-        <div className="mx-auto max-w-[1180px] space-y-14 px-5 py-14 sm:space-y-20 sm:px-8 sm:py-20">
+        <div className="mx-auto max-w-[1180px] space-y-12 px-5 py-12 sm:space-y-16 sm:px-8 sm:py-16 lg:space-y-20 lg:py-20">
           {children}
           {showCta && (
             <Card className="bg-primary py-0 text-primary-foreground ring-0">

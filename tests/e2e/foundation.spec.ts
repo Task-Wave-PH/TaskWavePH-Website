@@ -32,6 +32,13 @@ test("form validates, focuses errors, requires consent, and sends no application
   await expect(consent).not.toBeChecked();
   await page.getByRole("button", { name: "Validate Application" }).click();
   await expect(page.getByLabel("First Name", { exact: true })).toBeFocused();
+  await expect
+    .poll(() =>
+      page
+        .getByLabel("First Name", { exact: true })
+        .evaluate((node) => node.getBoundingClientRect().top),
+    )
+    .toBeGreaterThanOrEqual(88);
   await expect(
     page.getByText("Please agree to the privacy notice."),
   ).toBeVisible();
@@ -99,6 +106,24 @@ for (const width of [360, 390, 430, 768, 1024, 1440]) {
           () => document.documentElement.scrollWidth <= window.innerWidth,
         ),
       ).toBe(true);
+      const header = page.getByRole("navigation", { name: "Main navigation" });
+      await expect(header).toHaveCSS("height", width < 1024 ? "72px" : "80px");
+      if (width < 1024) {
+        await expect(header.getByRole("link")).toHaveCount(1);
+        await expect(
+          header.getByRole("button", { name: "Open navigation" }),
+        ).toBeVisible();
+      }
+      await page.evaluate(() =>
+        window.scrollTo({ top: 400, behavior: "instant" }),
+      );
+      await expect
+        .poll(() =>
+          page
+            .locator("header")
+            .evaluate((node) => node.getBoundingClientRect().top),
+        )
+        .toBe(0);
       if (
         ["/", "/areas-of-work", "/how-it-works", "/careers", "/about"].includes(
           route,

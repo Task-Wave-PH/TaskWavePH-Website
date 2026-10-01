@@ -49,7 +49,7 @@ export function JobList({
     <section
       id="open-roles"
       aria-labelledby="roles-title"
-      className="scroll-mt-6 space-y-6"
+      className="space-y-6"
     >
       <div>
         <p className="text-sm font-semibold text-primary">

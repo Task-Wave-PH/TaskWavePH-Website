@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { MapPin } from "lucide-react";
+import { companyLocation } from "@/lib/brand-content";
 import {
   getTrackedHref,
   type TrackingQuery,
@@ -25,6 +27,13 @@ export function Footer({ query = {} }: { query?: TrackingQuery }) {
           <p className="max-w-sm leading-relaxed">
             Philippine talent and business support for global teams. We handle
             the tasks. You focus on growth.
+          </p>
+          <p className="flex max-w-sm items-start gap-2 leading-relaxed">
+            <MapPin
+              aria-hidden="true"
+              className="mt-0.5 size-4 shrink-0 text-primary"
+            />
+            <span>{companyLocation}</span>
           </p>
         </div>
         <nav aria-label="Footer company navigation">

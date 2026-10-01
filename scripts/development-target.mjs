@@ -11,10 +11,14 @@ export function requireDevelopmentTarget() {
     ["127.0.0.1", "localhost"].includes(url.hostname),
   );
   const name = deployment.startsWith("dev:") ? deployment.slice(4) : "";
+  const cloudSuffix = client.hostname.slice(name.length);
+  const matchingCloudHost =
+    client.hostname.startsWith(`${name}.`) &&
+    /^\.(?:[a-z0-9]+(?:-[a-z0-9]+)*\.)?convex\.cloud$/.test(cloudSuffix);
   const remote =
     name &&
-    site.hostname === `${name}.convex.site` &&
-    client.hostname === `${name}.convex.cloud` &&
+    matchingCloudHost &&
+    site.hostname === client.hostname.replace(/\.cloud$/, ".site") &&
     site.protocol === "https:" &&
     client.protocol === "https:";
   if (!(local && /^(anonymous|local|dev):/.test(deployment)) && !remote)

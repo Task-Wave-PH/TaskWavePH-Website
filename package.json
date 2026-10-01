@@ -28,6 +28,7 @@
   "dependencies": {
     "@base-ui/react": "^1.8.0",
     "@clerk/nextjs": "^7.9.9",
+    "@clerk/ui": "^1.38.0",
     "@convex-dev/aggregate": "^0.3.1",
     "@convex-dev/rate-limiter": "^0.4.0",
     "@hookform/resolvers": "^5.9.1",

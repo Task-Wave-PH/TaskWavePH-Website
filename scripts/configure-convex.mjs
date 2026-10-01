@@ -5,7 +5,19 @@ if (
   process.env.CONVEX_DEPLOYMENT.startsWith("prod:")
 )
   throw new Error("Use a development deployment only.");
-for (const name of ["CONVEX_SERVER_SECRET", "CLERK_JWT_ISSUER_DOMAIN"]) {
+if (!process.env.STAFF_INVITATION_REDIRECT_URL) {
+  const admin = new URL(
+    process.env.NEXT_PUBLIC_ADMIN_URL ?? "http://localhost:3000/admin",
+  );
+  admin.pathname = `${admin.pathname.replace(/\/$/, "")}/sign-up`;
+  process.env.STAFF_INVITATION_REDIRECT_URL = admin.toString();
+}
+for (const name of [
+  "CONVEX_SERVER_SECRET",
+  "CLERK_JWT_ISSUER_DOMAIN",
+  "CLERK_SECRET_KEY",
+  "STAFF_INVITATION_REDIRECT_URL",
+]) {
   const value = process.env[name];
   if (!value) {
     console.log(

@@ -1,5 +1,23 @@
 # Convex MVP setup
 
+## Local security verification
+
+See [SECURITY-AUDIT.md](SECURITY-AUDIT.md) for the October 2, 2026 local review,
+adversarial tests, measured latency, cache/TTL checks, and remaining deployment
+verification. This audit does not deploy backend changes or certify production.
+
+Public submission endpoints reject foreign or opaque browser Origins and
+`Sec-Fetch-Site: cross-site` before backend work. Same-origin browser requests and
+non-browser requests without these headers still require all validation,
+Turnstile, honeypot, and persistent throttling checks. Disabled collection remains 503. Rejected origins return the safe `INVALID_ORIGIN` code with 403 and no receipt.
+
+Export backend fetches bypass caching, share a 25-second abort budget, and cancel
+on caller disconnect. Workbook generation is bounded by the existing 5,000-row
+limit; the network abort signal cannot preempt synchronous encoding work.
+Direct Convex CV errors as well as successful downloads are private/no-store.
+Pending uploads expire at the exact one-hour boundary. Cookie-bearing or explicitly
+credentialed job queries never qualify for public first-page caching.
+
 ## What is implemented
 
 Applications and business leads are stored in Convex. Optional PDF resumes are
@@ -66,7 +84,10 @@ and [Turnstile’s privacy notice](https://www.cloudflare.com/turnstile-privacy-
    values. Local state and environment files are ignored by Git.
 4. Create a Clerk development application. Enable email/password and password
    recovery; use restricted sign-up or provision users through the Clerk dashboard.
-   No public sign-up route is included. Set the publishable key, secret key, and
+   Staff sign-up is invitation-only at `/admin/sign-up` (or `/sign-up` on the admin
+   hostname). Set Clerk Restrictions → Sign-up mode to Invite-only / Restricted.
+   Login has no signup link; registration without a ticket shows invitation guidance.
+   Set the publishable key, secret key, and
    issuer domain in `.env.local`. Enable the Clerk Convex integration/JWT template
    with audience `convex`, then rerun `npm run convex:configure` and
    `npm run convex:check`. Never grant staff access from user-editable metadata.
@@ -101,6 +122,58 @@ no records. A local fail-closed issuer placeholder may be used to compile the
 backend before Clerk exists; replace it with the real Clerk issuer before testing
 login. It does not provide working authentication.
 
+## Owners, staff, and invitations
+
+Clerk authenticates users; Convex `adminUsers` remains the permission source.
+Missing roles on older records mean Staff. Only active Owners see Users navigation
+and can list staff/invitations or change access. Staff retain applicant, lead, and
+job access. Every backend operation checks permission; host routing is additional
+isolation, not authorization. Changes reject stale revisions, and transactions
+prevent removing the last active Owner, including trusted CLI provisioning.
+
+Bootstrap the first Owner using trusted access to the intended deployment:
+
+```bash
+npx convex run provision:setStaff '{"subject":"user_REPLACE_ME","active":true,"role":"Owner","email":"owner@example.com"}'
+```
+
+Use the matching Clerk user ID and verified email. Configure production independently;
+development approvals never migrate automatically. For existing registered accounts
+without an invitation, use trusted provisioning; do not create a second account.
+
+Configure these **in Convex**, in addition to the existing issuer and shared secret:
+
+- `CLERK_SECRET_KEY`: the matching Clerk instance's server key, never a public key.
+- `STAFF_INVITATION_REDIRECT_URL`: `http://localhost:3000/admin/sign-up` in local
+  development; `https://admin.taskwaveph.com/sign-up` in production.
+
+`npm run convex:configure` copies these to development without printing keys and
+derives the invitation URL from `NEXT_PUBLIC_ADMIN_URL` when no override is supplied.
+Set Clerk signup mode to **Invite-only / Restricted** for the same instance.
+
+Owners send seven-day email invitations with Owner/Staff roles. Convex stores the
+role and eligibility; Clerk metadata contains only a reference, not authority.
+Registration requires an invitation ticket and redirects to `/admin/accept-invitation`.
+The authenticated acceptance action fetches the user from Clerk's Backend API,
+checks the verified primary email and server-managed invitation reference, and
+activates once only if the local invitation is pending/unexpired and its sponsoring
+Owner remains active. Repeated acceptance is safe; old links cannot reactivate
+disabled staff. Browser-supplied or user-editable metadata never grants access.
+
+Owner invite attempts and authenticated acceptance attempts are limited to 20 per
+hour per identity. Failed/uncertain sends retain the operation token; retry scans
+bounded pending Clerk invitations for the reference before creating another.
+Clerk also rejects duplicate addresses. Cancellation removes local eligibility
+before remote revocation; retry cancellation if Clerk is unavailable. An expired
+invitation requires cancellation and a new invite. Deactivation keeps the Clerk
+account and audit history but immediately removes Convex record permissions.
+No permanent account deletion or employee management is included.
+
+The development Owner was provisioned during this implementation. Production
+invite-only mode, credentials, bootstrap, and invitation emails must be configured
+and verified separately. Test real acceptance using a second email you control;
+CLI identity checks and mocked Clerk responses do not verify browser signup.
+
 ## Files and privacy
 
 - Optional one PDF, maximum 2 MiB. Optional HTTP/HTTPS resume link remains.
@@ -133,11 +206,12 @@ Production collection requires `SUBMISSIONS_ENABLED=true`,
 `PRIVACY_RETENTION_NOTICE`. Startup rejects incomplete enabled configuration.
 Default-disabled builds and previews remain usable without submission secrets.
 
-Set public URL to `https://taskwaveph.com` and admin URL to
+Set public URL to `https://www.taskwaveph.com` and admin URL to
 `https://admin.taskwaveph.com`. Both hostnames serve the same Next.js project.
 The admin hostname rewrites its root/navigation to the internal admin route tree;
 public production hosts reject `/admin` and `/api/admin` paths. Localhost keeps
-`/admin` for development. Admin-host public page paths are rejected. Configure
+`/admin` only in development; production builds on localhost and Vercel preview
+hostnames reject admin pages/APIs and Clerk auto-proxy paths. Admin-host public page paths are rejected. Configure
 Clerk's production domain for the admin hostname and test cookies, callbacks,
 recovery, and host routing before enabling collection.
 
@@ -179,6 +253,21 @@ so it does not depend on accounts or save personal data. Set `PLAYWRIGHT_PORT=31
 if your normal development server already occupies port 3000.
 
 ## Local UI preview without Clerk keys
+
+### Clerk CLI setup
+
+The repository is linked to Clerk application `app_3K6WAnlhWMmeeTNkaYJRA5dAR4h`.
+Use `clerk auth login`, then `clerk init --app app_3K6WAnlhWMmeeTNkaYJRA5dAR4h`
+and `clerk doctor`. The CLI pulls development credentials into ignored `.env.local`.
+Its generic scaffold may add public auth routes or a second root provider; keep
+the existing admin-scoped provider and routes instead. Never print environment files.
+Admin Clerk components use `@clerk/ui`'s shadcn theme and Poppins/brand overrides.
+The `/__clerk/:path*` matcher follows the API matcher; auto-proxy requests reach
+Clerk before admin page rewrites. Unconfigured auto-proxy requests fail closed.
+Set the four documented Clerk route variables to `/admin/sign-in`, `/admin/sign-up`,
+and `/admin` fallback destinations. CLI setup configures development only;
+production credentials, domain verification, approved staff, and real browser
+sign-in/sign-out verification remain separate requirements.
 
 With `npm run dev` running, open `/dev-preview/login`,
 `/dev-preview/applications`, or `/dev-preview/businessLeads`. These use the

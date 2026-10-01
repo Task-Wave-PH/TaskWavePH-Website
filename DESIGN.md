@@ -453,3 +453,24 @@ Major sections use 48px mobile, 64px tablet, and 80px desktop spacing. Use short
 color/background transitions and smooth anchor scrolling, respecting reduced
 motion. Page navigation retains normal Next.js behavior without page fades.
 Brand-theme descriptions are website guidance, not additional media-kit claims.
+
+## Access and missing-page screens
+
+### Owner user management
+
+The Users section belongs to the existing dashboard shell and is visible only to
+Owners. Use shadcn Cards, Tabs, Select, Badges, Inputs, Buttons, and confirmation
+Sheets with the existing brand tokens. Invite controls stack on phones; staff and
+invitation rows use wrapped cards so emails and actions remain usable at 360px.
+Differentiate Owner/Staff roles from Active/Inactive access and invitation status.
+Login retains its branded card and removes open-registration links. Ticketless
+registration uses the shared access screen with invitation guidance.
+
+Access-denied and 404 screens use the original logo, Poppins, a white shadcn Card,
+and a navy illustration panel with quiet blue/cyan circular motifs. Stack panels
+on phones; keep actions at least 44px tall. Denied staff see the current account,
+approval guidance, and a sign-out action with safe failure feedback. Registration
+never grants permissions. Missing-page screens link to the public homepage and
+services; admin segment errors link back to the dashboard. No private record data
+is displayed. Proxy-blocked page requests render the shared 404 while preserving
+404 status and private/no-store/noindex headers; rejected API requests stay empty.

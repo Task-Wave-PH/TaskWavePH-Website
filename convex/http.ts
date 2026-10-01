@@ -189,31 +189,34 @@ http.route({
   path: "/resume",
   method: "GET",
   handler: httpAction(async (ctx, request) => {
+    const headers = {
+      "Cache-Control": "private, no-store",
+      "X-Robots-Tag": "noindex",
+      "X-Content-Type-Options": "nosniff",
+    };
     try {
       const params = new URL(request.url).searchParams;
       const id = params.get("id") ?? "";
       const mode = params.get("mode") ?? "download";
       if (!["view", "download"].includes(mode))
-        return new Response("Invalid mode", { status: 400 });
+        return new Response("Invalid mode", { status: 400, headers });
       const file = await ctx.runQuery(internal.downloads.find, { id });
-      if (!file) return new Response("Not found", { status: 404 });
+      if (!file) return new Response("Not found", { status: 404, headers });
       const blob = await ctx.storage.get(file.storageId);
-      if (!blob) return new Response("Not found", { status: 404 });
+      if (!blob) return new Response("Not found", { status: 404, headers });
       await ctx.runMutation(internal.downloads.audit, {
         id,
         mode: mode as "view" | "download",
       });
       return new Response(blob, {
         headers: {
+          ...headers,
           "Content-Type": "application/pdf",
           "Content-Disposition": `${mode === "view" ? "inline" : "attachment"}; filename="resume.pdf"`,
-          "Cache-Control": "private, no-store",
-          "X-Content-Type-Options": "nosniff",
-          "X-Robots-Tag": "noindex",
         },
       });
     } catch {
-      return new Response("Access denied", { status: 403 });
+      return new Response("Access denied", { status: 403, headers });
     }
   }),
 });

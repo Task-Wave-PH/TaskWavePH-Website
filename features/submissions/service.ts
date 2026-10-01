@@ -29,6 +29,12 @@ export async function submitRequest(
     });
   if (!submissionsEnabled())
     return json({ success: false, error: "SUBMISSIONS_DISABLED" }, 503);
+  const origin = request.headers.get("origin");
+  if (
+    (origin !== null && origin !== new URL(request.url).origin) ||
+    request.headers.get("sec-fetch-site") === "cross-site"
+  )
+    return json({ success: false, error: "INVALID_ORIGIN" }, 403);
   try {
     const env = getSubmissionEnv();
     if (Number(request.headers.get("content-length")) > MAX_REQUEST_BYTES)

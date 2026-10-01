@@ -226,6 +226,26 @@ describe("submission protections", () => {
 });
 
 describe("early submission limits and error propagation", () => {
+  it.each([
+    { origin: "https://attacker.example" },
+    { origin: "null" },
+    { "sec-fetch-site": "cross-site" },
+  ])(
+    "rejects cross-origin browser submissions before backend work: %j",
+    async (headers) => {
+      configure();
+      const fetch = vi.fn();
+      vi.stubGlobal("fetch", fetch);
+      const input = request();
+      for (const [name, value] of Object.entries(headers))
+        input.headers.set(name, value);
+      const response = await submitRequest(input, "applications");
+      expect(response.status).toBe(403);
+      expect(response.headers.get("cache-control")).toBe("no-store");
+      expect(response.headers.get("set-cookie")).toBeNull();
+      expect(fetch).not.toHaveBeenCalled();
+    },
+  );
   it("rejects unsupported content without contacting the backend", async () => {
     configure();
     const fetch = vi.fn();
@@ -235,6 +255,25 @@ describe("early submission limits and error propagation", () => {
         method: "POST",
         body: "{}",
         headers: { "Content-Type": "application/json" },
+      }),
+      "applications",
+    );
+    expect(response.status).toBe(415);
+    expect(fetch).not.toHaveBeenCalled();
+  });
+  it("permits same-origin browser requests without weakening content validation", async () => {
+    configure();
+    const fetch = vi.fn();
+    vi.stubGlobal("fetch", fetch);
+    const response = await submitRequest(
+      new Request("http://localhost/api/applications", {
+        method: "POST",
+        body: "{}",
+        headers: {
+          Origin: "http://localhost",
+          "Content-Type": "application/json",
+          "Sec-Fetch-Site": "same-origin",
+        },
       }),
       "applications",
     );

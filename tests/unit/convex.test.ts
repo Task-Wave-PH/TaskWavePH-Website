@@ -2,11 +2,12 @@
 import { convexTest } from "convex-test";
 import aggregate from "@convex-dev/aggregate/test";
 import rateLimiter from "@convex-dev/rate-limiter/test";
-import { describe, it, expect, vi } from "vitest";
+import { afterEach, describe, it, expect, vi } from "vitest";
 import schema from "../../convex/schema";
 import { api, internal } from "../../convex/_generated/api";
 import { applicationSchema } from "../../features/applications/schema";
 const modules = import.meta.glob("../../convex/**/*.ts");
+afterEach(() => vi.useRealTimers());
 function setup() {
   const t = convexTest(schema, modules);
   rateLimiter.register(t);
@@ -56,6 +57,43 @@ const options = {
   paginationOpts: { numItems: 20, cursor: null },
 };
 describe("Convex intake and administration", () => {
+  it("rejects reservations at the exact one-hour expiry and cleans them", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(Date.UTC(2026, 9, 2));
+    const t = setup();
+    const token = crypto.randomUUID();
+    await t.mutation(internal.intake.reserve, {
+      kind: "applications",
+      token,
+      fingerprint: "fixture",
+      rateKey: crypto.randomUUID(),
+    });
+    vi.setSystemTime(Date.now() + 3600000);
+    await expect(
+      t.mutation(internal.intake.save, {
+        kind: "applications",
+        token: `applications:${token}`,
+        fingerprint: "fixture",
+        data,
+      }),
+    ).rejects.toThrow("Invalid reservation");
+    await t.mutation(internal.intake.cleanup, {});
+    expect(
+      await t.run((ctx) => ctx.db.query("pendingUploads").first()),
+    ).toBeNull();
+  });
+  it("returns uncached download denials for invalid modes and anonymous callers", async () => {
+    const t = setup();
+    for (const [path, status] of [
+      ["/resume?id=forged", 403],
+      ["/resume?id=forged&mode=bad", 400],
+    ] as const) {
+      const response = await t.fetch(path);
+      expect(response.status).toBe(status);
+      expect(response.headers.get("cache-control")).toBe("private, no-store");
+      expect(response.headers.get("x-robots-tag")).toBe("noindex");
+    }
+  });
   it("rejects stale applicant and lead reviews without overwriting newer notes", async () => {
     const t = setup();
     const admin = await staff(t);
@@ -378,6 +416,20 @@ describe("Convex intake and administration", () => {
     expect(
       (await t.mutation(internal.intake.attempt, { rateKey: "c".repeat(64) }))
         .allowed,
+    ).toBe(true);
+  });
+  it("restores attempt eligibility after the returned cooldown", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(Date.UTC(2026, 9, 2));
+    const t = setup();
+    const rateKey = "d".repeat(64);
+    for (let i = 0; i < 20; i++)
+      await t.mutation(internal.intake.attempt, { rateKey });
+    const denied = await t.mutation(internal.intake.attempt, { rateKey });
+    expect(denied.allowed).toBe(false);
+    vi.setSystemTime(Date.now() + denied.retryAfterSeconds * 1000 + 1);
+    expect(
+      (await t.mutation(internal.intake.attempt, { rateKey })).allowed,
     ).toBe(true);
   });
   it("authenticates attempt checks and applies a shared global budget", async () => {

@@ -22,13 +22,15 @@ on October 1, 2026. This supersedes the original Sheets-only MVP constraints.
   another datastore, object store, CRM, employee management, or applicant login.
 - Public forms POST through Next.js services to the authenticated Convex HTTP
   adapter. Keep the shared secret server-side. Backend functions validate again.
-- Tables: applications, businessLeads, jobs, adminUsers, adminActivity, pendingUploads,
+- Tables: applications, businessLeads, jobs, adminUsers, staffInvitations, adminActivity, pendingUploads,
   dashboardState (internal metric readiness).
   Convex rate-limiter supplies persistent throttling; aggregate components supply
   exact private dashboard counts. Synchronize all write paths, including seeds.
 - Administrative functions require verified Clerk identity AND active adminUsers
-  approval. Authentication alone grants no record access. Staff provisioning is
-  an internal mutation invoked from trusted CLI/dashboard access.
+  approval. Authentication alone grants no record access. Owners alone manage
+  staff roles, invitations, and activation. Existing approvals without a role are
+  Staff. Bootstrap Owners through trusted internal provisioning; never remove the
+  last active Owner, including through CLI provisioning.
 - Store resume storage IDs, not public file URLs. Each download checks permission.
   PDF only, optional, up to 2 MB; signature/type checks are not malware scanning.
 - Preserve only source, campaign, utm_source, utm_medium, utm_campaign and pathname
@@ -62,9 +64,18 @@ Use server components except for needed interactivity. Check 360, 390, 430, 768,
 1024, and 1440 pixel layouts, keyboard access, contrast, and reduced motion.
 
 Admin uses a branded shadcn Sidebar, paginated records, filters, detail editing,
-protected CV viewing/downloads, CSV/styled XLSX exports, and confirmed deletion. No public sign-up or dashboard links.
-Development uses /admin. Configured production admin hostname rewrites to this
-route tree; the public hostname blocks admin paths. Exclude admin from sitemap,
+protected CV viewing/downloads, CSV/styled XLSX exports, and confirmed deletion. No public marketing sign-up or dashboard links.
+Staff account creation requires an Owner invitation and Clerk invite-only mode.
+The registration route accepts invitation tickets; ordinary login has no signup
+link. Activate only after server-verified Clerk email and invitation metadata match
+a pending, unexpired invitation from an active Owner. Ignore user-editable metadata.
+Revocation/deactivation removes eligibility immediately; keep account/audit history.
+Invitations last seven days; operations are persistently throttled and retry uncertain
+sends through reconciliation. Keep the matching Clerk secret in the Convex backend.
+Localhost development uses /admin. Deployed administration, APIs, and Clerk
+auto-proxy are restricted to the configured admin hostname; public and Vercel
+preview hosts cannot access administration. The admin hostname rewrites to this
+route tree. Exclude admin from sitemap,
 add noindex, and send private/no-store responses. Host routing is not authorization.
 
 ## Configuration and delivery

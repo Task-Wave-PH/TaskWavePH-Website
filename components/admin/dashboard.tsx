@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth, UserButton } from "@clerk/nextjs";
+import { useAuth } from "@clerk/nextjs";
 import {
   useConvexAuth,
   useMutation,
@@ -21,6 +21,7 @@ import {
   Handshake,
   LayoutDashboard,
   BriefcaseBusiness,
+  UsersRound,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import {
@@ -33,6 +34,8 @@ import {
 } from "@/components/ui/sidebar";
 import { RecordsView } from "./records-view";
 import { LeadDetails } from "./lead-details";
+import { AccessDenied } from "./access-denied";
+import { AccessLoading } from "./access-loading";
 import type { LeadView } from "@/features/leads/admin-types";
 import type { Id } from "@/convex/_generated/dataModel";
 type Kind = "applications" | "businessLeads";
@@ -41,12 +44,7 @@ const title = (kind: Kind) =>
 export function StaffGate({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useConvexAuth();
   const { isLoaded } = useAuth();
-  if (!isLoaded || isLoading)
-    return (
-      <p className="p-8" role="status">
-        Checking staff access…
-      </p>
-    );
+  if (!isLoaded || isLoading) return <AccessLoading />;
   if (!isAuthenticated)
     return (
       <main className="p-8">
@@ -64,19 +62,8 @@ export function StaffGate({ children }: { children: React.ReactNode }) {
 function Access({ children }: { children: React.ReactNode }) {
   const access = useQuery(api.staffStatus.current);
   if (access === undefined)
-    return (
-      <p className="p-8" role="status">
-        Checking permissions…
-      </p>
-    );
-  if (!access)
-    return (
-      <main className="p-8">
-        <h1 className="text-2xl font-semibold">Access denied</h1>
-        <p className="mt-4">Your account is not approved for staff access.</p>
-        <UserButton />
-      </main>
-    );
+    return <AccessLoading message="Checking permissions…" />;
+  if (!access) return <AccessDenied />;
   return children;
 }
 function Navigation({ preview = false }: { preview?: boolean }) {
@@ -139,8 +126,33 @@ function Navigation({ preview = false }: { preview?: boolean }) {
             <span>Jobs</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
+        {!preview && <OwnerNavigation />}
       </SidebarMenu>
     </nav>
+  );
+}
+function OwnerNavigation() {
+  const current = useQuery(api.staffManagement.current, {});
+  const pathname = usePathname();
+  const { setOpenMobile } = useSidebar();
+  if (current?.role !== "Owner") return null;
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton
+        render={
+          <Link
+            href="/admin/users"
+            aria-current={pathname.includes("/users") ? "page" : undefined}
+          />
+        }
+        isActive={pathname.includes("/users")}
+        className="min-h-11"
+        onClick={() => setOpenMobile(false)}
+      >
+        <UsersRound />
+        <span>Users</span>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
   );
 }
 export function Dashboard({

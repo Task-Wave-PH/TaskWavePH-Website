@@ -21,7 +21,10 @@ import type * as jobs from "../jobs.js";
 import type * as overview from "../overview.js";
 import type * as provision from "../provision.js";
 import type * as seed from "../seed.js";
+import type * as staffInvitations from "../staffInvitations.js";
+import type * as staffManagement from "../staffManagement.js";
 import type * as staffStatus from "../staffStatus.js";
+import type * as staffValidators from "../staffValidators.js";
 import type * as validators from "../validators.js";
 
 import type {
@@ -44,7 +47,10 @@ declare const fullApi: ApiFromModules<{
   overview: typeof overview;
   provision: typeof provision;
   seed: typeof seed;
+  staffInvitations: typeof staffInvitations;
+  staffManagement: typeof staffManagement;
   staffStatus: typeof staffStatus;
+  staffValidators: typeof staffValidators;
   validators: typeof validators;
 }>;
 

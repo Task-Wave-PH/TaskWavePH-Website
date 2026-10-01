@@ -68,9 +68,10 @@ test("disabled submissions fail closed and administration is excluded from index
     expect(response.status()).toBe(503);
     expect(await response.json()).toMatchObject({ success: false });
   }
-  await page.goto("/admin");
+  const denied = await page.goto("/admin");
+  expect(denied?.status()).toBe(404);
   await expect(
-    page.getByRole("heading", { name: "Admin setup required" }),
+    page.getByRole("heading", { name: "Let’s get you back on track." }),
   ).toBeVisible();
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
     "content",
@@ -80,9 +81,9 @@ test("disabled submissions fail closed and administration is excluded from index
   expect(admin.headers()["cache-control"]).toContain("no-store");
   expect(
     (await request.get("/api/admin/applications/export?format=csv")).status(),
-  ).toBe(503);
+  ).toBe(404);
   const download = await request.get("/api/admin/resumes/unknown");
-  expect(download.status()).toBe(503);
+  expect(download.status()).toBe(404);
   const sitemap = await request.get("/sitemap.xml");
   const text = await sitemap.text();
   expect(text).not.toContain("/admin");

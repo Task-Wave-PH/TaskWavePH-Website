@@ -14,6 +14,15 @@ export async function requireAdmin(ctx: Pick<QueryCtx, "auth" | "db">) {
   if (!admin?.active) throw new ConvexError("FORBIDDEN");
   return identity.subject;
 }
+export async function requireOwner(ctx: Pick<QueryCtx, "auth" | "db">) {
+  const subject = await requireAdmin(ctx);
+  const row = await ctx.db
+    .query("adminUsers")
+    .withIndex("by_subject", (q) => q.eq("subject", subject))
+    .unique();
+  if (row?.role !== "Owner") throw new ConvexError("OWNER_REQUIRED");
+  return subject;
+}
 const customization = {
   args: {},
   input: async (ctx: QueryCtx) => ({

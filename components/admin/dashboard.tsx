@@ -89,7 +89,7 @@ function Access({ children }: { children: React.ReactNode }) {
     );
   return children;
 }
-function Navigation() {
+function Navigation({ preview = false }: { preview?: boolean }) {
   const pathname = usePathname();
   const { setOpenMobile } = useSidebar();
   return (
@@ -100,7 +100,7 @@ function Navigation() {
             <SidebarMenuButton
               render={
                 <Link
-                  href={`/admin/${kind}`}
+                  href={preview ? `/dev-preview/${kind}` : `/admin/${kind}`}
                   aria-current={
                     pathname.includes(kind) ||
                     (kind === "applications" &&
@@ -135,31 +135,47 @@ export function Dashboard({
 }) {
   return (
     <StaffGate>
-      <SidebarProvider
-        style={
-          {
-            "--sidebar-width": "calc(var(--spacing) * 72)",
-            "--header-height": "calc(var(--spacing) * 16)",
-          } as React.CSSProperties
-        }
-      >
-        <AppSidebar>
-          <Navigation />
-        </AppSidebar>
-        <SidebarInset className="min-w-0">
-          <SiteHeader title={`TaskWavePH / ${title(kind)}`} />
-          <div id="main-content" className="min-w-0 flex-1 p-5 sm:p-8">
-            {id ? (
-              <Details kind={kind} id={id} />
-            ) : (
-              <Records key={kind} kind={kind} />
-            )}
-          </div>
-        </SidebarInset>
-      </SidebarProvider>
+      <DashboardShell kind={kind}>
+        {id ? (
+          <Details kind={kind} id={id} />
+        ) : (
+          <Records key={kind} kind={kind} />
+        )}
+      </DashboardShell>
     </StaffGate>
   );
 }
+export function DashboardShell({
+  kind = "applications",
+  preview = false,
+  children,
+}: {
+  kind?: Kind;
+  preview?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <SidebarProvider
+      style={
+        {
+          "--sidebar-width": "calc(var(--spacing) * 72)",
+          "--header-height": "calc(var(--spacing) * 16)",
+        } as React.CSSProperties
+      }
+    >
+      <AppSidebar preview={preview}>
+        <Navigation preview={preview} />
+      </AppSidebar>
+      <SidebarInset className="min-w-0">
+        <SiteHeader title={`TaskWavePH / ${title(kind)}`} />
+        <div id="main-content" className="min-w-0 flex-1 p-5 sm:p-8">
+          {children}
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
+  );
+}
+
 function Records({ kind }: { kind: Kind }) {
   const [status, setStatus] = useState("");
   const {

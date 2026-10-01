@@ -131,3 +131,12 @@ Do not run them against production.
 The standard `npm run test:e2e` runs with submissions disabled and no Clerk keys,
 so it does not depend on accounts or save personal data. Set `PLAYWRIGHT_PORT=3100`
 if your normal development server already occupies port 3000.
+
+## Local UI preview without Clerk keys
+
+With `npm run dev` running, open `/dev-preview/login`,
+`/dev-preview/applications`, or `/dev-preview/businessLeads`. These use the
+shared login card and dashboard shell with explicitly labeled synthetic rows.
+They do not query Convex, authenticate, or save records. Routes require development
+mode and a localhost hostname and return 404 in production. Actual staff access
+continues to require configured Clerk keys and Convex staff approval.

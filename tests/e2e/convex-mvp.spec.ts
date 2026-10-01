@@ -1,4 +1,9 @@
 import { test, expect } from "@playwright/test";
+test("local UI previews are unavailable in production", async ({ request }) => {
+  for (const page of ["login", "applications", "businessLeads"]) {
+    expect((await request.get(`/dev-preview/${page}`)).status()).toBe(404);
+  }
+});
 test("business enquiry preview validates required data without saving", async ({
   page,
 }) => {

@@ -56,3 +56,5 @@ credentials*.json
 /.convex/
 
 /.next-verify/
+/.playwright-cli/
+/output/playwright/

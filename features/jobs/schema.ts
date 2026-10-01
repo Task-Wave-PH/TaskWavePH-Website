@@ -14,7 +14,12 @@ export const employmentTypes = [
   "Contract",
   "Project-based",
 ] as const;
-export const jobStatuses = ["Draft", "Published", "Closed"] as const;
+export const jobStatuses = [
+  "Draft",
+  "Published",
+  "Closed",
+  "Archived",
+] as const;
 export const jobSchema = z.object({
   title: z.string().trim().min(2).max(200),
   serviceArea: z.enum(serviceAreas),

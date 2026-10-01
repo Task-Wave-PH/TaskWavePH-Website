@@ -1,73 +1,96 @@
 "use client";
-import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
+import {
+  FileText,
+  Handshake,
+  BriefcaseBusiness,
+  Clock3,
+  ArrowUpRight,
+} from "lucide-react";
 import {
   Card,
-  CardAction,
+  CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { FileText, Clock, CircleCheck, Archive } from "lucide-react";
+import {
+  countStatus,
+  total,
+  type OverviewData,
+} from "@/features/admin/metrics";
 export type DashboardRow = { status: string; submittedAt: number };
-// The dashboard-01 card structure, with counts from the currently loaded records.
 export function SectionCards({
-  rows,
-  loading = false,
+  data,
+  preview = false,
 }: {
-  rows: DashboardRow[];
-  loading?: boolean;
+  data?: OverviewData;
+  preview?: boolean;
 }) {
+  const root = preview ? "/dev-preview" : "/admin";
   const cards = [
     {
-      label: "Loaded records",
-      value: rows.length,
-      caption: "Records in this view",
-      note: "Includes the current status filter",
+      label: "Applicants",
+      value: total(data?.applications ?? []),
+      note: `${countStatus(data?.applications ?? [], "New")} awaiting review`,
       icon: FileText,
+      href: "applications",
     },
     {
-      label: "New submissions",
-      value: rows.filter((r) => r.status === "New").length,
-      caption: "Ready for review",
-      note: "New records in this view",
-      icon: Clock,
+      label: "Business leads",
+      value: total(data?.leads ?? []),
+      note: `${data?.priorityLeads ?? 0} marked as priority`,
+      icon: Handshake,
+      href: "businessLeads",
     },
     {
-      label: "In progress",
-      value: rows.filter((r) => !["New", "Closed"].includes(r.status)).length,
-      caption: "Review is underway",
-      note: "Reviewed, shortlisted or contacted",
-      icon: CircleCheck,
+      label: "Published jobs",
+      value: countStatus(data?.jobs ?? [], "Published"),
+      note: "Visible on the Careers page",
+      icon: BriefcaseBusiness,
+      href: "jobs?status=Published",
     },
     {
-      label: "Closed records",
-      value: rows.filter((r) => r.status === "Closed").length,
-      caption: "Review completed",
-      note: "Closed records in this view",
-      icon: Archive,
+      label: "Draft jobs",
+      value: countStatus(data?.jobs ?? [], "Draft"),
+      note: "Prepare and publish approved roles",
+      icon: Clock3,
+      href: "jobs?status=Draft",
     },
   ];
   return (
-    <div className="grid grid-cols-1 gap-4 *:data-[slot=card]:bg-linear-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
-      {cards.map(({ label, value, caption, note, icon: Icon }) => (
-        <Card key={label} className="@container/card">
-          <CardHeader>
-            <CardDescription>{label}</CardDescription>
-            <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-              {loading ? "—" : value.toLocaleString()}
-            </CardTitle>
-            <CardAction>
-              <Badge variant="outline">
-                <Icon className="size-3" />
-                <span className="sr-only">{label}</span>
-              </Badge>
-            </CardAction>
+    <div className="grid gap-4 @xl/main:grid-cols-2 @3xl/main:grid-cols-4">
+      {cards.map(({ label, value, note, icon: Icon, href }) => (
+        <Card
+          key={label}
+          className="gap-4 bg-linear-to-t from-primary/5 to-card shadow-xs"
+        >
+          <CardHeader className="flex flex-row items-start justify-between gap-3">
+            <div className="min-w-0 space-y-2">
+              <CardDescription>{label}</CardDescription>
+              <CardTitle
+                className="text-3xl font-semibold tabular-nums text-brand-navy"
+                data-testid={`metric-${href.split("?")[0]}-${label.replaceAll(" ", "-").toLowerCase()}`}
+              >
+                {data?.ready ? value.toLocaleString() : "—"}
+              </CardTitle>
+            </div>
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <Icon className="size-5" aria-hidden="true" />
+            </span>
           </CardHeader>
-          <CardFooter className="flex-col items-start gap-1.5 border-0 bg-transparent text-sm">
-            <div className="flex gap-2 font-medium">{caption}</div>
-            <div className="text-muted-foreground">{note}</div>
-          </CardFooter>
+          <CardContent className="flex flex-1 flex-col gap-2 text-sm">
+            <p className="min-h-10 text-muted-foreground">
+              {data?.ready ? note : "Preparing totals…"}
+            </p>
+            <Link
+              href={`${root}/${href}`}
+              className="mt-auto inline-flex min-h-11 items-center gap-2 self-start font-medium text-primary"
+            >
+              View {label.toLowerCase()}
+              <ArrowUpRight className="size-4" aria-hidden="true" />
+            </Link>
+          </CardContent>
         </Card>
       ))}
     </div>

@@ -1,98 +1,77 @@
 "use client";
-import { PreviewApplicantsList } from "./preview-applicants-list";
 import { useState } from "react";
-import { SectionCards } from "@/components/section-cards";
-import { ChartAreaInteractive } from "@/components/chart-area-interactive";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { leadStatuses } from "@/features/submissions/validation";
+import { useRouter } from "next/navigation";
+import { PreviewApplicantsList } from "./preview-applicants-list";
+import { usePreviewLeads } from "./preview-provider";
+import { RecordsView } from "./records-view";
+import { LeadDetails } from "./lead-details";
 export function PreviewDashboardContent({
   kind,
 }: {
   kind: "applications" | "businessLeads";
 }) {
-  if (kind === "applications") return <PreviewApplicantsList />;
-  return <BusinessPreview />;
+  return kind === "applications" ? (
+    <PreviewApplicantsList />
+  ) : (
+    <PreviewLeadsList />
+  );
 }
-function BusinessPreview() {
-  const [status, setStatus] = useState("all");
-  const statuses = leadStatuses;
-  const sampleRows = Array.from({ length: 360 }, (_, i) => ({
-    status: statuses[i % statuses.length],
-    submittedAt:
-      Date.UTC(2026, 9, 1) - ((i * 17 + Math.floor(i / 8)) % 90) * 86400000,
-  }));
-  const filtered = sampleRows.filter(
-    (row) => status === "all" || row.status === status,
+function PreviewLeadsList() {
+  const { leads, prioritizeLead } = usePreviewLeads();
+  const [status, setStatus] = useState("");
+  const [priority, setPriority] = useState(false);
+  const [limit, setLimit] = useState(20);
+  const filtered = leads.filter(
+    (row) => (!status || row.status === status) && (!priority || row.priority),
   );
   return (
-    <>
-      <h1 className="sr-only">Business Leads</h1>
-      <SectionCards rows={filtered} />
-      <ChartAreaInteractive rows={filtered} preview />
-      <Tabs
-        value={status}
-        onValueChange={(value) => setStatus(String(value))}
-        className="gap-4"
-      >
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <TabsList className="h-auto! min-h-9 flex-wrap">
-            <TabsTrigger className="min-h-9" value="all">
-              All records
-            </TabsTrigger>
-            {statuses.map((value) => (
-              <TabsTrigger className="min-h-9" key={value} value={value}>
-                {value}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-          <Badge variant="outline">Sample records</Badge>
-        </div>
-        <TabsContent value={status}>
-          <div className="overflow-hidden rounded-xl border bg-card">
-            <Table>
-              <TableHeader className="bg-muted/50">
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Submitted</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.slice(0, 8).map((row, index) => (
-                  <TableRow key={index}>
-                    <TableCell className="font-medium">
-                      Sample business {index + 1}
-                    </TableCell>
-                    <TableCell>sample-{index + 1}@example.invalid</TableCell>
-                    <TableCell>
-                      {new Date(row.submittedAt).toLocaleDateString("en-US", {
-                        timeZone: "UTC",
-                      })}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{row.status}</Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-          <p className="mt-4 text-sm text-muted-foreground">
-            Showing {Math.min(filtered.length, 8)} of {filtered.length} sample
-            records.
-          </p>
-        </TabsContent>
-      </Tabs>
-    </>
+    <RecordsView
+      kind="businessLeads"
+      rows={filtered.slice(0, limit).map((row) => ({
+        id: row._id,
+        reference: row.reference,
+        name: row.data.company,
+        email: row.data.email,
+        status: row.status,
+        submittedAt: row.submittedAt,
+        priority: row.priority,
+      }))}
+      preview
+      matchedCount={filtered.length}
+      status={status}
+      onStatus={(value) => {
+        setStatus(value);
+        setLimit(20);
+      }}
+      priorityOnly={priority}
+      onPriorityFilter={(value) => {
+        setPriority(value);
+        setLimit(20);
+      }}
+      onPriority={(row) => prioritizeLead(row.id, !row.priority)}
+      more={filtered.length > limit ? () => setLimit((v) => v + 20) : undefined}
+    />
+  );
+}
+export function PreviewLeadDetails({ id }: { id: string }) {
+  const { leads, updateLead, prioritizeLead, removeLead } = usePreviewLeads();
+  const router = useRouter();
+  const lead = leads.find((row) => row._id === id);
+  if (!lead)
+    return (
+      <p role="status">Lead not found. Preview records reset on refresh.</p>
+    );
+  return (
+    <LeadDetails
+      key={id}
+      record={lead}
+      backHref="/dev-preview/businessLeads"
+      onSave={async (status, notes) => updateLead(id, status, notes)}
+      onPriority={async (value) => prioritizeLead(id, value)}
+      onDelete={async () => {
+        removeLead(id);
+        router.push("/dev-preview/businessLeads");
+      }}
+    />
   );
 }

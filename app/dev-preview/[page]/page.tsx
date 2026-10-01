@@ -27,13 +27,11 @@ export default async function Page({
   const { page } = await params;
   if (!["login", "applications", "businessLeads"].includes(page)) notFound();
   const notice = (
-    <p className="mb-6 rounded-lg border border-primary/20 bg-secondary p-4 text-sm">
+    <p className="rounded-lg border border-primary/20 bg-secondary p-4 text-sm">
       Local UI preview · Sample data only ·{" "}
       <Link
         className="text-primary underline"
-        href={
-          page === "login" ? "/dev-preview/applications" : "/dev-preview/login"
-        }
+        href={page === "login" ? "/dev-preview" : "/dev-preview/login"}
       >
         {page === "login" ? "View dashboard" : "View login"}
       </Link>

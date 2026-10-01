@@ -22,8 +22,10 @@ on October 1, 2026. This supersedes the original Sheets-only MVP constraints.
   another datastore, object store, CRM, employee management, or applicant login.
 - Public forms POST through Next.js services to the authenticated Convex HTTP
   adapter. Keep the shared secret server-side. Backend functions validate again.
-- Tables: applications, businessLeads, jobs, adminUsers, adminActivity, pendingUploads.
-  Convex rate-limiter component supplies persistent throttling.
+- Tables: applications, businessLeads, jobs, adminUsers, adminActivity, pendingUploads,
+  dashboardState (internal metric readiness).
+  Convex rate-limiter supplies persistent throttling; aggregate components supply
+  exact private dashboard counts. Synchronize all write paths, including seeds.
 - Administrative functions require verified Clerk identity AND active adminUsers
   approval. Authentication alone grants no record access. Staff provisioning is
   an internal mutation invoked from trusted CLI/dashboard access.
@@ -112,7 +114,12 @@ add noindex, and send private/no-store responses. Host routing is not authorizat
 
 ## Job postings
 
-- Careers lists only Published jobs. Draft and Closed postings are private.
+- Careers lists only Published jobs. Draft, Closed, and Archived postings are private.
+- Archived jobs restore to Draft before publication. Jobs with linked applications
+  cannot be permanently deleted; check the indexed association in the transaction.
+- Leads support an optional priority star (missing means false), not custom CRM tags.
+- The admin overview uses full-table transactional aggregates and Philippine dates,
+  independent of list pagination/filters. Backfill existing data before displaying totals.
 - Approved staff create/edit bounded plain-text postings and explicitly confirm
   publication or closure. Preserve closed postings and existing applications.
 - Optional application job IDs are validated inside the save transaction; store

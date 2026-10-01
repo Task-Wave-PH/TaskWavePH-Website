@@ -1,5 +1,6 @@
 /// <reference types="vite/client" />
 import { convexTest } from "convex-test";
+import aggregate from "@convex-dev/aggregate/test";
 import rateLimiter from "@convex-dev/rate-limiter/test";
 import { describe, it, expect, vi, afterEach } from "vitest";
 import schema from "../../convex/schema";
@@ -12,6 +13,8 @@ const modules = import.meta.glob("../../convex/**/*.ts");
 function setup() {
   const t = convexTest(schema, modules);
   rateLimiter.register(t);
+  aggregate.register(t, "adminByTime");
+  aggregate.register(t, "adminByStatus");
   return t;
 }
 async function staff(t: ReturnType<typeof setup>) {

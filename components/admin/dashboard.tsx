@@ -10,37 +10,18 @@ import {
   useQuery,
 } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import {
-  applicationStatuses,
-  leadStatuses,
-} from "@/features/submissions/validation";
+import { buttonVariants } from "@/components/ui/button";
 import { ApplicantDetails } from "./applicant-details";
 import { ExportButtons } from "./export-buttons";
 import type { ApplicantView } from "@/features/applications/admin-types";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SiteHeader } from "@/components/site-header";
-import { SectionCards } from "@/components/section-cards";
-import { ChartAreaInteractive } from "@/components/chart-area-interactive";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
 import {
   FileText,
   Handshake,
   LayoutDashboard,
   BriefcaseBusiness,
 } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { usePathname } from "next/navigation";
 import {
   SidebarInset,
@@ -50,13 +31,10 @@ import {
   SidebarProvider,
   useSidebar,
 } from "@/components/ui/sidebar";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { RecordsView } from "./records-view";
+import { LeadDetails } from "./lead-details";
+import type { LeadView } from "@/features/leads/admin-types";
+import type { Id } from "@/convex/_generated/dataModel";
 type Kind = "applications" | "businessLeads";
 const title = (kind: Kind) =>
   kind === "applications" ? "Applications" : "Business Leads";
@@ -110,9 +88,17 @@ function Navigation({ preview = false }: { preview?: boolean }) {
         <SidebarMenuItem>
           <SidebarMenuButton
             render={
-              <Link href={preview ? "/dev-preview/applications" : "/admin"} />
+              <Link
+                href={preview ? "/dev-preview" : "/admin"}
+                aria-current={
+                  ["/admin", "/dev-preview", "/"].includes(pathname)
+                    ? "page"
+                    : undefined
+                }
+              />
             }
-            className="min-h-10"
+            isActive={["/admin", "/dev-preview", "/"].includes(pathname)}
+            className="min-h-11"
             onClick={() => setOpenMobile(false)}
           >
             <LayoutDashboard />
@@ -125,20 +111,11 @@ function Navigation({ preview = false }: { preview?: boolean }) {
               render={
                 <Link
                   href={preview ? `/dev-preview/${kind}` : `/admin/${kind}`}
-                  aria-current={
-                    pathname.includes(kind) ||
-                    (kind === "applications" &&
-                      ["/admin", "/"].includes(pathname))
-                      ? "page"
-                      : undefined
-                  }
+                  aria-current={pathname.includes(kind) ? "page" : undefined}
                 />
               }
-              isActive={
-                pathname.includes(kind) ||
-                (kind === "applications" && ["/admin", "/"].includes(pathname))
-              }
-              className="min-h-10 data-active:bg-sidebar-accent data-active:text-sidebar-accent-foreground"
+              isActive={pathname.includes(kind)}
+              className="min-h-11 data-active:bg-sidebar-accent data-active:text-sidebar-accent-foreground"
               onClick={() => setOpenMobile(false)}
             >
               {kind === "applications" ? <FileText /> : <Handshake />}
@@ -155,7 +132,7 @@ function Navigation({ preview = false }: { preview?: boolean }) {
               />
             }
             isActive={pathname.includes("/jobs")}
-            className="min-h-10"
+            className="min-h-11"
             onClick={() => setOpenMobile(false)}
           >
             <BriefcaseBusiness />
@@ -201,7 +178,7 @@ export function DashboardShell({
       style={
         {
           "--sidebar-width": "calc(var(--spacing) * 72)",
-          "--header-height": "calc(var(--spacing) * 12)",
+          "--header-height": "calc(var(--spacing) * 16)",
         } as React.CSSProperties
       }
     >
@@ -209,10 +186,10 @@ export function DashboardShell({
         <Navigation preview={preview} />
       </AppSidebar>
       <SidebarInset className="min-w-0">
-        <SiteHeader title={sectionTitle ?? title(kind)} />
+        <SiteHeader title={sectionTitle ?? title(kind)} preview={preview} />
         <div
           id="main-content"
-          className="@container/main flex min-w-0 flex-1 flex-col gap-4 px-4 py-4 md:gap-6 md:py-6 lg:px-6"
+          className="@container/main flex min-w-0 flex-1 flex-col gap-6 px-4 py-6 md:py-8 lg:px-8"
         >
           {children}
         </div>
@@ -223,128 +200,71 @@ export function DashboardShell({
 
 function Records({ kind }: { kind: Kind }) {
   const [status, setStatus] = useState("");
+  const [priorityOnly, setPriorityOnly] = useState(false);
+  const [message, setMessage] = useState("");
+  const [marking, setMarking] = useState(false);
+  const prioritize = useMutation(api.admin.setPriority);
   const {
     results,
     status: pagination,
     loadMore,
   } = usePaginatedQuery(
     api.admin.list,
-    { kind, ...(status ? { status } : {}) },
+    {
+      kind,
+      ...(status ? { status } : {}),
+      ...(priorityOnly ? { priorityOnly: true } : {}),
+    },
     { initialNumItems: 20 },
   );
   return (
     <>
-      <h1 className="sr-only">{title(kind)}</h1>
-      <SectionCards
+      <RecordsView
+        kind={kind}
         rows={results}
+        status={status}
+        onStatus={setStatus}
+        priorityOnly={priorityOnly}
+        onPriorityFilter={setPriorityOnly}
+        onPriority={
+          kind === "businessLeads"
+            ? async (row) => {
+                if (marking) return;
+                setMarking(true);
+                setMessage("");
+                try {
+                  await prioritize({
+                    id: row.id as Id<"businessLeads">,
+                    priority: !row.priority,
+                  });
+                } catch {
+                  setMessage(
+                    "Unable to change priority. Check your access and try again.",
+                  );
+                } finally {
+                  setMarking(false);
+                }
+              }
+            : undefined
+        }
+        actions={
+          kind === "applications" ? (
+            <ExportButtons status={status} />
+          ) : undefined
+        }
         loading={pagination === "LoadingFirstPage"}
+        loadingMore={pagination === "LoadingMore"}
+        more={
+          pagination === "CanLoadMore" || pagination === "LoadingMore"
+            ? () => loadMore(20)
+            : undefined
+        }
       />
-      <ChartAreaInteractive
-        rows={results}
-        loading={pagination === "LoadingFirstPage"}
-      />
-      <Tabs
-        value={status || "all"}
-        onValueChange={(v) => setStatus(v === "all" ? "" : String(v))}
-        className="gap-4"
-      >
-        <section aria-label="Records" className="space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <TabsList className="hidden h-auto! flex-wrap gap-1 md:inline-flex">
-              <TabsTrigger className="min-h-11" value="all">
-                All records
-              </TabsTrigger>
-              {(kind === "applications"
-                ? applicationStatuses
-                : leadStatuses
-              ).map((v) => (
-                <TabsTrigger className="min-h-11" key={v} value={v}>
-                  {v}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-            <h2 className="text-lg font-semibold md:sr-only">{title(kind)}</h2>
-            <div className="flex flex-wrap items-end gap-4">
-              {kind === "applications" && <ExportButtons status={status} />}
-              <div className="grid gap-2">
-                <Label htmlFor="status-filter" className="text-sm">
-                  Filter by status
-                </Label>
-                <Select
-                  value={status || "all"}
-                  onValueChange={(value) =>
-                    setStatus(value === "all" ? "" : String(value))
-                  }
-                >
-                  <SelectTrigger id="status-filter" className="h-11! w-48">
-                    <SelectValue>{status || "All statuses"}</SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All statuses</SelectItem>
-                    {(kind === "applications"
-                      ? applicationStatuses
-                      : leadStatuses
-                    ).map((value) => (
-                      <SelectItem key={value} value={value}>
-                        {value}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-          <TabsContent value={status || "all"} className="space-y-4">
-            {pagination === "LoadingFirstPage" && (
-              <p role="status">Loading records…</p>
-            )}
-            {pagination !== "LoadingFirstPage" && !results.length && (
-              <p>No records found.</p>
-            )}
-            {!!results.length && (
-              <div className="overflow-hidden rounded-xl border bg-card">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Submitted</TableHead>
-                      <TableHead>Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {results.map((row) => (
-                      <TableRow key={row.id}>
-                        <TableCell>
-                          <Link
-                            href={`/admin/${kind}/${row.id}`}
-                            className="font-semibold text-primary underline underline-offset-4"
-                          >
-                            {row.name}
-                          </Link>
-                        </TableCell>
-                        <TableCell>{row.email}</TableCell>
-                        <TableCell>
-                          {new Date(row.submittedAt).toLocaleString()}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{row.status}</Badge>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </TabsContent>
-          {pagination === "CanLoadMore" && (
-            <Button className="mt-6 min-h-11" onClick={() => loadMore(20)}>
-              Load more
-            </Button>
-          )}
-          {pagination === "LoadingMore" && <p role="status">Loading more…</p>}
-        </section>
-      </Tabs>
+      {message && (
+        <p role="alert" className="text-sm text-destructive">
+          {message}
+        </p>
+      )}
     </>
   );
 }
@@ -356,7 +276,7 @@ function Details({ kind, id }: { kind: Kind; id: string }) {
     return (
       <LiveApplicantEditor key={record._id} record={record as ApplicantView} />
     );
-  return <Editor key={record._id} kind={kind} record={record} />;
+  return <LiveLeadEditor key={record._id} record={record as LeadView} />;
 }
 function LiveApplicantEditor({ record }: { record: ApplicantView }) {
   const update = useMutation(api.admin.update);
@@ -379,157 +299,28 @@ function LiveApplicantEditor({ record }: { record: ApplicantView }) {
     />
   );
 }
-type RecordData = NonNullable<
-  import("convex/server").FunctionReturnType<typeof api.admin.detail>
->;
-function Editor({ kind, record }: { kind: Kind; record: RecordData }) {
-  const [status, setStatus] = useState<string>(record.status);
-  const [notes, setNotes] = useState(record.notes);
-  const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState("");
-  const [confirm, setConfirm] = useState(false);
-  const update = useMutation(api.admin.update);
-  const remove = useMutation(api.admin.remove);
+function LiveLeadEditor({ record }: { record: LeadView }) {
+  const update = useMutation(api.admin.update),
+    remove = useMutation(api.admin.remove),
+    priority = useMutation(api.admin.setPriority);
   const router = useRouter();
-  const resume = "resumeFile" in record ? record.resumeFile : undefined;
-  async function save() {
-    setBusy(true);
-    setMessage("");
-    try {
-      await update({ kind, id: record._id, status, notes });
-      setMessage("Changes saved.");
-    } catch {
-      setMessage("Unable to save. Check your access and try again.");
-    } finally {
-      setBusy(false);
-    }
-  }
-  async function erase() {
-    setBusy(true);
-    try {
-      await remove({ kind, id: record._id });
-      router.push(`/admin/${kind}`);
-    } catch {
-      setMessage("Unable to delete. Check your access and try again.");
-      setBusy(false);
-    }
-  }
   return (
-    <>
-      <Link
-        href={`/admin/${kind}`}
-        className="inline-flex min-h-11 items-center self-start text-primary underline underline-offset-4"
-      >
-        Back to {title(kind)}
-      </Link>
-      <h1 className="break-words text-3xl font-semibold">
-        {kind === "applications" && "firstName" in record.data
-          ? `${record.data.firstName} ${record.data.lastName}`
-          : "company" in record.data
-            ? record.data.company
-            : "Record"}
-      </h1>
-      <p className="break-all text-sm text-muted-foreground">
-        {record.reference}
-      </p>
-      <Card className="py-0">
-        <CardContent className="p-5 sm:p-8">
-          <dl className="grid gap-5 sm:grid-cols-2">
-            {Object.entries(record.data).map(([key, value]) => (
-              <div key={key} className="min-w-0">
-                <dt className="text-sm font-medium">
-                  {key.replace(/([A-Z])/g, " $1").replaceAll("_", " ")}
-                </dt>
-                <dd className="mt-1 whitespace-pre-wrap break-words text-muted-foreground">
-                  {Array.isArray(value)
-                    ? value.join(", ")
-                    : String(value ?? "—")}
-                </dd>
-              </div>
-            ))}
-          </dl>
-          {resume && (
-            <Link
-              prefetch={false}
-              href={`/api/admin/resumes/${record._id}`}
-              className={buttonVariants({ className: "mt-6 min-h-11" })}
-            >
-              Download resume PDF
-            </Link>
-          )}
-        </CardContent>
-      </Card>
-      <div className="grid gap-4">
-        <div className="grid gap-2">
-          <Label htmlFor="record-status">Status</Label>
-          <Select
-            value={status}
-            onValueChange={(value) => setStatus(String(value))}
-          >
-            <SelectTrigger id="record-status" className="h-11! w-full sm:w-64">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {(kind === "applications"
-                ? applicationStatuses
-                : leadStatuses
-              ).map((value) => (
-                <SelectItem key={value} value={value}>
-                  {value}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor="notes">Internal notes</Label>
-          <Textarea
-            id="notes"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            maxLength={2000}
-          />
-        </div>
-        <Button className="min-h-11 w-fit px-5" disabled={busy} onClick={save}>
-          {busy ? "Please wait…" : "Save changes"}
-        </Button>
-        <p role="status">{message}</p>
-        <Button
-          variant="destructive"
-          className="min-h-11 w-fit px-5"
-          disabled={busy}
-          onClick={() => setConfirm(true)}
-        >
-          Delete record
-        </Button>
-        {confirm && (
-          <Card className="py-0">
-            <CardContent className="space-y-4 p-5">
-              <p>
-                Permanently delete this record and any attached resume? This
-                cannot be undone.
-              </p>
-              <div className="flex flex-wrap gap-3">
-                <Button
-                  variant="destructive"
-                  disabled={busy}
-                  onClick={erase}
-                  className="min-h-11"
-                >
-                  Confirm permanent deletion
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setConfirm(false)}
-                  className="min-h-11"
-                >
-                  Cancel
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-    </>
+    <LeadDetails
+      record={record}
+      backHref="/admin/businessLeads"
+      onSave={async (status, notes) => {
+        await update({ kind: "businessLeads", id: record._id, status, notes });
+      }}
+      onPriority={async (value) => {
+        await priority({
+          id: record._id as Id<"businessLeads">,
+          priority: value,
+        });
+      }}
+      onDelete={async () => {
+        await remove({ kind: "businessLeads", id: record._id });
+        router.push("/admin/businessLeads");
+      }}
+    />
   );
 }

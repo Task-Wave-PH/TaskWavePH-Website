@@ -3,6 +3,7 @@ export const jobStatus = v.union(
   v.literal("Draft"),
   v.literal("Published"),
   v.literal("Closed"),
+  v.literal("Archived"),
 );
 export const jobFields = {
   title: v.string(),

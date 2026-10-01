@@ -9,6 +9,12 @@ export function previewApplicants(): ApplicantView[] {
     status: (["New", "Reviewed", "Shortlisted", "Closed"] as const)[i % 4],
     notes: "Synthetic sample for UI testing.",
     data: {
+      ...(i < 3
+        ? {
+            jobId: "sample-job-001",
+            jobTitle: "Sample Customer Support Role 1",
+          }
+        : {}),
       firstName: "Sample",
       lastName: `Applicant ${i + 1}`,
       email: `sample-${i + 1}@example.invalid`,

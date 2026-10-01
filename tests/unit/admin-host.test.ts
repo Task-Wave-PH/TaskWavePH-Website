@@ -19,6 +19,16 @@ describe("admin domain isolation", () => {
       expect(response.headers.get("x-robots-tag")).toContain("noindex");
     }
   });
+  it("marks preview responses private and unindexable", async () => {
+    for (const path of [
+      "/dev-preview",
+      "/dev-preview/businessLeads/sample-lead-002",
+    ]) {
+      const response = await call(`http://localhost:3000${path}`);
+      expect(response.headers.get("cache-control")).toBe("private, no-store");
+      expect(response.headers.get("x-robots-tag")).toContain("noindex");
+    }
+  });
   it("blocks admin routes and downloads on the public production host", async () => {
     for (const path of [
       "/admin",

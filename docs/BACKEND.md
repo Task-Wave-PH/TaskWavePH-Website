@@ -315,3 +315,51 @@ Run `npm run convex:limits:smoke` to verify authentication and the persistent
 rate bucket and creates no applicant records. `npm run test:submissions` additionally
 checks real development writes and real Cloudflare test-widget sizing; keep these
 services separate from production.
+
+## Admin overview and management
+
+`/admin` is the protected overview; `/dev-preview` is its localhost-only synthetic
+counterpart. Middleware requests private/no-store and noindex responses. Next.js
+development mode overrides page cache-control to no-cache/must-revalidate; it
+contains synthetic preview data only. Production previews remain unavailable.
+Applications, Business Leads, and Jobs have separate list and detail
+screens. Preview lead priority/status/notes/deletion and job archive/restore/delete
+update preview state only. The sample first job has three linked applicants to
+demonstrate blocked deletion. Exit preview clears sample jobs and leaves the workspace.
+
+Staff account menus show Clerk profile information and offer explicit logout.
+Real Clerk sign-in/logout still requires configured development keys and an approved
+`adminUsers` record. Preview has no authenticated account and cannot read private data.
+
+The `adminByTime` and `adminByStatus` Convex Aggregate components maintain exact
+counts transactionally. Every application, lead, and job write, seed, and cleanup
+must update them through `syncMetrics`. Chart buckets use Asia/Manila dates and
+include retained records; deletion removes records from totals and chart buckets.
+There is no revenue or conversion estimate. Recent activity exposes action metadata
+only, excluding record content, staff identifiers, and internal notes.
+
+After deploying this feature to the intended development deployment, run:
+
+```bash
+npx convex run overview:startBackfill '{}'
+```
+
+This internal migration uses idempotent, bounded batches and a `dashboardState`
+readiness marker. Live writes synchronize during backfill. Counts remain hidden
+until all three tables finish. Re-running is safe; if a scheduled batch fails,
+inspect Convex logs and re-run the starter to resume from the beginning. Once ready,
+the starter does not rebuild already synchronized counts. Do not edit source records
+directly in the Convex dashboard; use application functions so aggregates stay correct.
+
+Jobs now support Draft, Published, Closed, and Archived. Archived postings are
+private and must return to Draft before publication. Deletion checks
+`applications.by_jobId` in the same transaction and rejects linked jobs. Existing
+applications keep their title snapshot. Lead priority is an optional boolean with
+indexed priority/status filtering; missing values mean unstarred.
+
+Run `npm run convex:admin:smoke` against the configured development target for
+actual submissions, complete metrics, priority filtering, archive/restore, and safe
+deletion. It temporarily publishes a clearly synthetic development role, cleans
+its disposable applicant/lead/job records, and revokes its temporary CLI staff
+approval. CLI identity testing is not real Clerk authentication. This command does
+not configure or deploy production services.

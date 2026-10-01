@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { usePreviewApplicants } from "@/components/admin/preview-provider";
 import { usePreviewJobs } from "./preview-provider";
 import { JobEditor } from "./job-editor";
 import { JobList } from "./job-list";
@@ -49,10 +50,17 @@ export function PreviewNotice() {
     </aside>
   );
 }
-export function PreviewJobAdmin({ id }: { id?: string }) {
-  const { jobs, save, setStatus } = usePreviewJobs();
+export function PreviewJobAdmin({
+  id,
+  initialStatus = "all",
+}: {
+  id?: string;
+  initialStatus?: string;
+}) {
+  const { jobs, save, setStatus, remove } = usePreviewJobs();
+  const { records } = usePreviewApplicants();
   const router = useRouter();
-  const [filter, setFilter] = useState("all");
+  const [filter, setFilter] = useState(initialStatus);
   const [limit, setLimit] = useState(20);
   if (id) {
     const job = jobs.find((row) => row._id === id);
@@ -70,6 +78,19 @@ export function PreviewJobAdmin({ id }: { id?: string }) {
           key={`${id}-${job?.updatedAt}`}
           preview
           job={job}
+          deletionAllowed={
+            !!job && !records.some((row) => row.data.jobId === job._id)
+          }
+          onDelete={
+            job
+              ? async () => {
+                  if (records.some((row) => row.data.jobId === job._id))
+                    throw new Error("Linked applicants");
+                  remove(job._id);
+                  router.push("/dev-preview/jobs");
+                }
+              : undefined
+          }
           onSave={async (data) => {
             const saved = save(data, job?._id);
             if (!job) router.push(`/dev-preview/jobs/${saved}`);
@@ -92,7 +113,14 @@ export function PreviewJobAdmin({ id }: { id?: string }) {
     <>
       <PreviewNotice />
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-3xl font-semibold">Job Postings</h1>
+        <div className="space-y-2">
+          <h1 className="text-2xl font-semibold text-brand-navy sm:text-3xl">
+            Job Postings
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Manage sample roles and their publication status.
+          </p>
+        </div>
         <Link
           href="/dev-preview/jobs/new"
           className={buttonVariants({ className: "min-h-11 px-5" })}

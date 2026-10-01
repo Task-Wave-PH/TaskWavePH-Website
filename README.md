@@ -51,12 +51,16 @@ on finalized privacy details and service configuration.
 
 Read [AGENTS.md](AGENTS.md) and [DESIGN.md](DESIGN.md). Preserve official artwork
 and source-backed company copy. Convex is the source of truth; Sheets sync,
-employees, applicant accounts, job management, payroll, and CRM are deferred.
+employees, applicant accounts, payroll, and CRM are deferred.
 
 Applicant names open detail pages with profile, CV and submission tabs. Staff can
 review status/notes, view/download PDFs, delete records, and export all matching
 applicants to CSV or styled Excel. Local UI samples are available at
-`/dev-preview/applications`; they are separate from authenticated database records.
+`/dev-preview` (overview) and `/dev-preview/applications`; they are separate from
+authenticated database records. Business Leads supports priority stars, status,
+notes, and confirmed deletion. Jobs supports archive/restore and deletion only
+when no applications are linked. See `docs/BACKEND.md` for metric backfill and
+`npm run convex:admin:smoke` for development verification.
 Use `SUBMISSIONS_ENABLED=development` for local form writes without enabling
 production collection.
 

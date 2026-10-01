@@ -1,6 +1,8 @@
 import { test, expect } from "@playwright/test";
 test("local UI previews are unavailable in production", async ({ request }) => {
   for (const page of [
+    "",
+    "businessLeads/sample-lead-002",
     "login",
     "applications",
     "businessLeads",

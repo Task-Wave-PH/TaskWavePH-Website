@@ -73,7 +73,10 @@ test("exports include unloaded rows and honor the status filter", async ({
   const csv = await csvPromise;
   const text = await readFile((await csv.path())!, "utf8");
   expect(text.match(/TW-PREVIEW-/g)).toHaveLength(50);
-  await page.getByRole("tab", { name: "New", exact: true }).click();
+  await page
+    .getByRole("combobox", { name: "Filter by status", exact: true })
+    .click();
+  await page.getByRole("option", { name: "New", exact: true }).click();
   const excelPromise = page.waitForEvent("download");
   await page.getByRole("button", { name: "Export Excel" }).click();
   const excel = await excelPromise;

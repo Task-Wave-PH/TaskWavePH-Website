@@ -1,9 +1,16 @@
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-export function SiteHeader({ title }: { title: string }) {
+import { Badge } from "@/components/ui/badge";
+export function SiteHeader({
+  title,
+  preview = false,
+}: {
+  title: string;
+  preview?: boolean;
+}) {
   return (
-    <header className="flex h-(--header-height) shrink-0 items-center gap-2 border-b">
-      <div className="flex w-full min-w-0 items-center gap-2 px-4 lg:px-6">
+    <header className="sticky top-0 z-20 flex h-(--header-height) shrink-0 items-center gap-2 border-b bg-background/95 backdrop-blur-sm">
+      <div className="flex w-full min-w-0 items-center gap-2 px-4 lg:px-8">
         <SidebarTrigger className="size-11 shrink-0" />
         <Separator
           orientation="vertical"
@@ -12,6 +19,11 @@ export function SiteHeader({ title }: { title: string }) {
         <p className="truncate text-base font-medium text-brand-navy">
           {title}
         </p>
+        {preview && (
+          <Badge variant="outline" className="ml-auto shrink-0">
+            UI preview
+          </Badge>
+        )}
       </div>
     </header>
   );

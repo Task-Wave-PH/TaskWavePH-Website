@@ -34,7 +34,9 @@ export default async function proxy(
     return new NextResponse(null, { status: 404 });
   if (!adminHost && !adminPath) {
     const response = NextResponse.next();
-    return ["/apply/success", "/business-enquiry/success"].includes(path)
+    return ["/apply/success", "/business-enquiry/success"].includes(path) ||
+      path === "/dev-preview" ||
+      path.startsWith("/dev-preview/")
       ? privateResponse(response)
       : response;
   }

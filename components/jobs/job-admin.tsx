@@ -37,9 +37,9 @@ export function JobTable({
   preview?: boolean;
 }) {
   return (
-    <div className="overflow-x-auto rounded-lg border">
+    <div className="min-w-0 overflow-hidden rounded-xl border bg-card">
       <Table>
-        <TableHeader>
+        <TableHeader className="bg-secondary/50">
           <TableRow>
             <TableHead>Role</TableHead>
             <TableHead>Status</TableHead>
@@ -53,7 +53,7 @@ export function JobTable({
               <TableCell>
                 <Link
                   href={`${preview ? "/dev-preview/jobs" : "/admin/jobs"}/${job._id}`}
-                  className="font-medium text-primary underline"
+                  className="inline-flex min-h-11 items-center font-medium text-primary underline-offset-4 hover:underline"
                 >
                   {job.title}
                 </Link>
@@ -103,8 +103,8 @@ export function JobStatusFilter({
     </Select>
   );
 }
-function LiveList() {
-  const [filter, setFilter] = useState("all");
+function LiveList({ initialStatus }: { initialStatus: string }) {
+  const [filter, setFilter] = useState(initialStatus);
   const { results, status, loadMore } = usePaginatedQuery(
     api.jobs.staffList,
     { ...(filter !== "all" ? { status: filter as JobStatus } : {}) },
@@ -113,7 +113,14 @@ function LiveList() {
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-3xl font-semibold">Job Postings</h1>
+        <div className="space-y-2">
+          <h1 className="text-2xl font-semibold text-brand-navy sm:text-3xl">
+            Job Postings
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Prepare roles, manage publication, and archive completed hiring.
+          </p>
+        </div>
         <Link
           href="/admin/jobs/new"
           className={buttonVariants({ className: "min-h-11 px-5" })}
@@ -130,7 +137,11 @@ function LiveList() {
         <p role="status">No postings found. Create a draft to get started.</p>
       )}
       {status === "CanLoadMore" && (
-        <Button variant="outline" onClick={() => loadMore(20)}>
+        <Button
+          className="min-h-11 self-start px-5"
+          variant="outline"
+          onClick={() => loadMore(20)}
+        >
           Load More
         </Button>
       )}
@@ -145,6 +156,11 @@ function LiveEditor({ id }: { id: string }) {
   );
   const save = useMutation(api.jobs.save);
   const setStatus = useMutation(api.jobs.setStatus);
+  const remove = useMutation(api.jobs.remove);
+  const canDelete = useQuery(
+    api.jobs.deletionAllowed,
+    job ? { id: job._id } : "skip",
+  );
   if (id !== "new" && job === undefined)
     return <p role="status">Loading posting…</p>;
   if (id !== "new" && !job) return <p role="status">Posting not found.</p>;
@@ -152,6 +168,15 @@ function LiveEditor({ id }: { id: string }) {
     <JobEditor
       key={`${job?._id}-${job?.updatedAt}`}
       job={job ?? undefined}
+      deletionAllowed={canDelete}
+      onDelete={
+        job
+          ? async () => {
+              await remove({ id: job._id });
+              router.push("/admin/jobs");
+            }
+          : undefined
+      }
       onSave={async (data) => {
         const saved = await save({ data, ...(job ? { id: job._id } : {}) });
         if (!job) router.push(`/admin/jobs/${saved}`);
@@ -166,11 +191,21 @@ function LiveEditor({ id }: { id: string }) {
     />
   );
 }
-export function JobAdmin({ id }: { id?: string }) {
+export function JobAdmin({
+  id,
+  initialStatus = "all",
+}: {
+  id?: string;
+  initialStatus?: string;
+}) {
   return (
     <StaffGate>
       <DashboardShell sectionTitle="Jobs">
-        {id ? <LiveEditor id={id} /> : <LiveList />}
+        {id ? (
+          <LiveEditor id={id} />
+        ) : (
+          <LiveList initialStatus={initialStatus} />
+        )}
       </DashboardShell>
     </StaffGate>
   );

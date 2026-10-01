@@ -41,14 +41,22 @@ export default defineSchema({
   })
     .index("by_submissionToken", ["submissionToken"])
     .index("by_status", ["status"])
+    .index("by_jobId", ["data.jobId"])
     .index("by_resumeStorage", ["resumeFile.storageId"]),
   businessLeads: defineTable({
     data: leadData,
     ...baseFields,
     status: leadStatus,
+    priority: v.optional(v.boolean()),
   })
     .index("by_submissionToken", ["submissionToken"])
-    .index("by_status", ["status"]),
+    .index("by_status", ["status"])
+    .index("by_priority", ["priority"])
+    .index("by_priority_status", ["priority", "status"]),
+  dashboardState: defineTable({
+    key: v.literal("overview-v1"),
+    ready: v.boolean(),
+  }).index("by_key", ["key"]),
   adminUsers: defineTable({ subject: v.string(), active: v.boolean() }).index(
     "by_subject",
     ["subject"],

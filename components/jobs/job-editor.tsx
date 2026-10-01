@@ -32,6 +32,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { DeleteConfirmation } from "@/components/admin/delete-confirmation";
 const defaults: JobInput = {
   title: "",
   serviceArea: serviceAreas[0],
@@ -48,11 +49,15 @@ export function JobEditor({
   preview = false,
   onSave,
   onStatus,
+  onDelete,
+  deletionAllowed,
 }: {
   job?: JobView;
   preview?: boolean;
   onSave: (data: JobInput) => Promise<void>;
   onStatus?: (status: JobStatus) => Promise<void>;
+  onDelete?: () => Promise<void>;
+  deletionAllowed?: boolean;
 }) {
   const {
     register,
@@ -91,7 +96,7 @@ export function JobEditor({
         Back to jobs
       </Link>
       <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-3xl font-semibold">
+        <h1 className="text-2xl font-semibold text-brand-navy sm:text-3xl">
           {job ? "Edit Job Posting" : "Create Job Posting"}
         </h1>
         <Badge variant="outline">{job?.status ?? "Draft"}</Badge>
@@ -101,7 +106,7 @@ export function JobEditor({
         explicitly published. Salary is optional; all other fields are required.
       </p>
       <Card className="py-0">
-        <CardContent className="p-6">
+        <CardContent className="p-5 sm:p-8">
           <form
             noValidate
             className="space-y-6"
@@ -222,44 +227,75 @@ export function JobEditor({
         </CardContent>
       </Card>
       {job && onStatus && (
-        <div className="space-y-3">
-          <p className="text-sm text-muted-foreground">
-            Save changes before updating publication status. Publishing makes
-            this role publicly visible; closing stops new role-specific
-            applications.
-          </p>
-          <div className="flex flex-wrap gap-3">
-            {job.status !== "Published" && (
-              <Button
-                className="min-h-11 px-5"
-                disabled={isSubmitting || busy || isDirty}
-                onClick={() => setConfirmation("Published")}
-              >
-                Publish Posting
-              </Button>
+        <Card>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Save changes before updating publication status. Publishing makes
+              this role publicly visible; closing stops new role-specific
+              applications.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              {job.status !== "Published" && job.status !== "Archived" && (
+                <Button
+                  className="min-h-11 px-5"
+                  disabled={isSubmitting || busy || isDirty}
+                  onClick={() => setConfirmation("Published")}
+                >
+                  Publish Posting
+                </Button>
+              )}
+              {job.status !== "Closed" && job.status !== "Archived" && (
+                <Button
+                  className="min-h-11 px-5"
+                  variant="outline"
+                  disabled={isSubmitting || busy || isDirty}
+                  onClick={() => setConfirmation("Closed")}
+                >
+                  Close Posting
+                </Button>
+              )}
+              {job.status !== "Draft" && (
+                <Button
+                  className="min-h-11 px-5"
+                  variant="outline"
+                  disabled={isSubmitting || busy || isDirty}
+                  onClick={() => setConfirmation("Draft")}
+                >
+                  {job.status === "Archived"
+                    ? "Restore to Draft"
+                    : "Move to Draft"}
+                </Button>
+              )}
+              {job.status !== "Archived" && (
+                <Button
+                  className="min-h-11 px-5"
+                  variant="outline"
+                  disabled={isSubmitting || busy || isDirty}
+                  onClick={() => setConfirmation("Archived")}
+                >
+                  Archive Posting
+                </Button>
+              )}
+            </div>
+            {onDelete && (
+              <div className="space-y-3 border-t pt-5">
+                <p className="text-sm text-muted-foreground">
+                  {deletionAllowed === false
+                    ? "This job has linked applications. Archive it to preserve recruitment history; permanent deletion is unavailable."
+                    : "Jobs without linked applications can be permanently deleted."}
+                </p>
+                <DeleteConfirmation
+                  label="Delete job"
+                  description="Permanently remove this job posting."
+                  disabled={
+                    isSubmitting || busy || isDirty || deletionAllowed !== true
+                  }
+                  onDelete={onDelete}
+                />
+              </div>
             )}
-            {job.status !== "Closed" && (
-              <Button
-                className="min-h-11 px-5"
-                variant="outline"
-                disabled={isSubmitting || busy || isDirty}
-                onClick={() => setConfirmation("Closed")}
-              >
-                Close Posting
-              </Button>
-            )}
-            {job.status !== "Draft" && (
-              <Button
-                className="min-h-11 px-5"
-                variant="outline"
-                disabled={isSubmitting || busy || isDirty}
-                onClick={() => setConfirmation("Draft")}
-              >
-                Move to Draft
-              </Button>
-            )}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       )}
       {message && <p role="status">{message}</p>}
       <Sheet
@@ -275,7 +311,9 @@ export function JobEditor({
                 ? "Publish this role?"
                 : confirmation === "Closed"
                   ? "Close this role?"
-                  : "Move this role to draft?"}
+                  : confirmation === "Archived"
+                    ? "Archive this role?"
+                    : "Move this role to draft?"}
             </SheetTitle>
             <SheetDescription>
               {confirmation === "Published"

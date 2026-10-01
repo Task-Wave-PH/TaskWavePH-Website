@@ -11,6 +11,7 @@ import {
   kindValidator,
   resumeFile,
 } from "./validators";
+import { syncMetrics } from "./adminMetrics";
 const limiter = new RateLimiter(components.rateLimiter, {
   attempts: { kind: "fixed window", rate: 20, period: 10 * MINUTE },
   globalAttempts: { kind: "fixed window", rate: 120, period: MINUTE },
@@ -177,15 +178,17 @@ export const save = internalMutation({
         jobTitle = job.title;
         normalized.position = job.title;
       }
-      await ctx.db.insert("applications", {
+      const id = await ctx.db.insert("applications", {
         ...common,
         data: { ...normalized, ...(jobTitle ? { jobTitle } : {}) },
         ...(args.resumeFile ? { resumeFile: args.resumeFile } : {}),
       });
+      await syncMetrics(ctx, "applications", null, await ctx.db.get(id));
     } else if (args.kind === "businessLeads" && "company" in args.data) {
       const { website: _honeypot, ...data } = leadSchema.parse(args.data);
       void _honeypot;
-      await ctx.db.insert("businessLeads", { ...common, data });
+      const id = await ctx.db.insert("businessLeads", { ...common, data });
+      await syncMetrics(ctx, "businessLeads", null, await ctx.db.get(id));
     } else throw new Error("Invalid record");
     await ctx.db.delete(pending._id);
     return reference;

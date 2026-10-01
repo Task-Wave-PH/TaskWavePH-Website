@@ -8,6 +8,7 @@ import { internal } from "./_generated/api";
 import { applicationData, applicationStatus, resumeFile } from "./validators";
 import { applicationSchema } from "../features/applications/schema";
 import { sampleResumeBytes } from "../features/applications/sample-resume";
+import { syncMetrics } from "./adminMetrics";
 const token = (index: number) => `development-seed-v1:${index}`;
 function enabled() {
   if (process.env.ALLOW_DEVELOPMENT_SEED !== "true")
@@ -58,7 +59,7 @@ export const insert = internalMutation({
       experience: args.data.experience?.toString() ?? "",
     });
     void _website;
-    await ctx.db.insert("applications", {
+    const id = await ctx.db.insert("applications", {
       data,
       reference: `TW-SEED-${String(args.index + 1).padStart(3, "0")}`,
       submittedAt: Date.now() - args.index * 86400000,
@@ -69,6 +70,7 @@ export const insert = internalMutation({
       fingerprint: "development-seed-v1",
       ...(args.resumeFile ? { resumeFile: args.resumeFile } : {}),
     });
+    await syncMetrics(ctx, "applications", null, await ctx.db.get(id));
     return true;
   },
 });
@@ -146,6 +148,7 @@ export const cleanup = internalMutation({
         .unique();
       if (!row || row.data.source !== "development-seed-v1") continue;
       if (row.resumeFile) await ctx.storage.delete(row.resumeFile.storageId);
+      await syncMetrics(ctx, "applications", row, null);
       await ctx.db.delete(row._id);
       removed++;
     }

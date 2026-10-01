@@ -353,9 +353,12 @@ admin routes. Backend and deployment instructions are in `docs/BACKEND.md`.
 Staff sign-in adapts shadcn `login-03` with the original logo, a centered card,
 and Clerk authentication. Administration adapts `dashboard-01` with an inset
 sidebar, compact section header, four summary cards, interactive area chart,
-status tabs, and paginated record table. The dashboard-01 component structure and
-spacing are retained. Authenticated summaries and activity use the currently
-loaded records (including the selected filter), not database-wide totals.
+status filters, and paginated record tables. The dashboard-01 component structure and
+identity are retained. The dedicated overview shows database-wide applicant,
+lead, and job counts, status breakdowns, and 7/30/90-day activity using Philippine
+time. Default to 30 days through today; counts reflect retained records. List
+screens focus on filters and records without repeating overview charts. Use
+consistent 44px controls, responsive detail cards, and a clear staff account menu.
 Development previews explicitly label synthetic data. Revenue and growth claims
 and unsupported template navigation are omitted.
 

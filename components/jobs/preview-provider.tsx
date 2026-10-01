@@ -5,6 +5,8 @@ import type { JobInput, JobStatus, JobView } from "@/features/jobs/schema";
 type State = {
   jobs: JobView[];
   save: (data: JobInput, id?: string) => string;
+  reset: () => void;
+  remove: (id: string) => void;
   setStatus: (id: string, status: JobStatus) => void;
 };
 const Context = createContext<State | null>(null);
@@ -18,6 +20,8 @@ export function PreviewJobsProvider({
     <Context.Provider
       value={{
         jobs,
+        reset: () => setJobs(previewJobs()),
+        remove: (id) => setJobs((rows) => rows.filter((row) => row._id !== id)),
         save: (data, id) => {
           const saved = id ?? `sample-job-${crypto.randomUUID()}`;
           setJobs((rows) =>

@@ -13,6 +13,7 @@ import {
   baseFields,
   kindValidator,
 } from "./validators";
+import { syncMetrics } from "./adminMetrics";
 const applicationDoc = v.object({
   _id: v.id("applications"),
   _creationTime: v.number(),
@@ -25,6 +26,7 @@ const leadDoc = v.object({
   _id: v.id("businessLeads"),
   _creationTime: v.number(),
   data: leadData,
+  priority: v.optional(v.boolean()),
   ...baseFields,
   status: leadStatus,
 });
@@ -35,6 +37,7 @@ const summary = v.object({
   email: v.string(),
   status: v.string(),
   submittedAt: v.number(),
+  priority: v.optional(v.boolean()),
 });
 export const access = adminQuery({
   args: {},
@@ -45,11 +48,12 @@ export const list = adminQuery({
   args: {
     kind: kindValidator,
     status: v.optional(v.string()),
+    priorityOnly: v.optional(v.boolean()),
     paginationOpts: paginationOptsValidator,
   },
   returns: paginationResultValidator(summary),
   handler: async (ctx, args) => {
-    if (args.paginationOpts.numItems > 50)
+    if (args.paginationOpts.numItems > 50 || args.paginationOpts.numItems < 1)
       throw new ConvexError("INVALID_PAGE_SIZE");
     if (args.kind === "applications") {
       const status = args.status ? applicationStatus : null;
@@ -85,24 +89,33 @@ export const list = adminQuery({
     }
     if (args.status && !["New", "Contacted", "Closed"].includes(args.status))
       throw new ConvexError("INVALID_STATUS");
-    const result = args.status
-      ? await ctx.db
-          .query("businessLeads")
-          .withIndex("by_status", (q) =>
-            q.eq("status", args.status as "New" | "Contacted" | "Closed"),
-          )
-          .order("desc")
-          .paginate(args.paginationOpts)
-      : await ctx.db
-          .query("businessLeads")
-          .order("desc")
-          .paginate(args.paginationOpts);
+    const query = args.priorityOnly
+      ? args.status
+        ? ctx.db
+            .query("businessLeads")
+            .withIndex("by_priority_status", (q) =>
+              q
+                .eq("priority", true)
+                .eq("status", args.status as "New" | "Contacted" | "Closed"),
+            )
+        : ctx.db
+            .query("businessLeads")
+            .withIndex("by_priority", (q) => q.eq("priority", true))
+      : args.status
+        ? ctx.db
+            .query("businessLeads")
+            .withIndex("by_status", (q) =>
+              q.eq("status", args.status as "New" | "Contacted" | "Closed"),
+            )
+        : ctx.db.query("businessLeads");
+    const result = await query.order("desc").paginate(args.paginationOpts);
     return {
       ...result,
       page: result.page.map((row) => ({
         id: row._id,
         reference: row.reference,
         name: row.data.company,
+        priority: row.priority ?? false,
         email: row.data.email,
         status: row.status,
         submittedAt: row.submittedAt,
@@ -150,6 +163,7 @@ export const update = adminMutation({
         notes: args.notes.trim(),
       });
     }
+    await syncMetrics(ctx, args.kind, record, await ctx.db.get(id));
     for (const action of [
       ...(record.status !== args.status ? ["status_changed"] : []),
       ...(record.notes !== args.notes.trim() ? ["notes_updated"] : []),
@@ -173,11 +187,31 @@ export const remove = adminMutation({
     if (!record) throw new ConvexError("NOT_FOUND");
     if ("resumeFile" in record && record.resumeFile)
       await ctx.storage.delete(record.resumeFile.storageId);
+    await syncMetrics(ctx, kind, record, null);
     await ctx.db.delete(normalized);
     await ctx.db.insert("adminActivity", {
       actor: ctx.actor,
       record: id,
       action: "deleted",
+      timestamp: Date.now(),
+    });
+    return null;
+  },
+});
+
+export const setPriority = adminMutation({
+  args: { id: v.id("businessLeads"), priority: v.boolean() },
+  returns: v.null(),
+  handler: async (ctx, { id, priority }) => {
+    const lead = await ctx.db.get(id);
+    if (!lead) throw new ConvexError("NOT_FOUND");
+    if ((lead.priority ?? false) === priority) return null;
+    await ctx.db.patch(id, { priority });
+    await syncMetrics(ctx, "businessLeads", lead, await ctx.db.get(id));
+    await ctx.db.insert("adminActivity", {
+      actor: ctx.actor,
+      record: id,
+      action: priority ? "lead_prioritized" : "lead_unmarked",
       timestamp: Date.now(),
     });
     return null;

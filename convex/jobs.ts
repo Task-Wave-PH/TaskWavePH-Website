@@ -12,6 +12,7 @@ import {
   workArrangements,
 } from "../features/jobs/schema";
 import type { Doc } from "./_generated/dataModel";
+import { syncMetrics } from "./adminMetrics";
 const project = (row: Doc<"jobs">) => ({
   _id: row._id,
   title: row.title,
@@ -122,7 +123,8 @@ export const save = adminMutation({
   handler: async (ctx, { id, data }) => {
     const parsed = jobSchema.safeParse(data);
     if (!parsed.success) throw new ConvexError("INVALID_JOB");
-    if (id && !(await ctx.db.get(id))) throw new ConvexError("NOT_FOUND");
+    const old = id ? await ctx.db.get(id) : null;
+    if (id && !old) throw new ConvexError("NOT_FOUND");
     const timestamp = Date.now();
     if (id) await ctx.db.patch(id, { ...parsed.data, updatedAt: timestamp });
     else
@@ -131,6 +133,7 @@ export const save = adminMutation({
         status: "Draft",
         updatedAt: timestamp,
       });
+    await syncMetrics(ctx, "jobs", old, await ctx.db.get(id));
     await ctx.db.insert("adminActivity", {
       actor: ctx.actor,
       record: id,
@@ -146,6 +149,12 @@ export const setStatus = adminMutation({
   handler: async (ctx, { id, status }) => {
     const job = await ctx.db.get(id);
     if (!job) throw new ConvexError("NOT_FOUND");
+    if (
+      job.status === "Archived" &&
+      status !== "Draft" &&
+      status !== "Archived"
+    )
+      throw new ConvexError("RESTORE_TO_DRAFT_FIRST");
     jobSchema.parse(
       Object.fromEntries(
         Object.keys(jobFields).map((k) => [k, job[k as keyof typeof job]]),
@@ -159,11 +168,46 @@ export const setStatus = adminMutation({
         ? { publishedAt: timestamp }
         : {}),
     });
+    await syncMetrics(ctx, "jobs", job, await ctx.db.get(id));
     await ctx.db.insert("adminActivity", {
       actor: ctx.actor,
       record: id,
       action: `job_${status.toLowerCase()}`,
       timestamp,
+    });
+    return null;
+  },
+});
+
+export const deletionAllowed = adminQuery({
+  args: { id: v.id("jobs") },
+  returns: v.boolean(),
+  handler: async (ctx, { id }) => {
+    const linked = await ctx.db
+      .query("applications")
+      .withIndex("by_jobId", (q) => q.eq("data.jobId", id))
+      .first();
+    return !linked;
+  },
+});
+export const remove = adminMutation({
+  args: { id: v.id("jobs") },
+  returns: v.null(),
+  handler: async (ctx, { id }) => {
+    const job = await ctx.db.get(id);
+    if (!job) throw new ConvexError("NOT_FOUND");
+    const linked = await ctx.db
+      .query("applications")
+      .withIndex("by_jobId", (q) => q.eq("data.jobId", id))
+      .first();
+    if (linked) throw new ConvexError("JOB_HAS_APPLICATIONS");
+    await syncMetrics(ctx, "jobs", job, null);
+    await ctx.db.delete(id);
+    await ctx.db.insert("adminActivity", {
+      actor: ctx.actor,
+      record: id,
+      action: "job_deleted",
+      timestamp: Date.now(),
     });
     return null;
   },

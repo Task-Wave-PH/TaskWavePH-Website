@@ -44,11 +44,17 @@ test("real form/API confirms a saved application with a PDF", async ({
   await page.getByRole("button", { name: "Submit Application" }).click();
   const response = await saved;
   expect(response.status()).toBe(200);
-  expect(await response.json()).toMatchObject({
-    success: true,
-    applicationId: expect.stringMatching(/^TW-A-/),
-  });
+  // The full success navigation discards the browser's previous response body.
+  // Confirm persistence through the 200 response and server-issued receipt.
   await expect(page).toHaveURL(/\/apply\/success$/);
+  const receipt = (await page.context().cookies()).find(
+    (cookie) => cookie.name === "tw-application-receipt",
+  );
+  expect(receipt?.httpOnly).toBe(true);
+  await expect(
+    page.getByRole("heading", { name: "Application received." }),
+  ).toBeVisible();
+  await page.reload();
   await expect(
     page.getByRole("heading", { name: "Application received." }),
   ).toBeVisible();
@@ -77,11 +83,33 @@ test("real business enquiry is saved before confirmation", async ({ page }) => {
   await page.getByRole("button", { name: "Send Business Enquiry" }).click();
   const response = await saved;
   expect(response.status()).toBe(200);
-  expect(await response.json()).toMatchObject({
-    success: true,
-    leadId: expect.stringMatching(/^TW-B-/),
-  });
   await expect(page).toHaveURL(/\/business-enquiry\/success$/);
+  await expect(
+    page.getByRole("heading", { name: "Enquiry received." }),
+  ).toBeVisible();
+  expect(
+    (await page.context().cookies()).find(
+      (cookie) => cookie.name === "tw-enquiry-receipt",
+    )?.httpOnly,
+  ).toBe(true);
+  await page.reload();
+  await expect(
+    page.getByRole("heading", { name: "Enquiry received." }),
+  ).toBeVisible();
+  await page.goto("/apply/success");
+  await expect(page).toHaveURL(/\/apply$/);
+  const enquiryReceipt = (await page.context().cookies()).find(
+    (cookie) => cookie.name === "tw-enquiry-receipt",
+  );
+  expect(enquiryReceipt).toBeDefined();
+  await page
+    .context()
+    .addCookies([{ ...enquiryReceipt!, value: "altered-receipt" }]);
+  await page.goto("/business-enquiry/success");
+  await expect(page).toHaveURL(/\/business-enquiry$/);
+  await page.context().clearCookies();
+  await page.goto("/business-enquiry/success");
+  await expect(page).toHaveURL(/\/business-enquiry$/);
 });
 test("failed submission retains entries and does not show success", async ({
   page,

@@ -32,7 +32,12 @@ export default async function proxy(
     return new NextResponse(null, { status: 404 });
   if (adminPath && !adminHost && !isLocalHostname(request.nextUrl.hostname))
     return new NextResponse(null, { status: 404 });
-  if (!adminHost && !adminPath) return NextResponse.next();
+  if (!adminHost && !adminPath) {
+    const response = NextResponse.next();
+    return ["/apply/success", "/business-enquiry/success"].includes(path)
+      ? privateResponse(response)
+      : response;
+  }
   if (
     adminHost &&
     !adminPath &&

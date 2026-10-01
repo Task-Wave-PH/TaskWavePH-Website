@@ -1,5 +1,7 @@
 import "server-only";
 import { createHmac } from "node:crypto";
+import { NextResponse } from "next/server";
+import { confirmationRoutes, createReceipt, RECEIPT_MAX_AGE } from "./receipt";
 import { applicationSchema } from "@/features/applications/schema";
 import { leadSchema } from "@/features/leads/schema";
 import { getSubmissionEnv, submissionsEnabled } from "@/lib/submission-env";
@@ -15,7 +17,10 @@ export async function submitRequest(
   kind: "applications" | "businessLeads",
 ) {
   const json = (data: object, status: number) =>
-    Response.json(data, { status, headers: { "Cache-Control": "no-store" } });
+    NextResponse.json(data, {
+      status,
+      headers: { "Cache-Control": "no-store" },
+    });
   if (!submissionsEnabled())
     return json({ success: false, error: "SUBMISSIONS_DISABLED" }, 503);
   try {
@@ -118,7 +123,22 @@ export async function submitRequest(
         "name" in file ? String(file.name) : "resume.pdf",
       );
     const result = await appendSubmission(payload, rateKey);
-    return json(result.data, result.status);
+    const response = json(result.data, result.status);
+    if (result.status === 200 && result.data.success) {
+      const route = confirmationRoutes[kind];
+      response.cookies.set(
+        route.cookie,
+        createReceipt(kind, env.CONVEX_SERVER_SECRET),
+        {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          path: route.success,
+          maxAge: RECEIPT_MAX_AGE,
+        },
+      );
+    }
+    return response;
   } catch (error) {
     if (
       (error instanceof Error &&

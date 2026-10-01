@@ -57,7 +57,7 @@ test("form validates, focuses errors, requires consent, and sends no application
   await expect(page.getByRole("status")).toHaveCount(0);
 });
 
-test("privacy and confirmation routes have expected content and indexing", async ({
+test("privacy has expected content and direct confirmation access returns to the form", async ({
   page,
 }) => {
   await page.goto("/privacy");
@@ -66,13 +66,15 @@ test("privacy and confirmation routes have expected content and indexing", async
   ).toBeVisible();
   await expect(page.getByText(/Draft notice/)).toBeVisible();
   await page.goto("/apply/success");
+  await expect(page).toHaveURL(/\/apply$/);
   await expect(
     page.getByRole("heading", { name: "Application received." }),
-  ).toBeVisible();
-  await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
-    "content",
-    /noindex/,
-  );
+  ).toHaveCount(0);
+  await page.goto("/business-enquiry/success?success=true");
+  await expect(page).toHaveURL(/\/business-enquiry$/);
+  await expect(
+    page.getByRole("heading", { name: "Enquiry received." }),
+  ).toHaveCount(0);
 });
 
 for (const width of [360, 390, 430, 768, 1024, 1440]) {

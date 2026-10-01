@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import { requireSubmissionReceipt } from "@/features/submissions/confirmation";
 export const metadata = {
   title: "Enquiry received",
   robots: { index: false, follow: false },
 };
-export default function Page() {
+export default async function Page() {
+  await requireSubmissionReceipt("businessLeads");
   return (
     <>
       <Header />

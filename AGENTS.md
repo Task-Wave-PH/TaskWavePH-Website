@@ -33,6 +33,9 @@ on October 1, 2026. This supersedes the original Sheets-only MVP constraints.
   landing_page. Never put applicant information in URLs or logs.
 - Submissions require unselected consent, Turnstile, honeypot validation, length
   limits, server timestamps, and idempotency tokens. Success follows confirmed save.
+- Confirmation pages require a signed, kind-specific HttpOnly receipt issued
+  after save. Receipts expire after 10 minutes; direct access without one redirects
+  to the matching form. Keep confirmation responses private/no-store and noindex.
 - Application statuses: New, Reviewed, Shortlisted, Closed. Lead statuses: New,
   Contacted, Closed. Notes are internal and bounded to 2,000 characters.
 - Record deletion deletes attached resumes. Clean unlinked uploads after one hour.

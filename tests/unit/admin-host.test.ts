@@ -12,6 +12,13 @@ async function call(url: string) {
   );
 }
 describe("admin domain isolation", () => {
+  it("prevents confirmation responses from being cached or indexed", async () => {
+    for (const path of ["/apply/success", "/business-enquiry/success"]) {
+      const response = await call(`https://taskwaveph.com${path}`);
+      expect(response.headers.get("cache-control")).toBe("private, no-store");
+      expect(response.headers.get("x-robots-tag")).toContain("noindex");
+    }
+  });
   it("blocks admin routes and downloads on the public production host", async () => {
     for (const path of [
       "/admin",

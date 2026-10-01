@@ -7,6 +7,7 @@ import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import { requireSubmissionReceipt } from "@/features/submissions/confirmation";
 
 export const metadata: Metadata = {
   title: "Application received",
@@ -18,6 +19,7 @@ export default async function SuccessPage({
 }: {
   searchParams: Promise<TrackingQuery>;
 }) {
+  await requireSubmissionReceipt("applications");
   const query = await searchParams;
   return (
     <>

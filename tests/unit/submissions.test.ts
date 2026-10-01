@@ -134,6 +134,12 @@ describe("submission protections", () => {
       );
     vi.stubGlobal("fetch", fetch);
     const response = await submitRequest(request(), "applications");
+    const cookie = response.headers.get("set-cookie");
+    expect(cookie).toContain("tw-application-receipt=");
+    expect(cookie).toContain("HttpOnly");
+    expect(cookie).toContain("SameSite=lax");
+    expect(cookie).toContain("Path=/apply/success");
+    expect(cookie).toContain("Max-Age=600");
     expect(await response.json()).toEqual({
       success: true,
       applicationId: "TW-A-test",
@@ -159,6 +165,7 @@ describe("submission protections", () => {
     );
     const response = await submitRequest(request(), "applications");
     expect(response.status).toBe(503);
+    expect(response.headers.get("set-cookie")).toBeNull();
     expect(await response.text()).not.toContain("internal-secret-detail");
   });
   it("rejects wrong challenge hostname and oversized request before persistence", async () => {

@@ -1,8 +1,6 @@
 "use client";
 import { useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 export function useSubmission(endpoint: string, successPath: string) {
-  const router = useRouter();
   const token = useRef<string>(undefined);
   const fingerprint = useRef<string>(undefined);
   const locked = useRef(false);
@@ -35,7 +33,8 @@ export function useSubmission(endpoint: string, successPath: string) {
       const response = await fetch(endpoint, { method: "POST", body });
       const result = await response.json();
       if (response.ok && result.success) {
-        router.push(successPath);
+        // Read the new HttpOnly receipt on the server, avoiding a cached redirect.
+        window.location.assign(successPath);
         return;
       }
       setJobUnavailable(result.error === "JOB_UNAVAILABLE");

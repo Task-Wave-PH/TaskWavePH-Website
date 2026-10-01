@@ -9,6 +9,19 @@ throttles, reserves the submission token, stores the file, and commits a record.
 Repeated identical submissions return the same reference. Changed payloads must
 use a new token. Failed requests never produce the success navigation.
 
+Both confirmation pages require a server-signed HttpOnly receipt cookie issued
+only after Convex confirms persistence (including successful idempotent retries).
+Receipts last 10 minutes and allow refresh during that window. Missing, altered,
+expired, or wrong-kind receipts redirect to the corresponding form. They contain
+only submission kind, issuance/expiry timestamps, and a random nonce, with no
+record identifiers or personal data. The existing `CONVEX_SERVER_SECRET` signs
+receipts with a separate message prefix; rotating it invalidates outstanding
+receipts. Cookies are host-only, scoped to the matching success path, SameSite=Lax,
+and Secure in production. Confirmation responses are private/no-store and noindex.
+Successful forms perform a full navigation so stale prefetched redirects cannot
+hide a newly issued receipt. No new environment variables or database tables are
+needed. This guards the confirmation UI; it grants no access to applicant records.
+
 Staff use Clerk email/password authentication. Every administrative query,
 mutation, and download also checks `adminUsers`. Approved staff can review records,
 filter by status, edit notes/status, view and download PDF resumes, export applicants,

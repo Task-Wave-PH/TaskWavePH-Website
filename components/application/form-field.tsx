@@ -17,8 +17,8 @@ export function FormField({
   children: ReactNode;
 }) {
   return (
-    <div className="space-y-2">
-      <Label htmlFor={id}>
+    <div className="grid min-w-0 content-start gap-2">
+      <Label htmlFor={id} className="flex-wrap leading-snug">
         {label}
         {optional && (
           <span className="text-xs font-normal text-muted-foreground">

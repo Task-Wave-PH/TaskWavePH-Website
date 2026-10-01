@@ -51,3 +51,10 @@ credentials*.json
 # browser test artifacts
 /playwright-report/
 /test-results/
+
+# Local Convex backend state and credentials
+/.convex/
+
+/.next-verify/
+/.playwright-cli/
+/output/playwright/

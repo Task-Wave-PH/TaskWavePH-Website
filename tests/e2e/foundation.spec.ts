@@ -1,8 +1,8 @@
 import { test, expect } from "@playwright/test";
 
-test("home CTA preserves only approved tracking", async ({ page }) => {
+test("career CTA preserves only approved tracking", async ({ page }) => {
   await page.goto(
-    "/?source=cite&campaign=job-fair-2026&utm_source=qr&utm_medium=print&utm_campaign=october&email=private@example.com",
+    "/careers?source=cite&campaign=job-fair-2026&utm_source=qr&utm_medium=print&utm_campaign=october&email=private@example.com",
   );
   await page.getByRole("link", { name: "Apply Now" }).first().click();
   await expect(page).toHaveURL(
@@ -32,6 +32,13 @@ test("form validates, focuses errors, requires consent, and sends no application
   await expect(consent).not.toBeChecked();
   await page.getByRole("button", { name: "Validate Application" }).click();
   await expect(page.getByLabel("First Name", { exact: true })).toBeFocused();
+  await expect
+    .poll(() =>
+      page
+        .getByLabel("First Name", { exact: true })
+        .evaluate((node) => node.getBoundingClientRect().top),
+    )
+    .toBeGreaterThanOrEqual(88);
   await expect(
     page.getByText("Please agree to the privacy notice."),
   ).toBeVisible();
@@ -57,34 +64,97 @@ test("form validates, focuses errors, requires consent, and sends no application
   await expect(page.getByRole("status")).toHaveCount(0);
 });
 
-test("privacy and confirmation routes have expected content and indexing", async ({
+test("privacy has expected content and direct confirmation access returns to the form", async ({
   page,
 }) => {
   await page.goto("/privacy");
   await expect(
-    page.getByRole("heading", { name: "Privacy notice", exact: true }),
+    page.getByRole("heading", { name: "Privacy Policy", exact: true }),
   ).toBeVisible();
   await expect(page.getByText(/Draft notice/)).toBeVisible();
   await page.goto("/apply/success");
+  await expect(page).toHaveURL(/\/apply$/);
   await expect(
     page.getByRole("heading", { name: "Application received." }),
-  ).toBeVisible();
-  await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
-    "content",
-    /noindex/,
-  );
+  ).toHaveCount(0);
+  await page.goto("/business-enquiry/success?success=true");
+  await expect(page).toHaveURL(/\/business-enquiry$/);
+  await expect(
+    page.getByRole("heading", { name: "Enquiry received." }),
+  ).toHaveCount(0);
 });
 
-for (const width of [360, 390, 430, 768, 1024]) {
+for (const width of [360, 390, 430, 768, 1024, 1440]) {
   test(`pages fit a ${width}px viewport`, async ({ page }) => {
     await page.setViewportSize({ width, height: 850 });
-    for (const route of ["/", "/apply", "/privacy", "/apply/success"]) {
+    for (const route of [
+      "/",
+      "/areas-of-work",
+      "/how-it-works",
+      "/careers",
+      "/about",
+      "/apply",
+      "/business-enquiry",
+      "/privacy",
+      "/terms",
+      "/apply/success",
+      "/business-enquiry/success",
+    ]) {
       await page.goto(route);
       expect(
         await page.evaluate(
           () => document.documentElement.scrollWidth <= window.innerWidth,
         ),
       ).toBe(true);
+      const header = page.getByRole("navigation", { name: "Main navigation" });
+      await expect(header).toHaveCSS("height", width < 1024 ? "72px" : "80px");
+      if (width < 1024) {
+        await expect(header.getByRole("link")).toHaveCount(1);
+        await expect(
+          header.getByRole("button", { name: "Open navigation" }),
+        ).toBeVisible();
+      }
+      await page.evaluate(() =>
+        window.scrollTo({ top: 400, behavior: "instant" }),
+      );
+      await expect
+        .poll(() =>
+          page
+            .locator("header")
+            .evaluate((node) => node.getBoundingClientRect().top),
+        )
+        .toBe(0);
+      if (
+        ["/", "/areas-of-work", "/how-it-works", "/careers", "/about"].includes(
+          route,
+        )
+      ) {
+        if (route === "/areas-of-work") {
+          for (const image of await page.locator("main img").all()) {
+            await image.scrollIntoViewIfNeeded();
+            await expect(image).toHaveJSProperty("complete", true);
+            expect(
+              await image.evaluate(
+                (node) => (node as HTMLImageElement).naturalWidth,
+              ),
+            ).toBeGreaterThan(0);
+          }
+        }
+        await page.locator("footer").scrollIntoViewIfNeeded();
+        await expect(page.locator("footer img")).toHaveJSProperty(
+          "complete",
+          true,
+        );
+        await page.evaluate(() => document.fonts.ready);
+        await page.screenshot({
+          path: test
+            .info()
+            .outputPath(
+              `${route === "/" ? "landing" : route.slice(1)}-${width}.png`,
+            ),
+          fullPage: true,
+        });
+      }
     }
   });
 }

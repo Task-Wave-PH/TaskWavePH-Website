@@ -1,10 +1,10 @@
 import { trackingKeys } from "./schema";
 import type { ApplicationTracking } from "./types";
 
-type Query = Record<string, string | string[] | undefined>;
+export type TrackingQuery = Record<string, string | string[] | undefined>;
 
 export function getTracking(
-  query: Query,
+  query: TrackingQuery,
   pathname = "/apply",
 ): ApplicationTracking {
   const values = Object.fromEntries(
@@ -26,11 +26,15 @@ export function getTracking(
   };
 }
 
-export function getApplyHref(query: Query): string {
+export function getTrackedHref(pathname: string, query: TrackingQuery): string {
   const tracking = getTracking(query);
   const params = new URLSearchParams();
   for (const key of trackingKeys) {
     if (tracking[key]) params.set(key, tracking[key]);
   }
-  return params.size ? `/apply?${params.toString()}` : "/apply";
+  return params.size ? `${pathname}?${params.toString()}` : pathname;
+}
+
+export function getApplyHref(query: TrackingQuery): string {
+  return getTrackedHref("/apply", query);
 }

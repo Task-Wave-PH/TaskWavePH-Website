@@ -5,7 +5,16 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: Arial, Helvetica, sans-serif;
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --font-sans: var(--font-poppins), Arial, Helvetica, sans-serif;
   --font-mono: ui-monospace, monospace;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -14,6 +23,9 @@
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-brand-navy: var(--brand-navy);
+  --color-brand-cyan: var(--brand-cyan);
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
@@ -35,24 +47,36 @@
 }
 
 :root {
+  --public-header-height: 72px;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #0a1d3b;
+  --sidebar-primary: #0d6efd;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #eff4ff;
+  --sidebar-accent-foreground: #0759cb;
+  --sidebar-border: #dce3ed;
+  --sidebar-ring: #0d6efd;
   --background: #ffffff;
-  --foreground: #17243b;
+  --foreground: #111827;
+  --brand-navy: #0a1d3b;
+  --brand-cyan: #00c2ff;
   --card: #ffffff;
-  --card-foreground: #17243b;
+  --card-foreground: #111827;
   --popover: #ffffff;
-  --popover-foreground: #17243b;
-  --primary: #1d4ed8;
+  --popover-foreground: #111827;
+  --primary: #0d6efd;
+  --primary-hover: #0759cb;
   --primary-foreground: #ffffff;
-  --secondary: #f2f6fc;
-  --secondary-foreground: #17243b;
-  --muted: #f2f6fc;
+  --secondary: #f2f4f7;
+  --secondary-foreground: #0a1d3b;
+  --muted: #f2f4f7;
   --muted-foreground: #526176;
   --accent: #eff4ff;
-  --accent-foreground: #1d4ed8;
+  --accent-foreground: #0759cb;
   --destructive: #b42318;
   --border: #dce3ed;
   --input: #b8c4d4;
-  --ring: #1d4ed8;
+  --ring: #0d6efd;
   --radius: 0.625rem;
 }
 
@@ -63,12 +87,53 @@
   body {
     @apply bg-background text-foreground font-sans;
   }
+  h1,
+  h2,
+  h3 {
+    color: var(--brand-navy);
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  :where(
+    main,
+    section,
+    h2,
+    h3,
+    input,
+    textarea,
+    button,
+    [role="checkbox"]
+  )[id] {
+    scroll-margin-top: calc(var(--public-header-height) + 16px);
+  }
   input,
-  textarea {
-    scroll-margin-top: 2rem;
+  textarea,
+  [role="checkbox"] {
+    scroll-margin-top: calc(var(--public-header-height) + 16px);
+  }
+  :where(header, main, footer) a {
+    transition:
+      color 150ms ease,
+      background-color 150ms ease,
+      border-color 150ms ease;
   }
   a:focus-visible {
     outline: 2px solid var(--ring);
     outline-offset: 4px;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --public-header-height: 80px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  :where(header, main, footer) a {
+    transition: none;
   }
 }

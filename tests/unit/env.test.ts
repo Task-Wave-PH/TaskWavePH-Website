@@ -1,13 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseGoogleEnv, siteEnvSchema } from "@/lib/env-schema";
-
-// Synthetic test fixture, not a usable credential.
-const key = "-----BEGIN PRIVATE KEY-----\nTEST_ONLY\n-----END PRIVATE KEY-----";
-const valid = {
-  GOOGLE_SHEETS_SPREADSHEET_ID: "test-sheet",
-  GOOGLE_SERVICE_ACCOUNT_EMAIL: "test@example.iam.gserviceaccount.com",
-  GOOGLE_PRIVATE_KEY: key,
-};
+import { siteEnvSchema, submissionEnvSchema } from "@/lib/env-schema";
 
 describe("environment validation", () => {
   it("defaults the site URL locally and accepts HTTPS", () => {
@@ -27,26 +19,26 @@ describe("environment validation", () => {
       ).toBe(false);
     },
   );
-  it("accepts actual and escaped key newlines", () => {
-    expect(parseGoogleEnv(valid).GOOGLE_PRIVATE_KEY).toBe(key);
+  it("requires the Convex HTTP URL, a strong shared secret, and a challenge secret", () => {
+    const valid = {
+      CONVEX_SITE_URL: "https://development.convex.site",
+      CONVEX_SERVER_SECRET: "x".repeat(64),
+      TURNSTILE_SECRET_KEY: "synthetic-test-key",
+    };
+    expect(submissionEnvSchema.safeParse(valid).success).toBe(true);
+    for (const key of Object.keys(valid))
+      expect(
+        submissionEnvSchema.safeParse({ ...valid, [key]: "" }).success,
+      ).toBe(false);
     expect(
-      parseGoogleEnv({
+      submissionEnvSchema.safeParse({
         ...valid,
-        GOOGLE_PRIVATE_KEY: key.replace(/\n/g, "\\n"),
-      }).GOOGLE_PRIVATE_KEY,
-    ).toBe(key);
-  });
-  it.each(Object.keys(valid))("requires %s at adapter access", (field) => {
-    expect(() => parseGoogleEnv({ ...valid, [field]: "" })).toThrow(field);
-  });
-  it("rejects malformed configuration without exposing values", () => {
-    expect(() =>
-      parseGoogleEnv({ ...valid, GOOGLE_PRIVATE_KEY: "SECRET_INVALID_VALUE" }),
-    ).toThrow("GOOGLE_PRIVATE_KEY");
-    try {
-      parseGoogleEnv({ ...valid, GOOGLE_PRIVATE_KEY: "SECRET_INVALID_VALUE" });
-    } catch (error) {
-      expect(String(error)).not.toContain("SECRET_INVALID_VALUE");
-    }
+        CONVEX_SITE_URL: "file:///tmp/backend",
+      }).success,
+    ).toBe(false);
+    expect(
+      submissionEnvSchema.safeParse({ ...valid, CONVEX_SERVER_SECRET: "short" })
+        .success,
+    ).toBe(false);
   });
 });

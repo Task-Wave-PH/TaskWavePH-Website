@@ -43,9 +43,12 @@ addresses, company size, client logos, or recruitment promises.
 ### Audience and MVP relationship
 
 The company brand primarily addresses businesses seeking outsourcing and support.
-The current website MVP primarily serves Philippine applicants arriving through
-QR codes and mobile channels. Explain the company using its broader positioning
-while keeping application pages focused on applicant needs.
+The public website primarily serves companies seeking TaskWavePH talents and
+business support services. Home, Services, How It Works, and About address clients
+and lead to the business enquiry form. Careers and Apply serve applicants arriving
+through QR codes and mobile channels. Keep recruitment notices and Apply Now calls
+to action on applicant pages. Use the approved tagline and service categories for
+client messaging; do not invent performance claims or partnership guarantees.
 
 Service categories describe what the company offers; they do not establish
 currently open jobs. Do not turn them into vacancy listings without hiring data.
@@ -293,8 +296,160 @@ employee merchandise entitlements.
 
 ### Current implementation status
 
-This change establishes documentation and local originals. The existing website
-still uses a Lucide Waves icon/text wordmark, Arial, and a foundation palette
-(including primary `#1D4ED8`). These are placeholders, not the media-kit brand
-specification. A future feature will apply the official logo, Poppins, palette,
-and company messaging while preserving the recruitment MVP behavior.
+The initial applicant-focused landing page applies the supplied logo, official
+palette, and locally hosted Poppins weights 400–700 across shared page styling.
+White surfaces, navy headings, blue CTAs, cyan decorative details, and light-gray
+sections follow the approved direction. The hero leads with “Make your next move.”
+and introduces the original TW monogram; services are areas of work rather than
+confirmed vacancies. Applications remain a local-validation preview.
+
+The original PNGs are preserved. A 5:1 CSS frame around the horizontal logo and a
+2:1 frame around the monogram hide only transparent canvas padding. These frames
+are implementation choices, not new official artwork or minimum-size rules.
+
+Poppins files and their OFL license are stored under `public/fonts/poppins/`,
+obtained from the [Google Fonts source](https://github.com/google/fonts/tree/main/ofl/poppins).
+`next/font/local` serves them without a runtime Google Fonts request. Unlike the
+original media-kit folder, the repository now includes these separately sourced
+font files; no new official logo variants have been created.
+
+UI support tokens include dark blue `#0759CB` for accessible button hover states,
+muted text `#526176`, pale surfaces `#EFF4FF` / `#EFF7FF`, and the existing form
+error color `#B42318`. These are implementation colors, not additions to the five
+media-kit swatches. Blue buttons use full-opacity white text, including on hover.
+Motion is limited to interaction feedback with reduced-motion support. No dark
+mode or new animation dependency is introduced.
+
+### Component guidance
+
+Prefer shadcn/ui primitives where applicable, styled with the brand tokens rather
+than their default palette. The landing page uses shared button variants for its
+CTAs and secondary link, and Card/CardContent for the partnership and final CTA
+panels. The form reuses shadcn inputs, labels, checkbox, button, card, and alerts.
+Keep semantic sections, lists, original logo artwork, and native section anchors.
+Use components to support the approved layout and accessibility.
+
+The browser tab icon (`app/icon.png`) uses an unchanged copy of the supplied
+transparent TW monogram. Next.js generates the icon metadata from this file;
+there is no added background or recoloring.
+
+### Dedicated information pages
+
+Home uses concise previews linking to Areas of Work, How It Works, Careers, and
+About. The dedicated pages retain the white/blue palette, Poppins, original
+artwork, and shadcn cards/buttons. Shared service descriptions and themes avoid
+divergent brand copy. Navigation highlights the current route and uses a shadcn
+Sheet on mobile with reduced-motion support. Careers remains an overview with
+explicit preview messaging rather than unverified vacancy listings.
+
+### Convex and administration extension
+
+The owner approved real submission capability, business enquiries, optional PDF
+resumes, and an admin dashboard. Disabled environments retain local previews.
+The dashboard uses shadcn Sidebar, Select, Cards, Buttons, and the official
+white/navy/blue/cyan tokens with Poppins. Staff authentication is confined to
+admin routes. Backend and deployment instructions are in `docs/BACKEND.md`.
+
+Staff sign-in adapts shadcn `login-03` with the original logo, a centered card,
+and Clerk authentication. Administration adapts `dashboard-01` with an inset
+sidebar, compact section header, four summary cards, interactive area chart,
+status filters, and paginated record tables. The dashboard-01 component structure and
+identity are retained. The dedicated overview shows database-wide applicant,
+lead, and job counts, status breakdowns, and 7/30/90-day activity using Philippine
+time. Default to 30 days through today; counts reflect retained records. List
+screens focus on filters and records without repeating overview charts. Use
+consistent 44px controls, responsive detail cards, and a clear staff account menu.
+Development previews explicitly label synthetic data. Revenue and growth claims
+and unsupported template navigation are omitted.
+
+Applicant detail screens retain the dashboard-01 shell, with shadcn Cards and
+Tabs for profile, CV, and submission metadata. The review card edits status and
+notes; a shadcn Sheet confirms deletion. CVs use page/zoom controls and a separate
+download action. CSV/Excel export buttons sit beside the list status controls.
+Synthetic preview screens reuse the same applicant detail presentation.
+
+## Services page illustrations
+
+The Services page uses six AI-generated conceptual illustrations created on
+October 1, 2026 with the imagegen tool. They depict professionals performing
+service-related work; they are not photographs or portraits of actual TaskWavePH
+staff, clients, or facilities. These are website assets, not official media-kit
+artwork or new brand specifications.
+
+Assets live in `public/images/services/` as transparent WebP files. Digital
+Marketing established the reference style for the five companion images: natural
+human proportions, editorial rendering, navy/blue/cyan accents, abstract screens,
+and no text or logos. Preserve transparency and use `object-contain` so figures
+and furniture remain visible. Adjacent service text describes the meaning, so
+these decorative illustrations use empty alt text.
+
+The homepage keeps short summary cards. The dedicated Services page expands each
+service into an alternating image/text section with support examples to discuss,
+anchor navigation, and business enquiry links. Examples do not guarantee scope,
+availability, outcomes, or specific working arrangements.
+
+## Careers and job postings
+
+Careers addresses applicants and places published roles near the top. Reuse the
+administration team illustration as conceptual artwork beside the introduction.
+Use shadcn Cards, Badges, Select filters, and clear role-specific application links.
+Keep preparation guidance below the roles; do not invent employment benefits or
+vacancies. Staff-managed job content is separate from the service categories.
+Sample vacancies are confined to labeled localhost previews.
+
+## Layout spacing conventions
+
+These are website implementation choices, not media-kit specifications. Use
+explicit grid/flex gaps for grouped controls and navigation rather than relying
+on vertical margins on inline links. Public controls use at least 44px touch
+targets, with 48px primary form actions. Careers filters have matching 44px heights:
+stack on phones, use two field columns on tablets, and align fields/actions in
+one row on desktop. Keep labels 8px above their controls.
+
+Role metadata chips use 12px horizontal/4px vertical padding and wrap with
+8–12px gaps. Separate detail navigation, metadata, and content with 32px gaps.
+Role-card actions sit at the bottom of each card to align within a grid row.
+Single-content cards apply their padding once: zero outer vertical padding with
+24px content padding (32px where larger layouts already use it). Cards with
+headers/footers retain the shadcn structure. Admin toolbars wrap in logical groups,
+and back links have their own 44px target without stretching across the screen.
+
+## Trust pages, footer, and client workflow
+
+Privacy and Website Terms use a shared light policy layout with section navigation,
+an update date, and readable content. The footer keeps the original color logo on
+white, the approved tagline, and grouped company, service, and policy links. Cookie
+information uses shadcn Sheet and Buttons; it is an informational notice, not
+marketing consent. Preserve the distinction between draft policy status and approved
+production configuration.
+
+How It Works expands the existing Share needs / Discuss suitable support / Agree
+next steps journey into a connected numbered timeline and detailed discussion
+sections. Desktop connectors become vertical on mobile. This is inferred website
+guidance based on Reliable Teams, Efficient Processes, and Scalable Solutions; the
+media kit does not prescribe a client onboarding workflow or guarantee outcomes.
+
+Careers now uses `public/images/careers-opportunities.webp`, an AI-generated
+transparent conceptual illustration created October 1, 2026 with imagegen. It
+shows Filipino professionals with abstract career-path motifs; these are not
+verified staff portraits or employment promises. The original generated PNG is
+`exec-d6c6d176-6caa-481b-9e64-102f9b35f902.png`. The 1200px WebP retains alpha and
+the full composition. Use `object-contain` and empty alt text beside the career
+introduction. The six service illustrations remain dedicated to service sections.
+
+## Public layout and motion polish
+
+The owner confirmed **Dagupan City, Pangasinan, Philippines** as the company
+location. Use this city-level location on Home, About, and the footer; it does not
+establish a street address, office hours, or visitor arrangements.
+
+Public navigation is sticky, with a 72px header below 1024px and an 80px header
+from 1024px. Phones and tablets show only the original logo and menu button;
+the audience-specific action is inside the mobile Sheet. Anchor and focus targets
+leave 16px below the header; sticky policy navigation uses the same offset.
+
+Use 20px mobile gutters, 32px from 640px, and the existing 1180px maximum width.
+Major sections use 48px mobile, 64px tablet, and 80px desktop spacing. Use short
+color/background transitions and smooth anchor scrolling, respecting reduced
+motion. Page navigation retains normal Next.js behavior without page fades.
+Brand-theme descriptions are website guidance, not additional media-kit claims.

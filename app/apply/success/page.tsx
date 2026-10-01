@@ -1,18 +1,29 @@
+import {
+  getTrackedHref,
+  type TrackingQuery,
+} from "@/features/applications/tracking";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import { requireSubmissionReceipt } from "@/features/submissions/confirmation";
 
 export const metadata: Metadata = {
   title: "Application received",
   robots: { index: false, follow: false },
 };
 
-export default function SuccessPage() {
+export default async function SuccessPage({
+  searchParams,
+}: {
+  searchParams: Promise<TrackingQuery>;
+}) {
+  await requireSubmissionReceipt("applications");
+  const query = await searchParams;
   return (
     <>
-      <Header />
+      <Header query={query} audience="applicant" />
       <main
         id="main-content"
         className="mx-auto w-full max-w-2xl px-5 py-20 sm:px-8"
@@ -27,13 +38,13 @@ export default function SuccessPage() {
           available opportunity.
         </p>
         <Link
-          href="/"
+          href={getTrackedHref("/", query)}
           className="mt-8 inline-flex min-h-12 items-center rounded-lg bg-primary px-6 font-semibold text-primary-foreground"
         >
           Back to home
         </Link>
       </main>
-      <Footer />
+      <Footer query={query} />
     </>
   );
 }

@@ -10,297 +10,147 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 # TaskWavePH — Project Instructions
 
-Brand story, official colors, typography, taglines, and asset provenance are
-documented in [DESIGN.md](DESIGN.md). Read it before brand, copy, imagery, or UI
-work; local original references are under `docs/brand/` and `public/logo/`.
-
-## 1. Project goal
-
-Build a Philippine BPO/staffing and recruitment website. The MVP journey is:
-
-```text
-QR code → landing page / apply → applicant form → server validation
-→ Google Sheets → /apply/success
-```
-
-Google Sheets is the temporary applicant datastore. Do not add a permanent application database. Keep storage isolated so Convex can later become the source of truth without rewriting the frontend.
-
-## 2. MVP scope
-
-Build a landing page, applicant form, QR/source tracking, Sheets integration,
-client/server validation, confirmation, basic errors, mobile layout, SEO,
-privacy consent, spam protection structure, documentation, environment setup,
-and deployment configuration.
-
-Do not build applicant login, admin dashboard, CRM, Convex, Supabase, pipelines,
-interviews, job management, client portal, complex authentication, microservices,
-Redis, or queues.
-
-## 3. Stack
-
-Next.js App Router, strict TypeScript, Tailwind CSS, shadcn/ui, React Hook Form,
-Zod, Lucide React, Google Sheets via googleapis, Vercel, Cloudflare DNS, GitHub,
-Vitest, Playwright, Prettier, and ESLint. Use current stable compatible packages;
-retain compatible pinned versions in an existing repository.
-
-## 4. Architecture
-
-The browser must never communicate directly with Google Sheets. All credentials
-stay server-side. The future flow is POST route → shared validation → application
-service → Google Sheets adapter → confirmed success.
-
-## 5. Repository structure
-
-Use root-level `app/`, `components/ui/`, `components/layout/`,
-`components/application/`, `features/applications/`, `lib/`, `public/`,
-`tests/unit/`, and `tests/e2e/`. Introduce folders and files when they solve an
-actual organizational problem. Defer unused service and adapter stubs.
-
-## 6. Routes
-
-- `/`: landing page.
-- `/apply`: general form with source/campaign/UTM parameters.
-- `/apply/success`: submission confirmation, excluded from indexing.
-- `/privacy`: applicant privacy notice.
-- `/api/applications`: future POST-only server submission endpoint.
-
-## 7. Applicant fields
-
-First Name, Last Name, Email, Mobile Number, City / Location, Position Interested
-In, Years of Experience, Current Employment Status, Availability, optional Resume
-Link, Message / Notes, and Privacy Consent.
-
-Capture source, campaign, utm_source, utm_medium, utm_campaign, landing_page, and
-server-generated submitted_at. Tracking is controlled by URLs, not hard-coded
-campaign logic. Example: `/apply?source=cite&campaign=job-fair-oct-2026`.
-
-## 8. Validation
-
-Use one centralized Zod schema on both client and future server. Require names
-(2–100 characters), valid email, Philippine mobile number, location, position,
-and true consent. Experience, employment status, availability, resume, and notes
-are optional. Bound every text field. Never trust client validation alone.
-
-Foundation defaults: trim text, lowercase email, normalize accepted `09…`,
-`639…`, or `+639…` numbers to `+639…`; allow spaces, parentheses, and hyphens.
-Experience is 0–60 numeric years. Resume links use HTTP/HTTPS. Notes and resume
-links are limited to 2,000 characters, names to 100, email to 254, phone to 30,
-other text and tracking fields to 200. Position/status/availability are free text.
-
-## 9. Google Sheets structure
-
-Use a sheet such as “TaskWavePH Applicants”, worksheet “Applications”. Columns
-A–T, in order:
-
-```text
-Application ID | Submitted At | First Name | Last Name | Email | Phone
-Location | Position | Experience | Employment Status | Availability | Resume
-Message | Source | Campaign | UTM Source | UTM Medium | UTM Campaign
-Landing Page | Status
-```
-
-Default status is `New`. Generate a unique server ID, e.g.
-`TW-20261001-A8F3K2`. Never use row numbers as permanent IDs.
-
-## 10. Google integration
-
-Create a Google Cloud project, enable Sheets API, create a service account,
-generate credentials, and share the spreadsheet with its email. Isolate writes
-in `features/applications/google-sheets.ts`. Keep preparation/business logic in
-the application service; the route handles request parsing and boundary validation.
-
-## 11. Environment variables
-
-Document these in `.env.example`:
-
-```text
-NEXT_PUBLIC_SITE_URL=http://localhost:3000
-GOOGLE_SHEETS_SPREADSHEET_ID=
-GOOGLE_SERVICE_ACCOUNT_EMAIL=
-GOOGLE_PRIVATE_KEY=
-NEXT_PUBLIC_TURNSTILE_SITE_KEY=
-TURNSTILE_SECRET_KEY=
-```
-
-Turnstile is optional and not required for the foundation. Never commit
-`.env.local`, service-account JSON, private keys, or credentials.
-
-## 12. Environment validation
-
-Validate with Zod. Keep Google configuration access server-only and require all
-three Google values before operations run. Handle escaped private-key newlines.
-Errors must not include secret values. Foundation builds do not require Google
-credentials. Add production startup configuration checks with the integration.
-
-## 13. Application API (next feature)
-
-Parse JSON, validate and normalize, generate ID/timestamp, attach bounded tracking,
-append the row, and return `{ success: true, applicationId }`. Validation errors
-use `{ success: false, error: "INVALID_APPLICATION" }`. Do not expose internal
-Google errors. Log useful technical errors without unnecessary applicant data.
-
-## 14. Failure handling
-
-Redirect only after Sheets confirms a write. On failure, preserve the form and
-show “We couldn't submit your application right now. Please try again.”
-Never show invalid_grant, credential details, or Google API errors to applicants.
-
-## 15. Form UX
-
-Use clear field errors, first-error focus, large touch targets, loading state,
-disabled submit while submitting, and accidental double-click protection.
-Preserve campaign parameters. The final CTA is “Submit Application”.
-
-Success copy:
-
-> Application received.
->
-> Thank you for your interest in TaskWavePH. Our recruitment team will review your
-> information and contact you if your profile matches an available opportunity.
-
-Do not promise contact for every applicant.
-
-## 16. Landing page
-
-The eventual landing page includes header, hero/CTA, Why TaskWavePH,
-opportunities/roles, application process, about, final CTA, and footer.
-Keep the foundation basic. Do not invent vacancies, company statistics, or claims.
-
-## 17. Mobile first
-
-Assume applicants arrive through QR codes, Facebook, Messenger, and mobile
-browsers. Check 360, 390, 430, 768, and 1024+ pixels. No horizontal scrolling.
-
-## 18. QR architecture
-
-Preserve source, campaign, utm_source, utm_medium, and utm_campaign as bounded
-hidden values. New QR campaigns require only a new URL. For the foundation,
-record landing_page as pathname only, avoiding arbitrary query parameters.
-Do not put applicant names, emails, phones, or resume links into URLs.
-
-## 19. Spam protection
-
-Baseline: server validation, submission length limits, honeypot, and basic
-duplicate-click protection. Add Turnstile and rate limiting later if needed.
-Do not introduce complex infrastructure speculatively.
-
-## 20. Privacy
-
-Require unselected consent:
-
-> I agree that TaskWavePH may collect and process the information I provide for
-> recruitment and employment-related purposes.
-
-Explain collection purposes on `/privacy`. Foundation privacy copy is a draft;
-finalize organization details, privacy contact, retention, and rights procedures
-before real applicant collection.
-
-## 21. Security
-
-Keep Google private keys, service credentials, server variables, and future CRM
-secrets out of client components and browser bundles. Validate all external input.
-Sanitize storage-bound input in the future adapter, including spreadsheet formula
-injection protection. Never call Sheets from browser JavaScript.
-
-## 22. Git workflow
-
-Use `main`, feature branches, and pull requests before meaningful merges.
-Examples: `feat/application-form`, `feat/google-sheets`, `feat/landing-page`,
-`fix/form-validation`. Use conventional commits such as
-`feat: add applicant form` or `chore: add environment validation`.
-
-## 23. Initial setup
-
-Scaffold App Router with TypeScript, ESLint, Tailwind, no `src/` folder,
-Turbopack, npm, and `@/*`. Initialize shadcn/ui and add button, input, textarea,
-select, checkbox, label, card, and alert. Install form, validation, Google API,
-and icon packages. Keep lockfile committed.
-
-## 24. Development commands
-
-Provide `npm run dev`, `build`, `start`, `lint`, `typecheck`, `format`,
-`format:check`, `test`, and `test:e2e`. A feature is not complete with a failing
-production build. Run lint and build before completion.
-
-## 25. Deployment
-
-GitHub → Vercel → taskwaveph.com. Cloudflare manages DNS. Redirect
-www.taskwaveph.com to taskwaveph.com. Do not create an app subdomain yet.
-
-## 26. Vercel environment
-
-Set production site URL to `https://taskwaveph.com`. Configure Development,
-Preview, and Production independently. Prefer separate development and production
-spreadsheets. Never let automated tests write production applicant data.
-
-## 27. Future architecture
-
-Later, Next.js → Convex (jobs/applicants/applications) → integrations
-(Sheets/n8n/email). Convex becomes the source of truth and Sheets becomes a
-secondary integration. Do not install Convex during the MVP.
-
-## 28. Milestones
-
-1. Repository: framework, tooling, environment structure, README/AGENTS.
-2. Landing page: basic sections and mobile layout.
-3. Application form: fields, schema, tracking, consent, loading/errors.
-4. Sheets: service account, spreadsheet, server API/adapter, confirmed writes.
-5. Production: GitHub, Vercel, DNS/domain, production sheet, QR, real submission.
-
-## 29. MVP acceptance criteria
-
-- Domain loads; form works on desktop/mobile; validation and consent are required.
-- QR parameters survive; rows reach Sheets; success appears only after save.
-- Duplicate clicks are prevented; credentials are never exposed.
-- Environments are documented and development/production data are separable.
-- Production builds and real QR submissions work.
-- Frontend remains compatible with future Convex migration.
-
-## 30. Engineering principles
-
-Keep it simple, server-first for secrets, validate boundaries, mobile-first,
-save before automate, and build for migration without speculative abstraction.
-No Supabase, PostgreSQL, MongoDB, Redis, Docker, Kubernetes, microservices,
-GraphQL, or premature backend complexity in this MVP.
-
-## 31. Instructions for coding agents
-
-1. Read this file before changes; read [DESIGN.md](DESIGN.md) for branding, copy,
-   imagery, or UI work. Inspect existing code and reuse patterns.
-2. Keep changes scoped; avoid large dependencies without a reason.
-3. Do not add Convex unless specifically requested.
-4. Keep secrets server-side and Sheets isolated from UI code.
-5. Prefer server components; use client components only for interactivity.
-6. Use strict TypeScript; avoid `any` unless necessary and documented.
-7. Centralize validation; handle loading, success, empty, and error states.
-8. Make interfaces responsive; run lint and production build.
-9. Test meaningful business logic; avoid unrelated changes.
-10. Document each new environment variable; retain future backend compatibility.
-
-## 32. Current project state — foundation complete
-
-The completed foundation includes basic home/apply/success routes, draft privacy,
-validated form, shared schema, tracking, environment validation, and tests.
-The form supports local validation using “Validate Application” and visibly
-states that it does not send or save data. Do not fake success or navigate to the
-confirmation after local validation. No submission endpoint or Sheets write yet.
-
-The foundation passed lint/type/format/unit/e2e/build checks. Google Sheets
-integration remains the next isolated application feature. GitHub publishing, Google resources, deployment, DNS,
-and final production privacy policy are later milestones.
-
-## TaskWavePH project and brand instructions
-
-Read this file before making changes. Before branding, copy,
-imagery, typography, colors, or UI work, also read [DESIGN.md](DESIGN.md) and inspect
-the relevant supplied assets.
-
-- This file defines MVP scope and engineering constraints; DESIGN.md records
-  source-backed brand specifications and explicitly labeled design guidance.
-- Use the supplied company story, original logo artwork, and official tagline
-  "Outsource. Optimize. Grow." Keep original asset proportions and colors.
-- Label unsupported claims, missing specifications, and inferred guidance. Do not
-  turn mockup contacts, cultural slogans, or service categories into verified
-  company facts, employment promises, or current vacancies.
-- Existing site colors, Arial, and the Lucide Waves wordmark are foundation
-  placeholders. Apply official branding when that implementation is requested.
+Read [DESIGN.md](DESIGN.md) before branding or UI changes and inspect existing code.
+The owner approved Convex, business enquiries, PDF resumes, and an admin dashboard
+on October 1, 2026. This supersedes the original Sheets-only MVP constraints.
+
+## Scope and architecture
+
+- Next.js App Router, strict TypeScript, Tailwind, shadcn/ui, React Hook Form,
+  Zod, Lucide, Convex database/file storage, and Clerk staff authentication.
+- Convex is the source of truth. Google Sheets sync is deferred. Do not add
+  another datastore, object store, CRM, employee management, or applicant login.
+- Public forms POST through Next.js services to the authenticated Convex HTTP
+  adapter. Keep the shared secret server-side. Backend functions validate again.
+- Tables: applications, businessLeads, jobs, adminUsers, adminActivity, pendingUploads,
+  dashboardState (internal metric readiness).
+  Convex rate-limiter supplies persistent throttling; aggregate components supply
+  exact private dashboard counts. Synchronize all write paths, including seeds.
+- Administrative functions require verified Clerk identity AND active adminUsers
+  approval. Authentication alone grants no record access. Staff provisioning is
+  an internal mutation invoked from trusted CLI/dashboard access.
+- Store resume storage IDs, not public file URLs. Each download checks permission.
+  PDF only, optional, up to 2 MB; signature/type checks are not malware scanning.
+- Preserve only source, campaign, utm_source, utm_medium, utm_campaign and pathname
+  landing_page. Never put applicant information in URLs or logs.
+- Submissions require unselected consent, Turnstile, honeypot validation, length
+  limits, server timestamps, and idempotency tokens. Success follows confirmed save.
+- Confirmation pages require a signed, kind-specific HttpOnly receipt issued
+  after save. Receipts expire after 10 minutes; direct access without one redirects
+  to the matching form. Keep confirmation responses private/no-store and noindex.
+- Application statuses: New, Reviewed, Shortlisted, Closed. Lead statuses: New,
+  Contacted, Closed. Notes are internal and bounded to 2,000 characters.
+- Record deletion deletes attached resumes. Clean unlinked uploads after one hour.
+  Audit records contain metadata only; do not copy personal information or notes.
+
+## Pages and design
+
+The public marketing audience is business clients. Home, Services (at /areas-of-work),
+How It Works, and About explain outsourcing services and lead to business enquiries.
+Careers and Apply retain the applicant journey. Shared CTAs must follow page audience.
+
+Public routes: /, /areas-of-work, /how-it-works, /careers, /about, /apply,
+/business-enquiry, /privacy, /terms, and confirmation routes. Service areas are not verified
+vacancies; only approved staff-published job postings are vacancies. Do not invent roles, employee benefits, statistics, or contacts.
+
+Prefer existing shadcn primitives styled with official brand tokens. Preserve
+original logos, Poppins, navy/blue/cyan/white identity, and mobile-first layouts.
+Use server components except for needed interactivity. Check 360, 390, 430, 768,
+1024, and 1440 pixel layouts, keyboard access, contrast, and reduced motion.
+
+Admin uses a branded shadcn Sidebar, paginated records, filters, detail editing,
+protected CV viewing/downloads, CSV/styled XLSX exports, and confirmed deletion. No public sign-up or dashboard links.
+Development uses /admin. Configured production admin hostname rewrites to this
+route tree; the public hostname blocks admin paths. Exclude admin from sitemap,
+add noindex, and send private/no-store responses. Host routing is not authorization.
+
+## Configuration and delivery
+
+- Document variables in .env.example; .env.local and .convex are git-ignored.
+  Never commit secrets, private keys, or service-account credentials.
+- Read docs/BACKEND.md for Convex/Clerk/Turnstile setup, trusted staff provisioning,
+  local development verification, production domain configuration, and limitations.
+- Submissions default to disabled and local preview remains functional. Production
+  additionally requires approved privacy policy, organization/contact/retention
+  configuration, real Turnstile keys, and separate production services.
+- This task builds and tests development integration. Do not deploy, change DNS,
+  enable production collection, or merge without an explicit follow-up instruction.
+- Preserve feature-friendly structure and isolate service/storage code from UI.
+- Use feature branches and conventional commits; meaningful merges use PRs.
+- Run lint, typecheck, formatting check, unit/backend tests, build, and browser
+  checks. Verify actual Convex development writes; report unavailable external
+  authentication verification explicitly rather than claiming mocked login is real.
+- Read the Convex expert skill before editing convex/. Use object-form functions,
+  args/returns validators, proper generated imports, indexed reads, and pagination.
+- Keep this file and DESIGN.md accurate when scope or brand guidance changes.
+
+## Applicant review extension
+
+- Applicant profile fields are read-only; staff edit status and internal notes.
+- Render private PDFs with React-PDF and a local worker, without document scripts
+  or annotation navigation. Never expose public storage URLs.
+- Applicant exports include all matching status-filtered rows, with a 5,000-row
+  limit, bounded pagination, approval checks, CSV formula neutralization, and
+  explicit XLSX string cells. Export no tokens, fingerprints, or storage IDs.
+- Development preview state is synthetic and resets on reload. It must never
+  query private records or bypass authentication. All preview routes return 404
+  outside localhost development.
+- Seeds are internal, idempotent, version-marked, and development-only; cleanup
+  targets only owned synthetic records and attached files. Keep the backend seed
+  flag disabled after use and never enable it in production.
+
+## Cookies and policy content
+
+- Public pages use an informational essential-cookie notice, not optional tracking
+  consent. A versioned acknowledgment cookie lasts 180 days. Keep it separate from
+  form consent and never add analytics or advertising integrations implicitly.
+- Footer cookie information can be reopened; admin and preview pages omit the notice.
+- Privacy content uses configured organization/contact/retention values and stays
+  a development draft until production privacy configuration is complete and approved.
+  Website Terms remain a draft pending owner review. Do not invent legal contacts,
+  retention periods, operational agreements, or compliance claims.
+- The How It Works timeline expands the existing three-step enquiry journey. It is
+  website guidance inspired by the brand, not an official media-kit onboarding process.
+
+## Job postings
+
+- Careers lists only Published jobs. Draft, Closed, and Archived postings are private.
+- Archived jobs restore to Draft before publication. Jobs with linked applications
+  cannot be permanently deleted; check the indexed association in the transaction.
+- Leads support an optional priority star (missing means false), not custom CRM tags.
+- The admin overview uses full-table transactional aggregates and Philippine dates,
+  independent of list pagination/filters. Backfill existing data before displaying totals.
+- Approved staff create/edit bounded plain-text postings and explicitly confirm
+  publication or closure. Preserve closed postings and existing applications.
+- Optional application job IDs are validated inside the save transaction; store
+  the server-resolved title snapshot. Reject new applications for unavailable jobs,
+  while honoring identical retries of already saved submissions.
+- Public job reads expose only posting content; all administration retains Clerk
+  identity plus active staff approval. Preview jobs never write to the database. On localhost development, Careers
+  shows labeled sample jobs when its unfiltered live list is empty; it shares
+  state with sample admin tools. Production never uses this fallback.
+- Sitemap includes only published job URLs, bounded to 5,000 postings.
+
+## Public navigation and confirmed location
+
+- Public headers remain sticky. Below 1024px show the logo and menu button only;
+  put the audience-specific CTA inside the mobile menu. Retain tracking and keyboard
+  access, and offset anchor/error focus targets below the header.
+- The owner confirmed Dagupan City, Pangasinan, Philippines. Use the shared company
+  location; do not infer a street address, office hours, or visitor arrangements.
+- Keep motion subtle: smooth anchors and short interaction transitions, disabled
+  for reduced motion. Keep standard Next.js route navigation.
+
+## Submission reliability and public caching
+
+- Attempt throttling runs before upload reading and challenge verification. Use
+  the existing persistent Convex limiter; return denials so budget updates commit.
+  Keep bounded retry timing and safe public error codes, including JOB_UNAVAILABLE.
+- Trust forwarding headers only on Vercel deployments; hash validated addresses,
+  never store/log raw IPs. Other hosts share a conservative fallback bucket.
+- Preserve idempotency tokens for unchanged retries after uncertain failures.
+  Disabled buttons/cooldowns supplement server protections. Challenge retries
+  retain entries without browser-storage persistence.
+- Cache only bounded first-page published-job reads for 60 seconds in production.
+  Keep private data, arbitrary cursors, tracking, and eligibility checks uncached.
+  Public lists may lag while revalidating; saves always check current job status.

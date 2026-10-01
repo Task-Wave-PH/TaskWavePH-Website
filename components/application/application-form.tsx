@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { getTrackedHref } from "@/features/applications/tracking";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -18,6 +19,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FormField } from "./form-field";
+import { useSubmission } from "@/components/submissions/use-submission";
+import { TurnstileChallenge } from "@/components/submissions/turnstile";
+import { validateResume } from "@/features/submissions/validation";
 import { SubmissionMessage } from "./submission-message";
 
 const textFields = [
@@ -80,18 +84,29 @@ const textFields = [
     type: "url",
     optional: true,
     maxLength: 2000,
-    hint: "A link to your resume; no file upload is needed.",
+    hint: "Optional alternative to uploading a PDF.",
   },
 ] as const;
 
 export function ApplicationForm({
   tracking,
+  enabled = false,
+  job,
 }: {
   tracking: ApplicationTracking;
+  enabled?: boolean;
+  job?: { id: string; title: string };
 }) {
+  const [selectedJob, setSelectedJob] = useState(job);
   const [validated, setValidated] = useState(false);
+  const [file, setFile] = useState<File>();
+  const [fileError, setFileError] = useState("");
+  const [validatingFile, setValidatingFile] = useState(false);
+  const fileRevision = useRef(0);
+  const submission = useSubmission("/api/applications", "/apply/success");
   const {
     register,
+    setValue,
     control,
     handleSubmit,
     formState: { errors, isSubmitting },
@@ -103,7 +118,8 @@ export function ApplicationForm({
       email: "",
       phone: "",
       location: "",
-      position: "",
+      position: job?.title ?? "",
+      ...(job ? { jobId: job.id } : {}),
       experience: "",
       employmentStatus: "",
       availability: "",
@@ -121,11 +137,34 @@ export function ApplicationForm({
       noValidate
       onChange={() => setValidated(false)}
       onSubmit={handleSubmit(
-        () => setValidated(true),
+        async (data) => {
+          if (validatingFile) return;
+          if (fileError) {
+            setValidated(false);
+            return;
+          }
+          if (!enabled) {
+            setValidated(true);
+            return;
+          }
+          await submission.submit(
+            { ...data, experience: data.experience?.toString() ?? "" },
+            file,
+          );
+        },
         () => setValidated(false),
       )}
       className="space-y-7"
     >
+      {selectedJob && (
+        <div className="rounded-lg border bg-secondary p-4">
+          <p className="font-medium">Applying for: {selectedJob.title}</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Your application will be linked to this role.
+          </p>
+        </div>
+      )}
+      <input type="hidden" {...register("jobId")} />
       <div className="grid gap-6 sm:grid-cols-2">
         {textFields.map((field) => {
           const error = errors[field.name]?.message;
@@ -140,6 +179,7 @@ export function ApplicationForm({
               hint={hint}
             >
               <Input
+                readOnly={field.name === "position" && !!selectedJob}
                 id={field.name}
                 {...register(field.name)}
                 type={"type" in field ? field.type : "text"}
@@ -213,7 +253,7 @@ export function ApplicationForm({
               provide for recruitment and employment-related purposes.
             </label>{" "}
             <Link
-              href="/privacy"
+              href={getTrackedHref("/privacy", tracking)}
               className="font-medium text-primary underline underline-offset-4"
             >
               Read the privacy notice.
@@ -230,6 +270,66 @@ export function ApplicationForm({
           </p>
         )}
       </div>
+      <FormField
+        id="resumeFile"
+        label="Resume PDF"
+        optional
+        hint="One PDF, up to 2 MB. A resume link can also be provided."
+        error={fileError}
+      >
+        <Input
+          id="resumeFile"
+          type="file"
+          accept="application/pdf,.pdf"
+          aria-invalid={!!fileError}
+          aria-describedby={
+            fileError ? "resumeFile-hint resumeFile-error" : "resumeFile-hint"
+          }
+          onChange={async (event) => {
+            const selected = event.target.files?.[0];
+            const revision = ++fileRevision.current;
+            setFile(selected);
+            setFileError("");
+            setValidated(false);
+            setValidatingFile(!!selected);
+            if (selected)
+              try {
+                await validateResume(selected);
+              } catch {
+                if (revision === fileRevision.current)
+                  setFileError("Choose a valid PDF no larger than 2 MB.");
+              } finally {
+                if (revision === fileRevision.current) setValidatingFile(false);
+              }
+          }}
+        />
+      </FormField>
+      {enabled && (
+        <TurnstileChallenge
+          key={submission.reset}
+          onToken={submission.setChallenge}
+          reset={submission.reset}
+        />
+      )}
+      {submission.error && (
+        <p role="alert" className="text-sm text-destructive">
+          {submission.error}
+        </p>
+      )}
+      {submission.jobUnavailable && selectedJob && (
+        <Button
+          type="button"
+          variant="outline"
+          className="h-auto min-h-12 whitespace-normal px-6 py-3"
+          onClick={() => {
+            setSelectedJob(undefined);
+            setValue("jobId", undefined);
+            setValidated(false);
+          }}
+        >
+          Continue as a General Application
+        </Button>
+      )}
       {trackingKeys.map((key) => (
         <input key={key} type="hidden" {...register(key)} />
       ))}
@@ -254,14 +354,28 @@ export function ApplicationForm({
       {validated && <SubmissionMessage />}
       <Button
         type="submit"
-        disabled={isSubmitting}
-        className="min-h-12 w-full text-base sm:w-auto"
+        disabled={
+          isSubmitting || validatingFile || (enabled && submission.disabled)
+        }
+        aria-busy={isSubmitting || submission.sending || validatingFile}
+        className="min-h-12 w-full px-6 text-base sm:w-auto"
       >
-        {isSubmitting ? "Validating…" : "Validate Application"}
+        {validatingFile
+          ? "Checking PDF…"
+          : submission.cooldown > 0
+            ? `Try again in ${submission.cooldown}s`
+            : isSubmitting || submission.sending
+              ? enabled
+                ? "Submitting…"
+                : "Validating…"
+              : enabled
+                ? "Submit Application"
+                : "Validate Application"}
       </Button>
       <p className="text-sm text-muted-foreground">
-        Applications are not open yet. This form checks your entries locally; it
-        does not send or save your information.
+        {enabled
+          ? "Your information is used for recruitment-related purposes."
+          : "Applications are not open yet. This form checks your entries locally; it does not send or save your information."}
       </p>
     </form>
   );

@@ -1,29 +1,56 @@
 import Link from "next/link";
-import { ArrowUpRight, Waves } from "lucide-react";
+import { BrandLogo } from "./brand-logo";
+import { BusinessLink } from "./business-link";
+import { ApplyLink } from "./apply-link";
+import { SiteNavigation } from "./site-navigation";
+import {
+  getApplyHref,
+  getTrackedHref,
+  getTracking,
+  type TrackingQuery,
+} from "@/features/applications/tracking";
 
-export function Header({ applyHref = "/apply" }: { applyHref?: string }) {
+export function Header({
+  applyHref,
+  query = {},
+  audience = "business",
+}: {
+  applyHref?: string;
+  audience?: "business" | "applicant";
+  query?: TrackingQuery;
+}) {
   return (
-    <header className="border-b border-border bg-background">
+    <header className="sticky top-0 z-30 border-b border-border bg-background">
       <nav
         aria-label="Main navigation"
-        className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-5 sm:px-8"
+        className="mx-auto flex h-[72px] max-w-[1180px] items-center justify-between gap-3 px-5 sm:px-8 lg:h-20"
       >
         <Link
-          href="/"
+          href={getTrackedHref("/", query)}
           aria-label="TaskWavePH home"
-          className="flex items-center gap-2 text-lg font-bold tracking-tight"
+          className="shrink-0 rounded-sm"
         >
-          <Waves className="size-6 text-primary" aria-hidden="true" />
-          <span>
-            TaskWave<span className="text-primary">PH</span>
-          </span>
+          <BrandLogo eager />
         </Link>
-        <Link
-          href={applyHref}
-          className="inline-flex min-h-11 items-center gap-1 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
-        >
-          Apply Now <ArrowUpRight className="size-4" aria-hidden="true" />
-        </Link>
+        <SiteNavigation
+          query={getTracking(query)}
+          audience={audience}
+          ctaHref={
+            audience === "applicant"
+              ? (applyHref ?? getApplyHref(query))
+              : getTrackedHref("/business-enquiry", query)
+          }
+        />
+        <div className="hidden lg:block">
+          {audience === "applicant" ? (
+            <ApplyLink href={applyHref ?? getApplyHref(query)} compact />
+          ) : (
+            <BusinessLink
+              href={getTrackedHref("/business-enquiry", query)}
+              compact
+            />
+          )}
+        </div>
       </nav>
     </header>
   );

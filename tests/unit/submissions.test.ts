@@ -40,6 +40,13 @@ function configure() {
   vi.stubEnv("TURNSTILE_SECRET_KEY", "test-secret");
   vi.stubEnv("NEXT_PUBLIC_SITE_URL", "http://localhost:3000");
 }
+function stubBackendFetch(backend: typeof fetch) {
+  vi.stubGlobal("fetch", (input: RequestInfo | URL, init?: RequestInit) =>
+    String(input).endsWith("/submission-attempt")
+      ? Promise.resolve(Response.json({ allowed: true, retryAfterSeconds: 0 }))
+      : backend(input, init),
+  );
+}
 describe("submission protections", () => {
   it("enables the development flag only on the development server", () => {
     vi.stubEnv("SUBMISSIONS_ENABLED", "development");
@@ -105,7 +112,7 @@ describe("submission protections", () => {
   it("does not call Convex for bad consent or a failed challenge", async () => {
     configure();
     const fetch = vi.fn().mockResolvedValue(Response.json({ success: false }));
-    vi.stubGlobal("fetch", fetch);
+    stubBackendFetch(fetch);
     expect(
       (
         await submitRequest(
@@ -132,7 +139,7 @@ describe("submission protections", () => {
       .mockResolvedValueOnce(
         Response.json({ success: true, reference: "TW-A-test" }),
       );
-    vi.stubGlobal("fetch", fetch);
+    stubBackendFetch(fetch);
     const response = await submitRequest(request(), "applications");
     const cookie = response.headers.get("set-cookie");
     expect(cookie).toContain("tw-application-receipt=");
@@ -148,8 +155,7 @@ describe("submission protections", () => {
   });
   it("returns a safe failure when storage/backend fails", async () => {
     configure();
-    vi.stubGlobal(
-      "fetch",
+    stubBackendFetch(
       vi
         .fn()
         .mockResolvedValueOnce(
@@ -170,8 +176,7 @@ describe("submission protections", () => {
   });
   it("rejects wrong challenge hostname and oversized request before persistence", async () => {
     configure();
-    vi.stubGlobal(
-      "fetch",
+    stubBackendFetch(
       vi.fn().mockResolvedValue(
         Response.json({
           success: true,
@@ -189,5 +194,74 @@ describe("submission protections", () => {
         )
       ).status,
     ).toBe(413);
+  });
+});
+
+describe("early submission limits and error propagation", () => {
+  it("rejects unsupported content without contacting the backend", async () => {
+    configure();
+    const fetch = vi.fn();
+    vi.stubGlobal("fetch", fetch);
+    const response = await submitRequest(
+      new Request("http://localhost/api/applications", {
+        method: "POST",
+        body: "{}",
+        headers: { "Content-Type": "application/json" },
+      }),
+      "applications",
+    );
+    expect(response.status).toBe(415);
+    expect(fetch).not.toHaveBeenCalled();
+  });
+  it("throttles before reading a body or verifying a challenge", async () => {
+    configure();
+    const fetch = vi
+      .fn()
+      .mockResolvedValue(
+        Response.json(
+          { error: "RATE_LIMITED", retryAfterSeconds: 120 },
+          { status: 429 },
+        ),
+      );
+    vi.stubGlobal("fetch", fetch);
+    const body = vi.spyOn(Request.prototype, "formData");
+    const response = await submitRequest(request(), "applications");
+    expect(response.status).toBe(429);
+    expect(response.headers.get("Retry-After")).toBe("120");
+    expect(await response.json()).toMatchObject({ retryAfterSeconds: 120 });
+    expect(body).not.toHaveBeenCalled();
+    body.mockRestore();
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+  it("preserves closed-role recovery and save-limit cooldowns", async () => {
+    configure();
+    for (const [error, status] of [
+      ["JOB_UNAVAILABLE", 409],
+      ["RATE_LIMITED", 429],
+    ] as const) {
+      stubBackendFetch(
+        vi
+          .fn()
+          .mockResolvedValueOnce(
+            Response.json({
+              success: true,
+              action: "submission",
+              hostname: "localhost",
+            }),
+          )
+          .mockResolvedValueOnce(
+            Response.json(
+              { error, ...(status === 429 ? { retryAfterSeconds: 45 } : {}) },
+              { status },
+            ),
+          ),
+      );
+      const response = await submitRequest(request(), "applications");
+      expect(response.status).toBe(status);
+      expect(await response.json()).toMatchObject({ success: false, error });
+      expect(response.headers.get("set-cookie")).toBeNull();
+      if (status === 429)
+        expect(response.headers.get("Retry-After")).toBe("45");
+    }
   });
 });

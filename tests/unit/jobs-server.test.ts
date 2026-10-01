@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
+vi.mock("next/server", () => ({ connection: async () => {} }));
 const { query } = vi.hoisted(() => ({ query: vi.fn() }));
 vi.mock("convex/browser", () => ({
   ConvexHttpClient: class {

@@ -247,6 +247,46 @@ describe("Convex intake and administration", () => {
       await t.run((ctx) => ctx.db.query("pendingUploads").first()),
     ).toBeNull();
   });
+  it("commits persistent attempt limits and returns retry timing", async () => {
+    const t = setup();
+    const rateKey = "b".repeat(64);
+    for (let index = 0; index < 20; index++)
+      expect(
+        (await t.mutation(internal.intake.attempt, { rateKey })).allowed,
+      ).toBe(true);
+    const denied = await t.mutation(internal.intake.attempt, { rateKey });
+    expect(denied.allowed).toBe(false);
+    expect(denied.retryAfterSeconds).toBeGreaterThan(0);
+    expect(
+      (await t.mutation(internal.intake.attempt, { rateKey })).allowed,
+    ).toBe(false);
+    expect(
+      (await t.mutation(internal.intake.attempt, { rateKey: "c".repeat(64) }))
+        .allowed,
+    ).toBe(true);
+  });
+  it("authenticates attempt checks and applies a shared global budget", async () => {
+    const t = setup();
+    vi.stubEnv("CONVEX_SERVER_SECRET", "development-test-secret");
+    expect(
+      (await t.fetch("/submission-attempt", { method: "POST" })).status,
+    ).toBe(401);
+    const headers = {
+      Authorization: "Bearer development-test-secret",
+      "x-rate-key": "a".repeat(64),
+    };
+    for (let index = 0; index < 120; index++)
+      await t.mutation(internal.intake.attempt, {
+        rateKey: index.toString(16).padStart(64, "0"),
+      });
+    const response = await t.fetch("/submission-attempt", {
+      method: "POST",
+      headers,
+    });
+    expect(response.status).toBe(429);
+    expect(Number(response.headers.get("Retry-After"))).toBeGreaterThan(0);
+    vi.unstubAllEnvs();
+  });
   it("limits repeated submissions persistently", async () => {
     const t = setup();
     for (let index = 0; index < 5; index++)

@@ -110,3 +110,31 @@ test("Careers handles empty or unavailable roles without inventing vacancies", a
   await expect(page).toHaveURL(/\/apply\?source=qr$/);
   await expect(page.getByLabel("First Name", { exact: true })).toBeVisible();
 });
+
+test("public response headers prevent framing and form errors describe their controls", async ({
+  page,
+  request,
+}) => {
+  const response = await request.get("/apply");
+  expect(response.headers()["content-security-policy"]).toContain(
+    "frame-ancestors 'none'",
+  );
+  expect(response.headers()["x-frame-options"]).toBe("DENY");
+  expect(response.headers()["x-content-type-options"]).toBe("nosniff");
+  expect(response.headers()["referrer-policy"]).toBe(
+    "strict-origin-when-cross-origin",
+  );
+  await page.goto("/business-enquiry");
+  await page.getByRole("button", { name: "Validate Enquiry" }).click();
+  await expect(page.getByLabel("Tell us what you need")).toHaveAttribute(
+    "aria-describedby",
+    "message-error",
+  );
+  await expect(
+    page.getByRole("checkbox", { name: "Customer Support" }),
+  ).toHaveAttribute("aria-describedby", "services-error");
+  await expect(page.getByRole("checkbox", { name: /I agree/ })).toHaveAttribute(
+    "aria-describedby",
+    "business-consent-error",
+  );
+});

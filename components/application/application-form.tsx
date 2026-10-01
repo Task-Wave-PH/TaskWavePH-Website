@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { getTrackedHref } from "@/features/applications/tracking";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -101,6 +101,8 @@ export function ApplicationForm({
   const [validated, setValidated] = useState(false);
   const [file, setFile] = useState<File>();
   const [fileError, setFileError] = useState("");
+  const [validatingFile, setValidatingFile] = useState(false);
+  const fileRevision = useRef(0);
   const submission = useSubmission("/api/applications", "/apply/success");
   const {
     register,
@@ -136,6 +138,7 @@ export function ApplicationForm({
       onChange={() => setValidated(false)}
       onSubmit={handleSubmit(
         async (data) => {
+          if (validatingFile) return;
           if (fileError) {
             setValidated(false);
             return;
@@ -144,7 +147,6 @@ export function ApplicationForm({
             setValidated(true);
             return;
           }
-          if (fileError) return;
           await submission.submit(
             { ...data, experience: data.experience?.toString() ?? "" },
             file,
@@ -285,19 +287,26 @@ export function ApplicationForm({
           }
           onChange={async (event) => {
             const selected = event.target.files?.[0];
+            const revision = ++fileRevision.current;
             setFile(selected);
             setFileError("");
+            setValidated(false);
+            setValidatingFile(!!selected);
             if (selected)
               try {
                 await validateResume(selected);
               } catch {
-                setFileError("Choose a valid PDF no larger than 2 MB.");
+                if (revision === fileRevision.current)
+                  setFileError("Choose a valid PDF no larger than 2 MB.");
+              } finally {
+                if (revision === fileRevision.current) setValidatingFile(false);
               }
           }}
         />
       </FormField>
       {enabled && (
         <TurnstileChallenge
+          key={submission.reset}
           onToken={submission.setChallenge}
           reset={submission.reset}
         />
@@ -345,16 +354,23 @@ export function ApplicationForm({
       {validated && <SubmissionMessage />}
       <Button
         type="submit"
-        disabled={isSubmitting}
+        disabled={
+          isSubmitting || validatingFile || (enabled && submission.disabled)
+        }
+        aria-busy={isSubmitting || submission.sending || validatingFile}
         className="min-h-12 w-full px-6 text-base sm:w-auto"
       >
-        {isSubmitting
-          ? enabled
-            ? "Submitting…"
-            : "Validating…"
-          : enabled
-            ? "Submit Application"
-            : "Validate Application"}
+        {validatingFile
+          ? "Checking PDF…"
+          : submission.cooldown > 0
+            ? `Try again in ${submission.cooldown}s`
+            : isSubmitting || submission.sending
+              ? enabled
+                ? "Submitting…"
+                : "Validating…"
+              : enabled
+                ? "Submit Application"
+                : "Validate Application"}
       </Button>
       <p className="text-sm text-muted-foreground">
         {enabled

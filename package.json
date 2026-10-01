@@ -21,7 +21,8 @@
     "convex:seed:cleanup": "node scripts/seed-convex.mjs --cleanup",
     "test:preview": "playwright test --config playwright.preview.config.ts",
     "convex:workflow": "node scripts/smoke-applicant-workflow.mjs",
-    "convex:jobs:smoke": "node scripts/smoke-jobs.mjs"
+    "convex:jobs:smoke": "node scripts/smoke-jobs.mjs",
+    "convex:limits:smoke": "node scripts/smoke-rate-limits.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",

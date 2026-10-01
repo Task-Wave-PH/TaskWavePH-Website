@@ -133,3 +133,17 @@ add noindex, and send private/no-store responses. Host routing is not authorizat
   location; do not infer a street address, office hours, or visitor arrangements.
 - Keep motion subtle: smooth anchors and short interaction transitions, disabled
   for reduced motion. Keep standard Next.js route navigation.
+
+## Submission reliability and public caching
+
+- Attempt throttling runs before upload reading and challenge verification. Use
+  the existing persistent Convex limiter; return denials so budget updates commit.
+  Keep bounded retry timing and safe public error codes, including JOB_UNAVAILABLE.
+- Trust forwarding headers only on Vercel deployments; hash validated addresses,
+  never store/log raw IPs. Other hosts share a conservative fallback bucket.
+- Preserve idempotency tokens for unchanged retries after uncertain failures.
+  Disabled buttons/cooldowns supplement server protections. Challenge retries
+  retain entries without browser-storage persistence.
+- Cache only bounded first-page published-job reads for 60 seconds in production.
+  Keep private data, arbitrary cursors, tracking, and eligibility checks uncached.
+  Public lists may lag while revalidating; saves always check current job status.

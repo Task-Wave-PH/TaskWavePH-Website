@@ -1,5 +1,4 @@
 import "server-only";
-import { createHmac } from "node:crypto";
 import { NextResponse } from "next/server";
 import { confirmationRoutes, createReceipt, RECEIPT_MAX_AGE } from "./receipt";
 import { applicationSchema } from "@/features/applications/schema";
@@ -10,16 +9,23 @@ import {
   submissionTokenSchema,
   validateResume,
 } from "./validation";
-import { appendSubmission } from "./convex-adapter";
+import { appendSubmission, checkSubmissionAttempt } from "./convex-adapter";
+import { submissionRateKey } from "./rate-key";
+import { readSubmissionBody, SubmissionBodyError } from "./request-body";
 
 export async function submitRequest(
   request: Request,
   kind: "applications" | "businessLeads",
 ) {
-  const json = (data: object, status: number) =>
+  const json = (data: object, status: number, retryAfterSeconds?: number) =>
     NextResponse.json(data, {
       status,
-      headers: { "Cache-Control": "no-store" },
+      headers: {
+        "Cache-Control": "no-store",
+        ...(retryAfterSeconds
+          ? { "Retry-After": String(retryAfterSeconds) }
+          : {}),
+      },
     });
   if (!submissionsEnabled())
     return json({ success: false, error: "SUBMISSIONS_DISABLED" }, 503);
@@ -27,33 +33,35 @@ export async function submitRequest(
     const env = getSubmissionEnv();
     if (Number(request.headers.get("content-length")) > MAX_REQUEST_BYTES)
       return json({ success: false, error: "TOO_LARGE" }, 413);
-    // Bound the stream before multipart parsing, including chunked requests.
-    const reader = request.body?.getReader();
-    if (!reader)
-      return json({ success: false, error: "INVALID_SUBMISSION" }, 400);
-    const chunks: Uint8Array[] = [];
-    let total = 0;
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      total += value.byteLength;
-      if (total > MAX_REQUEST_BYTES) {
-        await reader.cancel();
-        return json({ success: false, error: "TOO_LARGE" }, 413);
-      }
-      chunks.push(value);
+    if (
+      !/^multipart\/form-data\s*;/i.test(
+        request.headers.get("content-type") ?? "",
+      )
+    )
+      return json({ success: false, error: "UNSUPPORTED_MEDIA_TYPE" }, 415);
+    const rateKey = submissionRateKey(request, env.CONVEX_SERVER_SECRET);
+    const attempt = await checkSubmissionAttempt(rateKey);
+    if (!attempt.allowed)
+      return json(
+        {
+          success: false,
+          error: "RATE_LIMITED",
+          retryAfterSeconds: attempt.retryAfterSeconds,
+        },
+        429,
+        attempt.retryAfterSeconds,
+      );
+    const bytes = await readSubmissionBody(request);
+    let form: FormData;
+    try {
+      form = await new Request(request.url, {
+        method: "POST",
+        headers: { "Content-Type": request.headers.get("content-type") ?? "" },
+        body: bytes,
+      }).formData();
+    } catch {
+      throw new SubmissionBodyError("INVALID_SUBMISSION", 400);
     }
-    const bytes = new Uint8Array(total);
-    let offset = 0;
-    for (const chunk of chunks) {
-      bytes.set(chunk, offset);
-      offset += chunk.byteLength;
-    }
-    const form = await new Request(request.url, {
-      method: "POST",
-      headers: { "Content-Type": request.headers.get("content-type") ?? "" },
-      body: bytes,
-    }).formData();
     submissionTokenSchema.parse(form.get("submissionToken"));
     const fields = JSON.parse(String(form.get("fields")));
     const data =
@@ -98,12 +106,6 @@ export async function submitRequest(
         (verified.action !== "submission" || verified.hostname !== host))
     )
       return json({ success: false, error: "CHALLENGE_FAILED" }, 400);
-    // Vercel replaces x-forwarded-for. The global limit remains authoritative on other hosts.
-    const address =
-      request.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
-    const rateKey = createHmac("sha256", env.CONVEX_SERVER_SECRET)
-      .update(address)
-      .digest("hex");
     const payload = new FormData();
     payload.set("kind", kind);
     payload.set("submissionToken", String(form.get("submissionToken")));
@@ -123,7 +125,11 @@ export async function submitRequest(
         "name" in file ? String(file.name) : "resume.pdf",
       );
     const result = await appendSubmission(payload, rateKey);
-    const response = json(result.data, result.status);
+    const response = json(
+      result.data,
+      result.status,
+      result.data.retryAfterSeconds,
+    );
     if (result.status === 200 && result.data.success) {
       const route = confirmationRoutes[kind];
       response.cookies.set(
@@ -140,6 +146,8 @@ export async function submitRequest(
     }
     return response;
   } catch (error) {
+    if (error instanceof SubmissionBodyError)
+      return json({ success: false, error: error.code }, error.status);
     if (
       (error instanceof Error &&
         ["ZodError", "SyntaxError"].includes(error.name)) ||

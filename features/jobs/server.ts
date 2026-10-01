@@ -1,19 +1,33 @@
 import "server-only";
+import { cache } from "react";
+import { cacheableJobList } from "./cache-policy";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/convex/_generated/api";
-export function publicJobsClient() {
+export function publicJobsClient({
+  cacheFirstPage = false,
+}: { cacheFirstPage?: boolean } = {}) {
   const url = process.env.NEXT_PUBLIC_CONVEX_URL;
   if (!url) return null;
   return new ConvexHttpClient(url, {
-    fetch: (input, init) =>
-      fetch(input, {
+    fetch: (input, init) => {
+      const cached =
+        cacheFirstPage &&
+        process.env.NODE_ENV === "production" &&
+        cacheableJobList(init);
+      return fetch(input, {
         ...init,
-        cache: "no-store",
+        ...(cached
+          ? {
+              cache: "force-cache" as const,
+              next: { revalidate: 60, tags: ["public-jobs"] },
+            }
+          : { cache: "no-store" as const }),
         signal: AbortSignal.timeout(10000),
-      }),
+      });
+    },
   });
 }
-export async function getPublishedJob(id: string) {
+export const getPublishedJob = cache(async (id: string) => {
   const client = publicJobsClient();
   if (!client) return { state: "unavailable" as const, job: null };
   try {
@@ -24,4 +38,4 @@ export async function getPublishedJob(id: string) {
   } catch {
     return { state: "unavailable" as const, job: null };
   }
-}
+});

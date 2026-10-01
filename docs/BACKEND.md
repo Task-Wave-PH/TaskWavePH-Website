@@ -266,3 +266,52 @@ Run `npm run test:preview` for sample job workflows. `npm run convex:jobs:smoke`
 verifies real development draft writes using a trusted temporary CLI identity,
 then closes the synthetic draft and revokes approval. It never publishes a vacancy
 and does not verify real Clerk password login. Staff login still needs Clerk keys.
+
+## Public submission hardening and read caching
+
+Public Next.js routes call the secret-protected Convex `/submission-attempt`
+endpoint before reading multipart uploads or calling Turnstile. Persistent budgets
+are shared across both forms: 20 attempts per address per 10 minutes and 120
+attempts globally per minute. Save budgets remain 5 new submissions per address
+per hour and 30 globally per minute. Completed identical retries remain
+idempotent. A `429` response includes bounded `retryAfterSeconds` and `Retry-After`.
+Backend attempt denials return normally so limiter updates commit.
+
+On Vercel only, the deployment-overwritten `x-forwarded-for` value is validated
+as an IP and HMAC-hashed using the server secret. Raw addresses are not stored or
+logged. Direct/self-hosted requests use a shared fallback bucket; arbitrary client
+headers cannot select rate buckets. Rotating the secret changes address buckets
+and invalidates confirmation receipts. Limits are deliberately conservative;
+shared office/QR-event networks share an address budget. This does not replace
+platform denial-of-service protections. See [Vercel request header behavior](https://vercel.com/docs/headers/request-headers).
+
+Uploads retain the 2 MB PDF limit plus 64 KB request overhead. Multipart stream
+reading has a 30-second deadline and cancels on excess bytes or disconnect. The
+attempt call times out after 5 seconds, Turnstile after 10 seconds, and Convex
+submission after 30 seconds. The browser times out after 90 seconds, retaining
+entries and the same token for unchanged retries because the save may have
+completed. Editing an uncertain submission before retrying can create a distinct
+application. Buttons also lock during sending/PDF validation, require a challenge,
+and apply server cooldowns or a 3-second failure cooldown. Button restrictions do
+not replace backend validation or rate limits.
+
+Turnstile uses compact sizing when its container is below 300px, otherwise
+flexible sizing. Script/widget errors provide a retry without navigating away or
+saving entries in browser storage. The notice acknowledgment is separate from
+form consent. Public responses deny framing and objects and restrict base URLs;
+the CSP intentionally does not yet impose a strict script allowlist.
+
+In production, Next.js fetch caching revalidates bounded first-page published-job
+reads after 60 seconds. Keys include deployment URL, validated filters, and page
+size; tracking parameters and private records never enter these requests. The
+sitemap reuses its first job page, while cursor pages remain uncached. Development
+bypasses this cache. Role details are deduplicated only within one render; details
+and transaction-time eligibility remain fresh. Time-based revalidation may serve
+stale listings during refresh or an outage; a stale card cannot authorize a save.
+See [Next.js fetch caching](https://nextjs.org/docs/app/api-reference/functions/fetch).
+
+Run `npm run convex:limits:smoke` to verify authentication and the persistent
+20-attempt budget against the guarded development target. It consumes a synthetic
+rate bucket and creates no applicant records. `npm run test:submissions` additionally
+checks real development writes and real Cloudflare test-widget sizing; keep these
+services separate from production.

@@ -1,14 +1,15 @@
+import { connection } from "next/server";
 import { publicJobsClient } from "@/features/jobs/server";
 import type { FunctionReturnType } from "convex/server";
 import { api } from "@/convex/_generated/api";
 import type { MetadataRoute } from "next";
 import { getSiteUrl } from "@/lib/env";
 
-export const dynamic = "force-dynamic";
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  await connection();
   const jobs: MetadataRoute.Sitemap = [];
   try {
-    const client = publicJobsClient();
+    const client = publicJobsClient({ cacheFirstPage: true });
     if (client) {
       let cursor: string | null = null;
       const deadline = Date.now() + 15000;

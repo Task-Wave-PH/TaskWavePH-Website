@@ -12,8 +12,35 @@ import {
   resumeFile,
 } from "./validators";
 const limiter = new RateLimiter(components.rateLimiter, {
+  attempts: { kind: "fixed window", rate: 20, period: 10 * MINUTE },
+  globalAttempts: { kind: "fixed window", rate: 120, period: MINUTE },
   intake: { kind: "fixed window", rate: 5, period: HOUR },
   global: { kind: "fixed window", rate: 30, period: MINUTE },
+});
+export const attempt = internalMutation({
+  args: { rateKey: v.string() },
+  returns: v.object({ allowed: v.boolean(), retryAfterSeconds: v.number() }),
+  handler: async (ctx, { rateKey }) => {
+    if (!/^[a-f0-9]{64}$/.test(rateKey)) throw new Error("Invalid rate key");
+    const local = await limiter.limit(ctx, "attempts", { key: rateKey });
+    const global = await limiter.limit(ctx, "globalAttempts");
+    // Returning denial commits successful limiter updates; throwing rolls them back.
+    return {
+      allowed: local.ok && global.ok,
+      retryAfterSeconds:
+        local.ok && global.ok
+          ? 0
+          : Math.max(
+              1,
+              Math.ceil(
+                Math.max(
+                  local.ok ? 0 : (local.retryAfter ?? 0),
+                  global.ok ? 0 : (global.retryAfter ?? 0),
+                ) / 1000,
+              ),
+            ),
+    };
+  },
 });
 export const reserve = internalMutation({
   args: {
@@ -48,7 +75,19 @@ export const reserve = internalMutation({
     if (pending) return { state: "busy" as const };
     const local = await limiter.limit(ctx, "intake", { key: args.rateKey });
     const global = await limiter.limit(ctx, "global");
-    if (!local.ok || !global.ok) throw new ConvexError("RATE_LIMITED");
+    if (!local.ok || !global.ok)
+      throw new ConvexError({
+        code: "RATE_LIMITED",
+        retryAfterSeconds: Math.max(
+          1,
+          Math.ceil(
+            Math.max(
+              local.ok ? 0 : (local.retryAfter ?? 0),
+              global.ok ? 0 : (global.retryAfter ?? 0),
+            ) / 1000,
+          ),
+        ),
+      });
     await ctx.db.insert("pendingUploads", {
       submissionToken: token,
       fingerprint: args.fingerprint,

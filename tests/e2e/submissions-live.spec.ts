@@ -133,3 +133,161 @@ test("failed submission retains entries and does not show success", async ({
   );
   await expect(page).toHaveURL(/\/apply$/);
 });
+
+test("real Turnstile fits public forms at all supported widths", async ({
+  page,
+}) => {
+  test.setTimeout(90000);
+  for (const route of ["/apply", "/business-enquiry"]) {
+    await page.goto(route);
+    const notice = page.getByRole("button", { name: "Got it", exact: true });
+    if (await notice.isVisible()) await notice.click();
+    for (const width of [360, 390, 430, 768, 1024, 1440]) {
+      await page.setViewportSize({ width, height: 850 });
+      const host = page.locator('[aria-label="Security check"]');
+      await expect(
+        page.getByText("Security check complete.", { exact: true }),
+      ).toBeVisible({ timeout: 20000 });
+      // Cloudflare encapsulates its iframe in a closed shadow root. Measure
+      // the real child frame viewport rather than querying through that root.
+      await expect
+        .poll(async () => {
+          const frame = page
+            .frames()
+            .find((frame) =>
+              frame.url().startsWith("https://challenges.cloudflare.com/"),
+            );
+          if (!frame) return false;
+          try {
+            return (
+              (await frame.evaluate(() => innerWidth)) <=
+              (await host.evaluate(
+                (node) => node.getBoundingClientRect().width,
+              ))
+            );
+          } catch {
+            return false;
+          }
+        })
+        .toBe(true);
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= innerWidth,
+        ),
+      ).toBe(true);
+    }
+  }
+});
+
+test("rate-limit cooldown prevents repeated requests and keeps the retry token", async ({
+  page,
+}) => {
+  await challenge(page);
+  await page.goto("/apply");
+  await application(page);
+  const tokens: string[] = [];
+  await page.route("**/api/applications", async (route) => {
+    const request = route.request();
+    const body = await new Request("http://test", {
+      method: "POST",
+      headers: { "Content-Type": request.headers()["content-type"] },
+      body: new Uint8Array(request.postDataBuffer()!),
+    }).formData();
+    tokens.push(String(body.get("submissionToken")));
+    await route.fulfill({
+      status: 429,
+      contentType: "application/json",
+      headers: { "Retry-After": "2" },
+      body: JSON.stringify({
+        success: false,
+        error: "RATE_LIMITED",
+        retryAfterSeconds: 2,
+      }),
+    });
+  });
+  await page.getByRole("button", { name: "Submit Application" }).click();
+  const button = page.getByRole("button", { name: /Try again in/ });
+  await expect(button).toBeDisabled();
+  await page.getByLabel("First Name", { exact: true }).press("Enter");
+  expect(tokens).toHaveLength(1);
+  await expect(
+    page.getByRole("button", { name: "Submit Application" }),
+  ).toBeEnabled();
+  await page.getByRole("button", { name: "Submit Application" }).click();
+  await expect.poll(() => tokens.length).toBe(2);
+  expect(tokens[0]).toBe(tokens[1]);
+  await expect(page.getByLabel("First Name", { exact: true })).toHaveValue(
+    "Development",
+  );
+});
+
+test("timed-out requests unlock safely and retain the same token", async ({
+  page,
+}) => {
+  await page.clock.install();
+  await challenge(page);
+  await page.goto("/apply");
+  await application(page);
+  let pending: import("@playwright/test").Route | undefined;
+  const tokens: string[] = [];
+  await page.route("**/api/applications", async (route) => {
+    const request = route.request();
+    const body = await new Request("http://test", {
+      method: "POST",
+      headers: { "Content-Type": request.headers()["content-type"] },
+      body: new Uint8Array(request.postDataBuffer()!),
+    }).formData();
+    tokens.push(String(body.get("submissionToken")));
+    if (tokens.length === 1) pending = route;
+    else
+      await route.fulfill({
+        status: 503,
+        contentType: "application/json",
+        body: JSON.stringify({ success: false, error: "SUBMISSION_FAILED" }),
+      });
+  });
+  await page.getByRole("button", { name: "Submit Application" }).click();
+  await expect.poll(() => tokens.length).toBe(1);
+  await page.clock.fastForward(90001);
+  await expect(
+    page.getByRole("alert").filter({ hasText: "may have completed" }),
+  ).toBeVisible();
+  await pending?.abort().catch(() => {});
+  await page.clock.fastForward(4000);
+  await expect(
+    page.getByRole("button", { name: "Submit Application" }),
+  ).toBeEnabled();
+  await page.getByRole("button", { name: "Submit Application" }).click();
+  await expect.poll(() => tokens.length).toBe(2);
+  expect(tokens[0]).toBe(tokens[1]);
+  await expect(page.getByLabel("First Name", { exact: true })).toHaveValue(
+    "Development",
+  );
+});
+
+test("blocked challenge scripts show retry without losing business entries", async ({
+  page,
+}) => {
+  await page.route(
+    "https://challenges.cloudflare.com/turnstile/v0/api.js*",
+    (route) => route.abort(),
+  );
+  await page.goto("/business-enquiry");
+  await page
+    .getByLabel("Company", { exact: true })
+    .fill("Synthetic retained company");
+  await expect(
+    page.getByRole("button", { name: "Retry Security Check" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Send Business Enquiry" }),
+  ).toBeDisabled();
+  await page.unroute("https://challenges.cloudflare.com/turnstile/v0/api.js*");
+  await page.getByRole("button", { name: "Retry Security Check" }).click();
+  await expect(
+    page.getByText("Security check complete.", { exact: true }),
+  ).toBeVisible({ timeout: 20000 });
+  await expect(page.getByLabel("Company", { exact: true })).toHaveValue(
+    "Synthetic retained company",
+  );
+});

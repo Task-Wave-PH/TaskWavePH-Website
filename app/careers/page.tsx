@@ -50,7 +50,7 @@ export default async function Page({
   let nextHref: string | undefined;
   let unavailable = false;
   try {
-    const client = publicJobsClient();
+    const client = publicJobsClient({ cacheFirstPage: !cursor });
     if (!client) unavailable = true;
     else {
       const result = await client.query(api.jobs.published, {

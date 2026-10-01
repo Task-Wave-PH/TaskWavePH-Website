@@ -14,6 +14,34 @@ const http = httpRouter();
 const json = (data: object, status = 200) =>
   Response.json(data, { status, headers: { "Cache-Control": "no-store" } });
 http.route({
+  path: "/submission-attempt",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    const secret = process.env.CONVEX_SERVER_SECRET;
+    if (!secret || request.headers.get("authorization") !== `Bearer ${secret}`)
+      return json({ error: "UNAUTHORIZED" }, 401);
+    const rateKey = request.headers.get("x-rate-key");
+    if (!rateKey || !/^[a-f0-9]{64}$/.test(rateKey))
+      return json({ error: "INVALID_SUBMISSION" }, 400);
+    const result = await ctx.runMutation(internal.intake.attempt, { rateKey });
+    return result.allowed
+      ? json(result)
+      : Response.json(
+          {
+            error: "RATE_LIMITED",
+            retryAfterSeconds: result.retryAfterSeconds,
+          },
+          {
+            status: 429,
+            headers: {
+              "Cache-Control": "no-store",
+              "Retry-After": String(result.retryAfterSeconds),
+            },
+          },
+        );
+  }),
+});
+http.route({
   path: "/submit",
   method: "POST",
   handler: httpAction(async (ctx, request) => {
@@ -108,8 +136,29 @@ http.route({
       }
       if (error instanceof ConvexError && error.data === "JOB_UNAVAILABLE")
         return json({ error: "JOB_UNAVAILABLE" }, 409);
-      if (error instanceof ConvexError && error.data === "RATE_LIMITED")
-        return json({ error: "RATE_LIMITED" }, 429);
+      if (
+        error instanceof ConvexError &&
+        typeof error.data === "object" &&
+        error.data !== null &&
+        "code" in error.data &&
+        error.data.code === "RATE_LIMITED" &&
+        "retryAfterSeconds" in error.data
+      ) {
+        const seconds = Math.min(
+          3600,
+          Math.max(1, Number(error.data.retryAfterSeconds) || 60),
+        );
+        return Response.json(
+          { error: "RATE_LIMITED", retryAfterSeconds: seconds },
+          {
+            status: 429,
+            headers: {
+              "Cache-Control": "no-store",
+              "Retry-After": String(seconds),
+            },
+          },
+        );
+      }
       if (error instanceof ConvexError && error.data === "TOKEN_CONFLICT")
         return json({ error: "TOKEN_CONFLICT" }, 409);
       if (

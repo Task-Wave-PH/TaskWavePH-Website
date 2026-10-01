@@ -85,20 +85,36 @@ export function BusinessForm({
                   ? "email"
                   : name === "companyWebsite"
                     ? "url"
-                    : "text"
+                    : name === "phone"
+                      ? "tel"
+                      : "text"
               }
               maxLength={
                 name === "companyWebsite" ? 2000 : name === "phone" ? 30 : 254
               }
               {...register(name)}
               className="min-h-12 text-base"
+              autoComplete={
+                name === "company"
+                  ? "organization"
+                  : name === "contactName"
+                    ? "name"
+                    : name === "email"
+                      ? "email"
+                      : name === "phone"
+                        ? "tel"
+                        : "url"
+              }
+              required={name !== "phone" && name !== "companyWebsite"}
               aria-invalid={!!errors[name]}
               aria-describedby={errors[name] ? `${name}-error` : undefined}
             />
           </FormField>
         ))}
       </div>
-      <fieldset>
+      <fieldset
+        aria-describedby={errors.services ? "services-error" : undefined}
+      >
         <legend className="mb-4 font-medium">Services Interested In</legend>
         <Controller
           control={control}
@@ -112,6 +128,10 @@ export function BusinessForm({
                 >
                   <Checkbox
                     inputRef={index === 0 ? field.ref : undefined}
+                    aria-invalid={!!errors.services}
+                    aria-describedby={
+                      errors.services ? "services-error" : undefined
+                    }
                     checked={field.value.includes(service)}
                     onCheckedChange={(checked) =>
                       field.onChange(
@@ -128,7 +148,11 @@ export function BusinessForm({
           )}
         />
         {errors.services && (
-          <p role="alert" className="mt-3 text-sm text-destructive">
+          <p
+            id="services-error"
+            role="alert"
+            className="mt-3 text-sm text-destructive"
+          >
             Select at least one service.
           </p>
         )}
@@ -142,6 +166,8 @@ export function BusinessForm({
           id="message"
           maxLength={2000}
           {...register("message")}
+          required
+          aria-describedby={errors.message ? "message-error" : undefined}
           aria-invalid={!!errors.message}
           className="text-base"
         />
@@ -156,6 +182,10 @@ export function BusinessForm({
               inputRef={field.ref}
               checked={field.value}
               onCheckedChange={field.onChange}
+              aria-required="true"
+              aria-describedby={
+                errors.privacyConsent ? "business-consent-error" : undefined
+              }
               aria-invalid={!!errors.privacyConsent}
             />
             <span>
@@ -166,7 +196,11 @@ export function BusinessForm({
         )}
       />
       {errors.privacyConsent && (
-        <p role="alert" className="text-sm text-destructive">
+        <p
+          id="business-consent-error"
+          role="alert"
+          className="text-sm text-destructive"
+        >
           {errors.privacyConsent.message}
         </p>
       )}
@@ -189,6 +223,7 @@ export function BusinessForm({
       </div>
       {enabled && (
         <TurnstileChallenge
+          key={submission.reset}
           onToken={submission.setChallenge}
           reset={submission.reset}
         />
@@ -207,13 +242,16 @@ export function BusinessForm({
       <Button
         className="min-h-12 w-full px-6 text-base sm:w-auto"
         type="submit"
-        disabled={isSubmitting}
+        disabled={isSubmitting || (enabled && submission.disabled)}
+        aria-busy={isSubmitting || submission.sending}
       >
-        {isSubmitting
-          ? "Please wait…"
-          : enabled
-            ? "Send Business Enquiry"
-            : "Validate Enquiry"}
+        {submission.cooldown > 0
+          ? `Try again in ${submission.cooldown}s`
+          : isSubmitting || submission.sending
+            ? "Please wait…"
+            : enabled
+              ? "Send Business Enquiry"
+              : "Validate Enquiry"}
       </Button>
     </form>
   );

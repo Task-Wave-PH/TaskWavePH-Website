@@ -1,17 +1,18 @@
 import { submissionsEnabled } from "@/lib/submission-env";
 import Link from "next/link";
 import { getPublishedJob } from "@/features/jobs/server";
-import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/page-metadata";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { ApplicationForm } from "@/components/application/application-form";
 import { Card, CardContent } from "@/components/ui/card";
 import { getTracking, getApplyHref } from "@/features/applications/tracking";
 
-export const metadata: Metadata = {
-  title: "Apply",
-  description: "Prepare your TaskWavePH recruitment application.",
-};
+export const metadata = pageMetadata(
+  "Recruitment Application",
+  "Apply to TaskWavePH for recruitment consideration. Share your experience, preferred role, and optional PDF resume through our application form.",
+  "/apply",
+);
 
 export default async function ApplyPage({
   searchParams,

@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import {
+  getApplyHref,
   getTrackedHref,
   getTracking,
   type TrackingQuery,
@@ -63,7 +64,7 @@ export function JobList({
         </p>
       </div>
       <form
-        className="grid gap-4 sm:grid-cols-2 sm:items-end lg:grid-cols-[minmax(0,18rem)_minmax(0,18rem)_auto]"
+        className="grid rounded-xl border bg-secondary/40 p-4 gap-4 sm:p-5 sm:grid-cols-2 sm:items-end lg:grid-cols-[minmax(0,18rem)_minmax(0,18rem)_auto]"
         onSubmit={(event) => {
           event.preventDefault();
           if (onFilter) {
@@ -130,13 +131,28 @@ export function JobList({
           still prepare a general application.
         </p>
       ) : jobs.length === 0 ? (
-        <p role="status" className="rounded-lg border bg-secondary p-6">
-          No open roles{" "}
-          {filters.serviceArea || filters.arrangement
-            ? "match these filters"
-            : "are listed right now"}
-          . You can submit a general application when submissions are enabled.
-        </p>
+        <div className="rounded-xl border bg-secondary/50 p-5 sm:p-6">
+          <p role="status" className="font-medium text-brand-navy">
+            No open roles{" "}
+            {filters.serviceArea || filters.arrangement
+              ? "match these filters"
+              : "are listed right now"}
+            .
+          </p>
+          <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">
+            You can prepare a general application. Submission is available when
+            applications are open.
+          </p>
+          <Link
+            href={getApplyHref(query)}
+            className={buttonVariants({
+              variant: "outline",
+              className: "mt-4 min-h-11 w-full sm:w-auto",
+            })}
+          >
+            General Application
+          </Link>
+        </div>
       ) : (
         <div className="grid gap-5 md:grid-cols-2">
           {jobs.map((job) => (

@@ -76,6 +76,7 @@ test("brand images and local fonts load; the hero CTA fits on mobile", async ({
   await expect(page.getByAltText("TaskWavePH TW wave monogram")).toBeVisible();
   await page.locator("footer").scrollIntoViewIfNeeded();
   for (const image of await page.locator("img").all()) {
+    await image.scrollIntoViewIfNeeded();
     await expect(image).toHaveJSProperty("complete", true);
     expect(
       await image.evaluate((node) => (node as HTMLImageElement).naturalWidth),
@@ -93,4 +94,133 @@ test("brand images and local fonts load; the hero CTA fits on mobile", async ({
       .first()
       .evaluate((node) => getComputedStyle(node).transitionProperty),
   ).toBe("none");
+});
+
+test("home service cards preserve tracking and open the matching service", async ({
+  page,
+}) => {
+  await page.goto("/?source=home-cards&email=private@example.invalid");
+  await page
+    .getByRole("complementary", { name: "Cookie notice", exact: true })
+    .getByRole("button", { name: "Got it", exact: true })
+    .click();
+  const section = page.locator("section[aria-labelledby='services-title']");
+  const card = section.getByRole("link", {
+    name: "Digital Marketing",
+    exact: true,
+  });
+  await expect(card).toHaveAttribute(
+    "href",
+    "/areas-of-work?source=home-cards#digital-marketing",
+  );
+  await card.click();
+  await expect(page).toHaveURL(
+    /\/areas-of-work\?source=home-cards#digital-marketing$/,
+  );
+  await expect(
+    page.getByRole("heading", {
+      name: "Keep your brand’s digital work moving.",
+      exact: true,
+    }),
+  ).toBeInViewport();
+});
+
+test("motion respects reduced preferences and marketing content remains usable without JavaScript", async ({
+  page,
+  browser,
+  baseURL,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  await page
+    .getByRole("complementary", { name: "Cookie notice", exact: true })
+    .getByRole("button", { name: "Got it", exact: true })
+    .click();
+  const card = page.locator(".public-service-card").first();
+  await card.hover();
+  await expect(card).toHaveCSS("transform", "none");
+  await expect(card).toHaveCSS("transition-property", "none");
+  expect(
+    await page
+      .locator("[data-motion-reveal]")
+      .evaluateAll((nodes) =>
+        nodes.every((node) => node.getAnimations().length === 0),
+      ),
+  ).toBe(true);
+  const context = await browser.newContext({
+    javaScriptEnabled: false,
+    baseURL,
+  });
+  try {
+    const staticPage = await context.newPage();
+    await staticPage.goto("/?source=no-js");
+    await expect(staticPage.getByRole("heading", { level: 1 })).toBeVisible();
+    const service = staticPage
+      .locator("section[aria-labelledby='services-title']")
+      .getByRole("link", { name: "Digital Marketing", exact: true });
+    await expect(service).toBeVisible();
+    await service.click();
+    await expect(staticPage).toHaveURL(
+      /\/areas-of-work\?source=no-js#digital-marketing$/,
+    );
+  } finally {
+    await context.close();
+  }
+});
+
+test("reveals play once, cancel on keyboard focus, and stop when reduced motion is enabled", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.addInitScript(() => {
+    const original = Element.prototype.animate;
+    Element.prototype.animate = function (
+      ...args: Parameters<typeof original>
+    ) {
+      if (this.hasAttribute("data-motion-reveal")) {
+        this.setAttribute(
+          "data-reveal-plays",
+          String(Number(this.getAttribute("data-reveal-plays") || 0) + 1),
+        );
+        const timing = args[1];
+        // Keep the effect open long enough to exercise focus/preference cancellation reliably.
+        if (typeof timing === "object") args[1] = { ...timing, duration: 5000 };
+      }
+      return original.apply(this, args);
+    };
+  });
+  await page.goto("/");
+  await page
+    .getByRole("complementary", { name: "Cookie notice", exact: true })
+    .getByRole("button", { name: "Got it", exact: true })
+    .click();
+  const firstCard = page.locator(".public-service-card").first();
+  const reveal = firstCard.locator("..");
+  await firstCard.scrollIntoViewIfNeeded();
+  // Motion mini creates one native animation per property (opacity and transform).
+  await expect(reveal).toHaveAttribute("data-reveal-plays", "2");
+  await firstCard.focus();
+  await expect
+    .poll(() => reveal.evaluate((node) => node.getAnimations().length))
+    .toBe(0);
+  await expect(reveal).toHaveCSS("opacity", "1");
+  await expect(reveal).toHaveCSS("transform", "none");
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
+  await firstCard.scrollIntoViewIfNeeded();
+  // Motion mini creates one native animation per property (opacity and transform).
+  await expect(reveal).toHaveAttribute("data-reveal-plays", "2");
+  const lastCard = page.locator(".public-service-card").last();
+  await lastCard.scrollIntoViewIfNeeded();
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect
+    .poll(() =>
+      page
+        .locator("[data-motion-reveal]")
+        .evaluateAll((nodes) =>
+          nodes.reduce((count, node) => count + node.getAnimations().length, 0),
+        ),
+    )
+    .toBe(0);
+  await expect(reveal).toHaveCSS("opacity", "1");
+  await expect(reveal).toHaveCSS("transform", "none");
 });

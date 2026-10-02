@@ -17,6 +17,7 @@ export function ApplyLink({
       href={href}
       className={cn(
         buttonVariants({ size: "lg" }),
+        "public-action",
         "h-13 gap-3 px-6 text-sm font-semibold motion-reduce:transition-none",
         compact && "h-11 gap-1.5 px-3.5 text-xs sm:px-5 sm:text-sm",
         light && "bg-white text-brand-navy hover:bg-secondary",

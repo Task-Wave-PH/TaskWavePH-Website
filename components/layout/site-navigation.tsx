@@ -20,6 +20,7 @@ import {
 } from "@/features/applications/tracking";
 
 const pages = [
+  ["Home", "/"],
   ["Services", "/areas-of-work"],
   ["How It Works", "/how-it-works"],
   ["Careers", "/careers"],
@@ -47,7 +48,7 @@ export function SiteNavigation({
         className={
           mobile
             ? "block rounded-lg px-4 py-4 text-base font-medium hover:bg-secondary aria-[current=page]:bg-secondary aria-[current=page]:text-primary"
-            : "py-3 hover:text-primary aria-[current=page]:text-primary"
+            : "border-b-2 border-transparent py-3 transition-colors hover:text-primary aria-[current=page]:border-primary aria-[current=page]:text-primary motion-reduce:transition-none"
         }
       >
         {label}

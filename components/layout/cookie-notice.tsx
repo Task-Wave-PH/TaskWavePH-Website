@@ -66,24 +66,20 @@ export function CookieNotice({ privacyHref }: { privacyHref: string }) {
       {!stored && !dismissed && (
         <aside
           aria-label="Cookie notice"
-          className="fixed inset-x-3 bottom-3 z-40 mx-auto max-w-lg rounded-2xl border bg-background p-5 text-left text-sm text-foreground shadow-xl sm:inset-x-auto sm:right-6 sm:bottom-6 sm:w-[420px]"
+          className="fixed inset-x-3 bottom-3 z-40 mx-auto max-w-lg rounded-xl border bg-background p-4 text-left text-sm text-foreground shadow-lg sm:inset-x-auto sm:right-6 sm:bottom-6 sm:w-[380px]"
         >
           <div className="flex items-center gap-3">
             <Cookie
               aria-hidden="true"
               className="size-5 shrink-0 text-primary"
             />
-            <h2 className="font-semibold">
-              A little information about cookies
-            </h2>
+            <h2 className="font-semibold">Cookies & visitor statistics</h2>
           </div>
-          <p className="mt-3 leading-relaxed text-muted-foreground">
-            We use essential cookies for security and submission confirmations.
-            We also remember when you dismiss this notice. Cookie-free visitor
-            statistics help us improve public pages. We do not use advertising
-            trackers.
+          <p className="mt-2 leading-relaxed text-muted-foreground">
+            Essential cookies keep this site working. Cookie-free statistics
+            help us improve it. No advertising trackers.
           </p>
-          <div className="mt-4 flex flex-wrap items-center gap-3">
+          <div className="mt-3 flex flex-wrap items-center gap-2">
             <Button className="min-h-11 px-5" onClick={acknowledge}>
               Got it
             </Button>

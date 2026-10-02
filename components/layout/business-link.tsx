@@ -17,6 +17,7 @@ export function BusinessLink({
       href={href}
       className={cn(
         buttonVariants({ size: "lg" }),
+        "public-action",
         "min-h-12 h-auto whitespace-normal gap-2 px-6 py-3 text-sm font-semibold motion-reduce:transition-none",
         compact && "min-h-11 px-3 text-xs sm:px-5 sm:text-sm",
         light && "bg-white text-brand-navy hover:bg-secondary",

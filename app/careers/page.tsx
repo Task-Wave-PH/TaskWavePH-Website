@@ -11,6 +11,7 @@ import {
   type JobView,
 } from "@/features/jobs/schema";
 import Link from "next/link";
+import { MotionReveal } from "@/components/layout/motion-reveal";
 import { ContentPage } from "@/components/layout/content-page";
 import { Card, CardContent } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
@@ -22,7 +23,7 @@ import {
 import { pageMetadata } from "@/lib/page-metadata";
 
 const careersMetadata = pageMetadata(
-  "Careers",
+  "Careers & Open Roles",
   "Explore TaskWavePH careers, prepare your details, and learn what to expect when applying.",
   "/careers",
 );
@@ -119,16 +120,16 @@ export default async function Page({
             </Link>
           </div>
         </div>
-        <div className="rounded-3xl bg-secondary p-6">
+        <MotionReveal className="flex h-[280px] items-center justify-center rounded-3xl bg-secondary p-5 sm:h-auto sm:p-6">
           <Image
             src="/images/careers-opportunities.webp"
             alt=""
             width={1200}
             height={1200}
             sizes="(max-width: 767px) calc(100vw - 88px), 500px"
-            className="h-auto w-full object-contain"
+            className="h-full w-full object-contain sm:h-auto"
           />
-        </div>
+        </MotionReveal>
       </section>
       {sampleFallback ? (
         <PreviewCareers query={query} />

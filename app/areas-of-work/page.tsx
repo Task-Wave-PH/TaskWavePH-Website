@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight, Check } from "lucide-react";
+import { MotionReveal } from "@/components/layout/motion-reveal";
 import { ContentPage } from "@/components/layout/content-page";
 import { Separator } from "@/components/ui/separator";
 import { buttonVariants } from "@/components/ui/button";
@@ -13,7 +14,7 @@ import { pageMetadata } from "@/lib/page-metadata";
 import { cn } from "@/lib/utils";
 
 export const metadata = pageMetadata(
-  "Services",
+  "Outsourcing Services",
   "Explore TaskWavePH outsourcing services for customer support, marketing, web development, administration, and sales support.",
   "/areas-of-work",
 );
@@ -54,10 +55,10 @@ export default async function Page({
               tabIndex={-1}
               className="rounded-sm focus-visible:outline-2 focus-visible:outline-offset-8 focus-visible:outline-primary"
             >
-              <div className="grid items-center gap-8 lg:grid-cols-2 lg:gap-16">
+              <MotionReveal className="grid items-center gap-6 sm:gap-8 lg:grid-cols-2 lg:gap-16">
                 <div
                   className={cn(
-                    "relative isolate flex aspect-square items-center justify-center overflow-hidden rounded-[32px] bg-secondary p-4 sm:p-6",
+                    "relative isolate flex h-[260px] items-center sm:h-auto sm:aspect-square justify-center overflow-hidden rounded-[32px] bg-secondary p-4 sm:p-6",
                     index % 2 === 1 && "lg:order-2",
                   )}
                 >
@@ -71,7 +72,7 @@ export default async function Page({
                     width={1254}
                     height={1254}
                     sizes="(max-width: 639px) calc(100vw - 40px), (max-width: 1023px) calc(100vw - 64px), 558px"
-                    className="h-auto w-full object-contain"
+                    className="h-full w-full object-contain sm:h-auto"
                   />
                 </div>
                 <div>
@@ -88,7 +89,7 @@ export default async function Page({
                   <h3 className="mt-6 text-sm font-semibold">
                     Examples of support to discuss
                   </h3>
-                  <ul className="mt-4 space-y-3">
+                  <ul className="mt-4 space-y-2.5">
                     {examples.map((example) => (
                       <li
                         key={example}
@@ -116,7 +117,7 @@ export default async function Page({
                     />
                   </Link>
                 </div>
-              </div>
+              </MotionReveal>
               {index < serviceDetails.length - 1 && (
                 <Separator className="mt-12 sm:mt-16" />
               )}

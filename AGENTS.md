@@ -100,6 +100,12 @@ add noindex, and send private/no-store responses. Host routing is not authorizat
 
 ## Applicant review extension
 
+- Read docs/HIRING-REFERENCE.md for the owner-approved screening reference.
+  Additional screening fields are optional; preserve historical records and each
+  job's work arrangement. Missing-information requests are copied for staff
+  review, never automatically sent. Do not adopt OneMiners-specific contacts,
+  office details, schedules, photo requirements, or intern offers as TaskWavePH policy.
+
 - Applicant profile fields are read-only; staff edit status and internal notes.
 - Render private PDFs with React-PDF and a local worker, without document scripts
   or annotation navigation. Never expose public storage URLs.

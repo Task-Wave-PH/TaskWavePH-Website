@@ -1,6 +1,9 @@
 import { z } from "zod";
 
 const optionalText = (max = 200) => z.string().trim().max(max).default("");
+// Omit blank additions so unchanged pre-screening submissions keep their fingerprint.
+const screeningText = (max: number) =>
+  optionalText(max).transform((value) => value || undefined);
 
 export function normalizePhone(value: string): string {
   const digits = value.replace(/[\s()-]/g, "");
@@ -73,6 +76,25 @@ export const applicationSchema = z.object({
     .transform((value) => (value === "" ? undefined : Number(value))),
   employmentStatus: optionalText(),
   availability: optionalText(),
+  expectedSalary: screeningText(100),
+  previousSalary: screeningText(100),
+  strengthOne: screeningText(300),
+  strengthTwo: screeningText(300),
+  distanceFromDagupan: screeningText(200),
+  relocationPreference: z
+    .enum(["", "Willing", "Not willing", "Discuss first"])
+    .default("")
+    .transform((value) => value || undefined),
+  portfolio: optionalText(2000)
+    .refine((value) => {
+      if (!value) return true;
+      try {
+        return ["http:", "https:"].includes(new URL(value).protocol);
+      } catch {
+        return false;
+      }
+    }, "Enter a link starting with http:// or https://.")
+    .transform((value) => value || undefined),
   resume: optionalText(2000).refine((value) => {
     if (!value) return true;
     try {

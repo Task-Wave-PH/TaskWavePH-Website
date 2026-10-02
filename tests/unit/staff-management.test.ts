@@ -67,12 +67,42 @@ describe("owner-managed staff", () => {
     expect(await staff.query(api.staffManagement.current, {})).toMatchObject({
       role: "Staff",
     });
-    for (const caller of [staff, guest, t])
+    const staffRow = await t.run((ctx) =>
+      ctx.db
+        .query("adminUsers")
+        .withIndex("by_subject", (q) => q.eq("subject", "user_staff"))
+        .unique(),
+    );
+    for (const caller of [staff, guest, t]) {
       await expect(
         caller.query(api.staffManagement.list, {
           paginationOpts: { numItems: 20, cursor: null },
         }),
       ).rejects.toThrow();
+      await expect(
+        caller.query(api.staffManagement.invitations, {
+          paginationOpts: { numItems: 20, cursor: null },
+        }),
+      ).rejects.toThrow();
+      await expect(
+        caller.mutation(api.staffManagement.update, {
+          id: staffRow!._id,
+          active: true,
+          role: "Owner",
+          expectedRevision: staffRow!.updatedAt ?? 0,
+        }),
+      ).rejects.toThrow();
+      await expect(
+        caller.action(api.staffInvitations.invite, {
+          email: "unauthorized@example.invalid",
+          role: "Owner",
+          token: crypto.randomUUID(),
+        }),
+      ).rejects.toThrow();
+    }
+    expect(
+      (await t.run((ctx) => ctx.db.get(staffRow!._id)))?.role ?? "Staff",
+    ).toBe("Staff");
     expect(
       (
         await owner.query(api.staffManagement.list, {

@@ -61,11 +61,14 @@ export function LeadDetails({
     }
   }
   const fields = (rows: [string, string][]) => (
-    <dl className="grid gap-5 sm:grid-cols-2">
+    <dl className="grid gap-3 sm:grid-cols-2">
       {rows.map(([label, value]) => (
-        <div key={label} className="min-w-0">
-          <dt className="text-sm font-medium">{label}</dt>
-          <dd className="mt-2 whitespace-pre-wrap break-words text-sm leading-relaxed text-muted-foreground">
+        <div
+          key={label}
+          className="min-w-0 rounded-lg border border-border/70 bg-muted/30 p-4"
+        >
+          <dt className="text-xs font-medium text-muted-foreground">{label}</dt>
+          <dd className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-brand-navy">
             {value || "Not provided"}
           </dd>
         </div>
@@ -127,7 +130,7 @@ export function LeadDetails({
               <CardTitle>Enquiry</CardTitle>
             </CardHeader>
             <CardContent className="space-y-5">
-              <div className="space-y-2">
+              <div className="rounded-lg border border-border/70 bg-muted/30 p-4 space-y-3">
                 <p className="text-sm font-medium">Services of interest</p>
                 <div className="flex flex-wrap gap-2">
                   {d.services.map((service) => (
@@ -141,7 +144,7 @@ export function LeadDetails({
                   ))}
                 </div>
               </div>
-              <div className="space-y-2">
+              <div className="rounded-lg border border-border/70 bg-muted/30 p-4 space-y-3">
                 <p className="text-sm font-medium">Message</p>
                 <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-muted-foreground">
                   {d.message || "Not provided"}

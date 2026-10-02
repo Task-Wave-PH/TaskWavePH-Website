@@ -17,6 +17,13 @@ import type {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FormField } from "./form-field";
 import { useSubmission } from "@/components/submissions/use-submission";
@@ -61,7 +68,7 @@ const textFields = [
   { name: "position", label: "Position Interested In", maxLength: 200 },
   {
     name: "experience",
-    label: "Years of Experience",
+    label: "Years of Active Work Experience",
     type: "number",
     optional: true,
     maxLength: 10,
@@ -74,9 +81,50 @@ const textFields = [
   },
   {
     name: "availability",
-    label: "Availability",
+    label: "Possible Start Date / Availability",
     optional: true,
     maxLength: 200,
+  },
+  {
+    name: "expectedSalary",
+    label: "Expected Salary",
+    optional: true,
+    maxLength: 100,
+    hint: "Include currency and pay period, e.g. PHP 25,000/month. Negotiable is also fine.",
+  },
+  {
+    name: "previousSalary",
+    label: "Previous Salary",
+    optional: true,
+    maxLength: 100,
+    hint: "Share only if you wish. Include currency and pay period.",
+  },
+  {
+    name: "strengthOne",
+    label: "First Key Strength",
+    optional: true,
+    maxLength: 300,
+  },
+  {
+    name: "strengthTwo",
+    label: "Second Key Strength",
+    optional: true,
+    maxLength: 300,
+  },
+  {
+    name: "distanceFromDagupan",
+    label: "Distance / Travel Time from Dagupan",
+    optional: true,
+    maxLength: 200,
+    hint: "If relevant to your role, give an approximate distance or commute time. No exact home address needed.",
+  },
+  {
+    name: "portfolio",
+    label: "Portfolio / Project Link",
+    optional: true,
+    type: "url",
+    maxLength: 2000,
+    hint: "An optional link to work you can share publicly.",
   },
   {
     name: "resume",
@@ -123,6 +171,13 @@ export function ApplicationForm({
       experience: "",
       employmentStatus: "",
       availability: "",
+      expectedSalary: "",
+      previousSalary: "",
+      strengthOne: "",
+      strengthTwo: "",
+      distanceFromDagupan: "",
+      relocationPreference: "",
+      portfolio: "",
       resume: "",
       message: "",
       privacyConsent: false,
@@ -165,47 +220,135 @@ export function ApplicationForm({
         </div>
       )}
       <input type="hidden" {...register("jobId")} />
-      <div className="grid gap-6 sm:grid-cols-2">
-        {textFields.map((field) => {
-          const error = errors[field.name]?.message;
-          const hint = "hint" in field ? field.hint : undefined;
-          return (
-            <FormField
-              key={field.name}
-              id={field.name}
-              label={field.label}
-              optional={"optional" in field}
-              error={error}
-              hint={hint}
+      {[
+        {
+          title: "Contact and role",
+          fields: textFields.filter((field) =>
+            [
+              "firstName",
+              "lastName",
+              "email",
+              "phone",
+              "location",
+              "position",
+            ].includes(field.name),
+          ),
+        },
+        {
+          title: "Experience and screening",
+          fields: textFields.filter(
+            (field) =>
+              ![
+                "firstName",
+                "lastName",
+                "email",
+                "phone",
+                "location",
+                "position",
+              ].includes(field.name),
+          ),
+        },
+      ].map((group) => (
+        <fieldset
+          key={group.title}
+          className="min-w-0 rounded-xl border bg-muted/20 p-4 sm:p-6"
+        >
+          <legend className="px-2 font-semibold text-brand-navy">
+            {group.title}
+          </legend>
+          {group.title === "Experience and screening" && (
+            <p className="mb-5 text-sm leading-6 text-muted-foreground">
+              These optional details help our recruitment team review your
+              profile. Follow the work arrangement in the job posting.
+            </p>
+          )}
+          <div className="grid gap-6 sm:grid-cols-2">
+            {group.fields.map((field) => {
+              const error = errors[field.name]?.message;
+              const hint = "hint" in field ? field.hint : undefined;
+              return (
+                <FormField
+                  key={field.name}
+                  id={field.name}
+                  label={field.label}
+                  optional={"optional" in field}
+                  error={error}
+                  hint={hint}
+                >
+                  <Input
+                    readOnly={field.name === "position" && !!selectedJob}
+                    id={field.name}
+                    {...register(field.name)}
+                    type={"type" in field ? field.type : "text"}
+                    autoComplete={
+                      "autoComplete" in field ? field.autoComplete : "off"
+                    }
+                    maxLength={field.maxLength}
+                    required={!("optional" in field)}
+                    min={field.name === "experience" ? 0 : undefined}
+                    max={field.name === "experience" ? 60 : undefined}
+                    step={field.name === "experience" ? "any" : undefined}
+                    aria-invalid={!!error}
+                    aria-describedby={
+                      [
+                        hint ? `${field.name}-hint` : "",
+                        error ? `${field.name}-error` : "",
+                      ]
+                        .filter(Boolean)
+                        .join(" ") || undefined
+                    }
+                    className="min-h-12 text-base"
+                  />
+                </FormField>
+              );
+            })}
+          </div>
+        </fieldset>
+      ))}
+      <FormField
+        id="relocationPreference"
+        label="Willingness to Relocate"
+        optional
+        hint="For roles requiring relocation. This does not change the role’s advertised work arrangement."
+        error={errors.relocationPreference?.message}
+      >
+        <Controller
+          name="relocationPreference"
+          control={control}
+          render={({ field }) => (
+            <Select
+              value={field.value || "unspecified"}
+              onValueChange={(value) => {
+                field.onChange(value === "unspecified" ? "" : value);
+                setValidated(false);
+              }}
             >
-              <Input
-                readOnly={field.name === "position" && !!selectedJob}
-                id={field.name}
-                {...register(field.name)}
-                type={"type" in field ? field.type : "text"}
-                autoComplete={
-                  "autoComplete" in field ? field.autoComplete : "off"
-                }
-                maxLength={field.maxLength}
-                required={!("optional" in field)}
-                min={field.name === "experience" ? 0 : undefined}
-                max={field.name === "experience" ? 60 : undefined}
-                step={field.name === "experience" ? "any" : undefined}
-                aria-invalid={!!error}
-                aria-describedby={
-                  [
-                    hint ? `${field.name}-hint` : "",
-                    error ? `${field.name}-error` : "",
-                  ]
-                    .filter(Boolean)
-                    .join(" ") || undefined
-                }
-                className="min-h-12 text-base"
-              />
-            </FormField>
-          );
-        })}
-      </div>
+              <SelectTrigger
+                id="relocationPreference"
+                ref={field.ref}
+                onBlur={field.onBlur}
+                className="min-h-12 w-full"
+                aria-invalid={!!errors.relocationPreference}
+                aria-describedby={`relocationPreference-hint${errors.relocationPreference ? " relocationPreference-error" : ""}`}
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="unspecified">
+                  Not specified / not applicable
+                </SelectItem>
+                <SelectItem value="Willing">Willing to relocate</SelectItem>
+                <SelectItem value="Not willing">
+                  Not willing to relocate
+                </SelectItem>
+                <SelectItem value="Discuss first">
+                  Would like to discuss first
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+        />
+      </FormField>
       <FormField
         id="message"
         label="Message / Notes"

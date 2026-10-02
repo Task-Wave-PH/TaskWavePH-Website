@@ -57,8 +57,10 @@ export default async function PrivacyPage({
         <p>
           We request your name, email address, mobile number, city or location,
           and position of interest. You may also provide experience, employment
-          status, availability, a message, and an optional resume PDF or resume
-          link. Uploaded resumes are optional, PDF only, and limited to 2 MB.
+          status, availability, salary expectations and optional salary history,
+          key strengths, approximate commute details, relocation preferences,
+          portfolio links, a message, and an optional resume PDF or resume link.
+          Uploaded resumes are optional, PDF only, and limited to 2 MB.
         </p>
         <h3 className="mt-5">Business enquiries</h3>
         <p>

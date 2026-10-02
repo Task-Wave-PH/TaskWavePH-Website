@@ -4,6 +4,10 @@ import Link from "next/link";
 import { useState } from "react";
 import type { ApplicantView } from "@/features/applications/admin-types";
 import { formatAdminDate } from "@/features/admin/metrics";
+import {
+  missingScreeningInformation,
+  screeningRequest,
+} from "@/features/applications/screening";
 import { applicationStatuses } from "@/features/submissions/validation";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -55,7 +59,9 @@ export function ApplicantDetails({
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [confirm, setConfirm] = useState(false);
+  const [copyMessage, setCopyMessage] = useState("");
   const d = record.data;
+  const missing = missingScreeningInformation(record);
   async function save() {
     setBusy(true);
     setMessage("");
@@ -86,16 +92,14 @@ export function ApplicantDetails({
     }
   }
   const fields = (rows: [string, string | number | undefined][]) => (
-    <dl className="grid gap-5 sm:grid-cols-2">
+    <dl className="grid gap-3 sm:grid-cols-2">
       {rows.map(([label, value]) => (
         <div
           key={label}
-          className={
-            label === "Message / notes" ? "min-w-0 sm:col-span-2" : "min-w-0"
-          }
+          className={`min-w-0 rounded-lg border border-border/70 bg-muted/30 p-4 ${label === "Message / notes" ? "sm:col-span-2" : ""}`}
         >
-          <dt className="text-sm font-medium">{label}</dt>
-          <dd className="mt-1 whitespace-pre-wrap break-words text-muted-foreground">
+          <dt className="text-xs font-medium text-muted-foreground">{label}</dt>
+          <dd className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-brand-navy">
             {value === undefined || value === "" ? "Not provided" : value}
           </dd>
         </div>
@@ -151,18 +155,85 @@ export function ApplicantDetails({
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle>Experience and availability</CardTitle>
+                <CardTitle>Role and background</CardTitle>
               </CardHeader>
               <CardContent>
                 {fields([
                   ["Position interested in", d.position],
                   ["Associated Job", d.jobTitle],
                   ["Job ID", d.jobId],
-                  ["Years of experience", d.experience],
                   ["Employment status", d.employmentStatus],
-                  ["Availability", d.availability],
                   ["Message / notes", d.message],
                 ])}
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Screening information</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-5">
+                {fields([
+                  ["Possible start date / availability", d.availability],
+                  ["Years of active work experience", d.experience],
+                  ["Expected salary", d.expectedSalary],
+                  ["Previous salary (optional)", d.previousSalary],
+                  ["First key strength", d.strengthOne],
+                  ["Second key strength", d.strengthTwo],
+                  [
+                    "Distance / travel time from Dagupan",
+                    d.distanceFromDagupan,
+                  ],
+                  ["Relocation preference", d.relocationPreference],
+                  ["Portfolio / project link", d.portfolio],
+                ])}
+                <div className="space-y-3 rounded-lg border bg-secondary/40 p-4">
+                  <p className="text-sm font-medium text-brand-navy">
+                    {missing.length
+                      ? "Information to follow up"
+                      : "Core screening information provided"}
+                  </p>
+                  {missing.length > 0 && (
+                    <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+                      {missing.map((item) => (
+                        <li key={item}>{item}</li>
+                      ))}
+                    </ul>
+                  )}
+                  <p className="text-xs leading-5 text-muted-foreground">
+                    Use this as review guidance. Verify the CV and the role’s
+                    work arrangement before deciding next steps. Previous
+                    salary, portfolio, and relocation details are optional; this
+                    checklist does not approve or reject an applicant.
+                  </p>
+                  {missing.length > 0 && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="min-h-11 h-auto whitespace-normal"
+                      onClick={async () => {
+                        try {
+                          await navigator.clipboard.writeText(
+                            screeningRequest(record),
+                          );
+                          setCopyMessage(
+                            "Request copied. Review it before sending to the applicant.",
+                          );
+                        } catch {
+                          setCopyMessage(
+                            "Unable to copy. Use the missing-information list to prepare your reply.",
+                          );
+                        }
+                      }}
+                    >
+                      Copy missing information request
+                    </Button>
+                  )}
+                  {copyMessage && (
+                    <p role="status" className="text-sm">
+                      {copyMessage}
+                    </p>
+                  )}
+                </div>
               </CardContent>
             </Card>
           </TabsContent>

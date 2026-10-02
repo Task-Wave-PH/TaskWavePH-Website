@@ -57,6 +57,48 @@ const options = {
   paginationOpts: { numItems: 20, cursor: null },
 };
 describe("Convex intake and administration", () => {
+  it("persists screening fields and returns them only to approved staff", async () => {
+    const t = setup();
+    const token = crypto.randomUUID();
+    const screening = {
+      expectedSalary: "PHP 25,000/month",
+      previousSalary: "",
+      strengthOne: "Communication",
+      strengthTwo: "Organization",
+      distanceFromDagupan: "30 minutes",
+      relocationPreference: "Discuss first" as const,
+      portfolio: "https://example.com/work",
+    };
+    await t.mutation(internal.intake.reserve, {
+      kind: "applications",
+      token,
+      fingerprint: "screening",
+      rateKey: crypto.randomUUID(),
+    });
+    await t.mutation(internal.intake.save, {
+      kind: "applications",
+      token: `applications:${token}`,
+      fingerprint: "screening",
+      data: { ...data, ...screening },
+    });
+    const row = await t.run((ctx) => ctx.db.query("applications").first());
+    const { previousSalary, ...providedScreening } = screening;
+    expect(previousSalary).toBe("");
+    expect(row?.data).toMatchObject(providedScreening);
+    expect(row?.data).not.toHaveProperty("previousSalary");
+    await expect(
+      t.query(api.admin.detail, { kind: "applications", id: row!._id }),
+    ).rejects.toThrow();
+    const admin = await staff(t);
+    expect(
+      (
+        await admin.query(api.admin.detail, {
+          kind: "applications",
+          id: row!._id,
+        })
+      )?.data,
+    ).toMatchObject(providedScreening);
+  });
   it("rejects reservations at the exact one-hour expiry and cleans them", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(Date.UTC(2026, 9, 2));

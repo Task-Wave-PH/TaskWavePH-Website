@@ -30,6 +30,12 @@ test("sample applicant details support review, PDF viewing and confirmed deletio
     page.getByRole("heading", { name: "Sample Applicant 1" }),
   ).toBeVisible();
   await expect(
+    page.getByText("Screening information", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Copy missing information request" }),
+  ).toBeVisible();
+  await expect(
     page.getByText("sample-1@example.invalid", { exact: true }),
   ).toBeVisible();
   await page.getByLabel("Status", { exact: true }).click();

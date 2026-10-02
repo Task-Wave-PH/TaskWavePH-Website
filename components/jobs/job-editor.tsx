@@ -1,4 +1,5 @@
 "use client";
+import { adminOperation } from "@/features/admin/operation-feedback";
 import { useState } from "react";
 import Link from "next/link";
 import { useForm, useWatch } from "react-hook-form";
@@ -88,7 +89,12 @@ export function JobEditor({
     setBusy(true);
     setMessage("");
     try {
-      await onStatus(confirmation);
+      await adminOperation(() => onStatus(confirmation), {
+        loading: "Updating posting status…",
+        success: `Posting changed to ${confirmation.toLowerCase()}.`,
+        error: "Unable to update. Check your access and try again.",
+        preview,
+      });
       setConfirmation(undefined);
       setMessage("Posting status updated.");
     } catch {
@@ -123,7 +129,13 @@ export function JobEditor({
             onSubmit={handleSubmit(async (data) => {
               setMessage("");
               try {
-                await onSave(data, editVersion);
+                await adminOperation(() => onSave(data, editVersion), {
+                  loading: "Saving posting…",
+                  success: "Posting saved.",
+                  error:
+                    "Unable to save the posting. Check the page for details.",
+                  preview,
+                });
                 reset(data, { keepDirtyValues: false, keepDirty: false });
                 setMessage("Posting saved.");
               } catch (error) {
@@ -318,6 +330,7 @@ export function JobEditor({
                     isSubmitting || busy || isDirty || deletionAllowed !== true
                   }
                   onDelete={onDelete}
+                  preview={preview}
                 />
               </div>
             )}

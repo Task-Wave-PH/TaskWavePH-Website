@@ -100,6 +100,11 @@ test("draft creation, publishing, role application, editing and closure work in 
     .click();
   await page.getByRole("button", { name: "Confirm", exact: true }).click();
   await expect(page.getByText("Closed", { exact: true }).first()).toBeVisible();
+  await expect(
+    page
+      .locator("[data-sonner-toast]")
+      .filter({ hasText: "Posting changed to closed." }),
+  ).toBeVisible();
   await page
     .getByRole("link", { name: "Preview Careers", exact: true })
     .click();

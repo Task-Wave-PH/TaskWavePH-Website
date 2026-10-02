@@ -1,4 +1,5 @@
 import { AdminProviders } from "@/components/admin/providers";
+import { OperationToaster } from "@/components/admin/operation-toaster";
 export const metadata = {
   title: "Administration | TaskWavePH",
   robots: { index: false, follow: false },
@@ -19,5 +20,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </p>
       </main>
     );
-  return <AdminProviders>{children}</AdminProviders>;
+  return (
+    <AdminProviders>
+      {children}
+      <OperationToaster />
+    </AdminProviders>
+  );
 }

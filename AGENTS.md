@@ -64,7 +64,11 @@ Use server components except for needed interactivity. Check 360, 390, 430, 768,
 1024, and 1440 pixel layouts, keyboard access, contrast, and reduced motion.
 
 Admin uses a branded shadcn Sidebar, paginated records, filters, detail editing,
-protected CV viewing/downloads, CSV/styled XLSX exports, and confirmed deletion. No public marketing sign-up or dashboard links.
+protected CV viewing/downloads, CSV/styled XLSX exports, and confirmed deletion.
+Use an admin-only shadcn Sonner toaster. Database actions show pending feedback,
+success only after confirmation, and safe errors while retaining inline messages.
+Preview notifications explicitly identify sample changes.
+No public marketing sign-up or dashboard links.
 Staff account creation requires an Owner invitation and Clerk invite-only mode.
 The registration route accepts invitation tickets; ordinary login has no signup
 link. Activate only after server-verified Clerk email and invitation metadata match

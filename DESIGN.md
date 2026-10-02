@@ -480,6 +480,13 @@ Differentiate Owner/Staff roles from Active/Inactive access and invitation statu
 Login retains its branded card and removes open-registration links. Ticketless
 registration uses the shared access screen with invitation guidance.
 
+Admin database actions use a shared shadcn Sonner toaster with light brand tokens,
+Poppins, navy text, and quiet borders. Replace pending feedback with success only
+after the operation resolves, or a safe error on failure. Retain inline errors
+and disabled buttons. Keep notifications within mobile screen bounds, allow
+dismissal, and respect reduced motion. Mount only in admin and local preview
+layouts so messages survive navigation; preview messages identify sample changes.
+
 Access-denied and 404 screens use the original logo, Poppins, a white shadcn Card,
 and a navy illustration panel with quiet blue/cyan circular motifs. Stack panels
 on phones; keep actions at least 44px tall. Denied staff see the current account,

@@ -1,4 +1,5 @@
 "use client";
+import { toast } from "sonner";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { ApplicantView } from "@/features/applications/admin-types";
@@ -14,6 +15,9 @@ export function ExportButtons({
   async function exportFile(format: "csv" | "xlsx") {
     setBusy(true);
     setError("");
+    const toastId = toast.loading("Preparing export…");
+    let failureMessage = "Unable to export. Check your access and try again.";
+    const description = previewRows ? "Sample preview data only." : undefined;
     try {
       let blob: Blob;
       if (previewRows) {
@@ -29,14 +33,15 @@ export function ExportButtons({
           `/api/admin/applications/export?${params}`,
           { cache: "no-store" },
         );
-        if (!response.ok)
-          throw new Error(
+        if (!response.ok) {
+          failureMessage =
             response.status === 413
               ? "More than 5,000 records match. Narrow the status filter before exporting."
               : response.status === 429
                 ? "Export limit reached. Please wait a few minutes before trying again."
-                : "Unable to export. Check your access and try again.",
-          );
+                : failureMessage;
+          throw new Error(failureMessage);
+        }
         blob = await response.blob();
       }
       const url = URL.createObjectURL(blob);
@@ -45,8 +50,14 @@ export function ExportButtons({
       a.download = `taskwaveph-${previewRows ? "sample-" : ""}applicants.${format}`;
       a.click();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Unable to export.");
+      toast.success("Export download started.", {
+        id: toastId,
+        description,
+        duration: 5000,
+      });
+    } catch {
+      setError(failureMessage);
+      toast.error(failureMessage, { id: toastId, description, duration: 8000 });
     } finally {
       setBusy(false);
     }

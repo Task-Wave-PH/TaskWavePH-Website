@@ -1,4 +1,5 @@
 "use client";
+import { adminOperation } from "@/features/admin/operation-feedback";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,11 +15,13 @@ export function DeleteConfirmation({
   description,
   disabled = false,
   onDelete,
+  preview = false,
 }: {
   label: string;
   description: string;
   disabled?: boolean;
   onDelete: () => Promise<void>;
+  preview?: boolean;
 }) {
   const [open, setOpen] = useState(false),
     [busy, setBusy] = useState(false),
@@ -71,7 +74,12 @@ export function DeleteConfirmation({
                 setBusy(true);
                 setError("");
                 try {
-                  await onDelete();
+                  await adminOperation(onDelete, {
+                    loading: "Deleting record…",
+                    success: "Record deleted.",
+                    error: "Unable to delete. Check the page for details.",
+                    preview,
+                  });
                   setOpen(false);
                 } catch {
                   setError(

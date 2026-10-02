@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import heroImage from "@/public/images/homepage/team-collaboration.webp";
 import Link from "next/link";
 import { ArrowRight, MapPin } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -88,7 +89,8 @@ export default async function Home({
             <figure className="relative -mx-5 min-w-0 sm:-mx-8 lg:absolute lg:inset-y-0 lg:right-0 lg:m-0 lg:w-[68%]">
               <div className="relative aspect-[4/3] overflow-hidden bg-secondary lg:h-full lg:aspect-auto">
                 <Image
-                  src="/images/homepage/team-collaboration.webp"
+                  src={heroImage}
+                  placeholder="blur"
                   alt="Illustrative scene of Filipino professionals collaborating around a laptop"
                   fill
                   preload

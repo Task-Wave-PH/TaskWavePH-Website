@@ -562,3 +562,19 @@ Poppins, navy and blue, and the official “Outsource. Optimize. Grow.” taglin
 Regenerate with `node scripts/generate-share-image.mjs`; no generated substitute
 logo or invented company facts. Homepage structured data identifies TaskWavePH
 and the website using the confirmed city only.
+
+## First-load optimization — October 2, 2026
+
+Use local WOFF2 derivatives of the four original Poppins TTF files. All glyphs,
+character mappings, weights, and advance widths are preserved; no subsetting.
+The combined font file size falls from 632,200 to 204,880 bytes (about 68%).
+Retain original fonts and OFL license. To regenerate, install `fonttools` and
+`brotli` in a temporary Python environment and run `scripts/compress-fonts.py`.
+No font-conversion dependency is needed at runtime or during deployment.
+
+The homepage hero uses a static image import with Next.js's generated blur
+placeholder, preserving preload, responsive sizing, and reserved dimensions.
+Header logos load eagerly with high fetch priority; footer logos stay lazy.
+Initially visible reveal containers skip animation when the client initializes;
+sections entering from below still receive one-time Motion reveals. Keep content
+visible while assets download; do not introduce an all-assets loading gate.

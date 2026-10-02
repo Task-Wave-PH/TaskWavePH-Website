@@ -10,22 +10,22 @@ import { PublicAnalytics } from "@/components/layout/public-analytics";
 const poppins = localFont({
   src: [
     {
-      path: "../public/fonts/poppins/Poppins-Regular.ttf",
+      path: "../public/fonts/poppins/Poppins-Regular.woff2",
       weight: "400",
       style: "normal",
     },
     {
-      path: "../public/fonts/poppins/Poppins-Medium.ttf",
+      path: "../public/fonts/poppins/Poppins-Medium.woff2",
       weight: "500",
       style: "normal",
     },
     {
-      path: "../public/fonts/poppins/Poppins-SemiBold.ttf",
+      path: "../public/fonts/poppins/Poppins-SemiBold.woff2",
       weight: "600",
       style: "normal",
     },
     {
-      path: "../public/fonts/poppins/Poppins-Bold.ttf",
+      path: "../public/fonts/poppins/Poppins-Bold.woff2",
       weight: "700",
       style: "normal",
     },

@@ -22,6 +22,7 @@ export function BrandLogo({
         fill
         sizes="(max-width: 639px) 140px, 210px"
         loading={eager ? "eager" : "lazy"}
+        fetchPriority={eager ? "high" : undefined}
         className="object-cover object-center"
       />
     </span>

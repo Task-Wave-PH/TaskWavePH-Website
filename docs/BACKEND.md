@@ -2,6 +2,16 @@
 
 ## Local security verification
 
+PDF viewer troubleshooting: `InvalidPDFException` means the parser could not
+read the received file as a document. Earlier smoke fixtures contained only a
+PDF header and EOF marker; they pass signature checks but are not readable PDFs.
+Smoke and live-submission tests now use the valid shared two-page sample.
+Run the smoke script via `npm run convex:smoke` (Node 22 type stripping loads the
+shared TypeScript sample). Already stored malformed files are not repaired by a
+code update: replace confirmed synthetic records through the development workflow,
+or obtain a new PDF from the applicant. Do not overwrite real CVs automatically.
+The viewer keeps downloads available and disables pagination/zoom when loading fails.
+
 See [SECURITY-AUDIT.md](SECURITY-AUDIT.md) for the October 2, 2026 local review,
 adversarial tests, measured latency, cache/TTL checks, and remaining deployment
 verification. This audit does not deploy backend changes or certify production.

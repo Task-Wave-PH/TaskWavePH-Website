@@ -15,7 +15,7 @@
     "convex:dev": "convex dev",
     "convex:check": "convex dev --once",
     "convex:configure": "node scripts/configure-convex.mjs",
-    "convex:smoke": "node scripts/smoke-convex.mjs",
+    "convex:smoke": "node --experimental-strip-types scripts/smoke-convex.mjs",
     "test:submissions": "playwright test --config playwright.submissions.config.ts",
     "convex:seed": "node scripts/seed-convex.mjs",
     "convex:seed:cleanup": "node scripts/seed-convex.mjs --cleanup",

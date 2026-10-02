@@ -423,6 +423,10 @@ information uses shadcn Sheet and Buttons; it is an informational notice, not
 marketing consent. Preserve the distinction between draft policy status and approved
 production configuration.
 
+The owner requested cookie-free public-page visitor analytics on October 2, 2026.
+Explain analytics in plain language in Privacy and the cookie notice, with no
+advertising tracking, private-workspace tracking, or form-content events.
+
 Public Privacy and Terms copy should use professional, plain language. Describe
 service providers by their purpose rather than naming the development stack, and
 keep collection, access, overseas processing, retention, cookies, and request rights

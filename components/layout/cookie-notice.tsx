@@ -79,8 +79,9 @@ export function CookieNotice({ privacyHref }: { privacyHref: string }) {
           </div>
           <p className="mt-3 leading-relaxed text-muted-foreground">
             We use essential cookies for security and submission confirmations.
-            We also remember when you dismiss this notice. No analytics or
-            advertising tools are installed.
+            We also remember when you dismiss this notice. Cookie-free visitor
+            statistics help us improve public pages. We do not use advertising
+            trackers.
           </p>
           <div className="mt-4 flex flex-wrap items-center gap-3">
             <Button className="min-h-11 px-5" onClick={acknowledge}>
@@ -134,11 +135,13 @@ export function CookieNotice({ privacyHref }: { privacyHref: string }) {
             </p>
           </section>
           <section>
-            <h3 className="font-semibold">No optional tracking tools</h3>
+            <h3 className="font-semibold">Website visitor statistics</h3>
             <p className="mt-2 text-muted-foreground">
-              We have not installed analytics or advertising tools.
-              Acknowledging this notice does not give recruitment consent or
-              submit a form.
+              We use cookie-free analytics for public-page visitor statistics,
+              such as page views, referral sources, and device types. It is not
+              used to record your form entries or private staff activity. We do
+              not use advertising trackers. Acknowledging this notice does not
+              give recruitment consent or submit a form.
             </p>
           </section>
           <Link

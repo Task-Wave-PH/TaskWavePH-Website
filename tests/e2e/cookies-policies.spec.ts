@@ -15,7 +15,7 @@ test("cookie acknowledgment persists, can be reopened, and never selects form co
   const cookie = (await page.context().cookies()).find(
     (cookie) => cookie.name === "tw-cookie-notice",
   );
-  expect(cookie?.value).toBe("1");
+  expect(cookie?.value).toBe("2");
   expect(cookie?.path).toBe("/");
   expect(cookie?.sameSite).toBe("Lax");
   expect(cookie!.expires - Date.now() / 1000).toBeGreaterThan(179 * 86400);
@@ -44,7 +44,7 @@ test("old notice versions reappear and the notice survives blocked browser stora
   baseURL,
 }) => {
   await context.addCookies([
-    { name: "tw-cookie-notice", value: "0", url: baseURL! },
+    { name: "tw-cookie-notice", value: "1", url: baseURL! },
   ]);
   await page.goto("/");
   const notice = page.getByRole("complementary", {
@@ -57,7 +57,7 @@ test("old notice versions reappear and the notice survives blocked browser stora
     (await context.cookies()).find(
       (cookie) => cookie.name === "tw-cookie-notice",
     )?.value,
-  ).toBe("1");
+  ).toBe("2");
   await context.clearCookies();
   await page.addInitScript(() =>
     Object.defineProperty(document, "cookie", {

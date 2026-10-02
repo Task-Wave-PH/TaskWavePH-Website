@@ -124,6 +124,10 @@ add noindex, and send private/no-store responses. Host routing is not authorizat
 - Public pages use an informational essential-cookie notice, not optional tracking
   consent. A versioned acknowledgment cookie lasts 180 days. Keep it separate from
   form consent and never add analytics or advertising integrations implicitly.
+- The owner explicitly requested Vercel Web Analytics on October 2, 2026. Track
+  public pages only on the configured production site origin. Strip page-view URL
+  queries/fragments; exclude admin, local/preview, confirmation routes, custom
+  events, and all form contents. Keep public privacy/cookie descriptions accurate.
 - Footer cookie information can be reopened; admin and preview pages omit the notice.
 - Privacy content uses configured organization/contact/retention values and stays
   a development draft until production privacy configuration is complete and approved.

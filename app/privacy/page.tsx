@@ -99,8 +99,9 @@ export default async function PrivacyPage({
         <p>
           Recruitment and enquiry forms ask for your agreement before
           submission. Providing information does not guarantee employment,
-          contact, or a business partnership. This website does not currently
-          use advertising or analytics tracking tools.
+          contact, or a business partnership. We also use cookie-free visitor
+          statistics to understand how public pages are used and improve the
+          website. We do not use advertising trackers.
         </p>
       </section>
       <section id="sharing">
@@ -113,9 +114,10 @@ export default async function PrivacyPage({
         <p>
           We use service providers to host this website, store submitted
           information, support authorized staff access, and protect forms from
-          abuse. These providers may process personal and technical information
-          needed to provide their services. Information may be stored or
-          processed outside the Philippines.
+          abuse, and provide website visitor statistics. These providers may
+          process personal and technical information needed to provide their
+          services. Information may be stored or processed outside the
+          Philippines.
         </p>
         <p>
           Uploaded resumes are not publicly available. Only authorized staff may
@@ -166,8 +168,12 @@ export default async function PrivacyPage({
         <h2>Cookies and security</h2>
         <p>
           Cookies are small browser records used for necessary website functions
-          or to remember a preference. The website does not currently include
-          analytics or advertising integrations.
+          or to remember a preference. Public-page analytics work without
+          analytics cookies and help us understand page views, referral sources,
+          approximate location, and browser or device types. Query strings and
+          fragments are removed from page-view URLs. Form entries, resumes, and
+          private staff pages are not included in these analytics events. We do
+          not use advertising trackers.
         </p>
         <div
           role="region"

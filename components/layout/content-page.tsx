@@ -1,6 +1,7 @@
 import { submissionsEnabled } from "@/lib/submission-env";
 import type { ReactNode } from "react";
 import { Header } from "./header";
+import { MotionReveal } from "./motion-reveal";
 import { Footer } from "./footer";
 import { BusinessLink } from "./business-link";
 import { ApplyLink } from "./apply-link";
@@ -33,47 +34,49 @@ export function ContentPage({
       <Header query={query} audience={audience} />
       <main id="main-content">
         <section className="bg-secondary">
-          <div className="mx-auto max-w-[1180px] px-5 py-12 sm:px-8 sm:py-16 lg:py-20">
+          <MotionReveal className="mx-auto max-w-[1180px] px-5 py-10 sm:px-8 sm:py-16 lg:py-20">
             <p className="text-sm font-semibold uppercase tracking-wider text-primary">
               {eyebrow}
             </p>
             <h1 className="mt-4 max-w-3xl text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
               {title}
             </h1>
-            <p className="mt-6 max-w-2xl leading-relaxed text-muted-foreground sm:text-lg">
+            <p className="mt-5 max-w-2xl leading-relaxed text-muted-foreground sm:text-lg">
               {description}
             </p>
-          </div>
+          </MotionReveal>
         </section>
-        <div className="mx-auto max-w-[1180px] space-y-12 px-5 py-12 sm:space-y-16 sm:px-8 sm:py-16 lg:space-y-20 lg:py-20">
+        <div className="mx-auto max-w-[1180px] space-y-10 px-5 py-10 sm:space-y-16 sm:px-8 sm:py-16 lg:space-y-20 lg:py-20">
           {children}
           {showCta && (
-            <Card className="bg-primary py-0 text-primary-foreground ring-0">
-              <CardContent className="flex flex-col items-start gap-6 px-6 py-8 sm:px-10 md:flex-row md:items-center md:justify-between">
-                <div>
-                  <h2 className="text-2xl font-semibold text-white">
-                    {audience === "applicant"
-                      ? "Prepare for your next move."
-                      : "Make more room for business growth."}
-                  </h2>
-                  <p className="mt-3 max-w-xl leading-relaxed">
-                    {audience === "business"
-                      ? "Tell us where your team needs support. Let’s discuss how TaskWavePH can help."
-                      : submissionsEnabled()
-                        ? "Submit your application for review. Contact depends on matching an available opportunity."
-                        : "Applications are opening soon. Preview the form; your information will not be sent or saved."}
-                  </p>
-                </div>
-                {audience === "applicant" ? (
-                  <ApplyLink href={getApplyHref(query)} light />
-                ) : (
-                  <BusinessLink
-                    href={getTrackedHref("/business-enquiry", query)}
-                    light
-                  />
-                )}
-              </CardContent>
-            </Card>
+            <MotionReveal>
+              <Card className="bg-primary py-0 text-primary-foreground ring-0">
+                <CardContent className="flex flex-col items-start gap-6 px-5 py-7 sm:px-8 sm:py-8 md:flex-row md:items-center md:justify-between">
+                  <div className="min-w-0">
+                    <h2 className="text-2xl font-semibold text-white">
+                      {audience === "applicant"
+                        ? "Prepare for your next move."
+                        : "Make more room for business growth."}
+                    </h2>
+                    <p className="mt-3 max-w-xl leading-relaxed">
+                      {audience === "business"
+                        ? "Tell us where your team needs support. Let’s discuss how TaskWavePH can help."
+                        : submissionsEnabled()
+                          ? "Submit your application for review. Contact depends on matching an available opportunity."
+                          : "Applications are opening soon. Preview the form; your information will not be sent or saved."}
+                    </p>
+                  </div>
+                  {audience === "applicant" ? (
+                    <ApplyLink href={getApplyHref(query)} light />
+                  ) : (
+                    <BusinessLink
+                      href={getTrackedHref("/business-enquiry", query)}
+                      light
+                    />
+                  )}
+                </CardContent>
+              </Card>
+            </MotionReveal>
           )}
         </div>
       </main>

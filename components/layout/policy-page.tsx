@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { ShieldCheck } from "lucide-react";
 import { Header } from "./header";
+import { MotionReveal } from "./motion-reveal";
 import { Footer } from "./footer";
 import type { TrackingQuery } from "@/features/applications/tracking";
 
@@ -24,7 +25,7 @@ export function PolicyPage({
       <Header query={query} />
       <main id="main-content">
         <section className="border-b bg-secondary/70">
-          <div className="mx-auto max-w-[1180px] px-5 py-12 sm:px-8 sm:py-16">
+          <MotionReveal className="mx-auto max-w-[1180px] px-5 py-10 sm:px-8 sm:py-16">
             <div className="flex items-center gap-2 text-sm font-medium text-primary">
               <ShieldCheck aria-hidden="true" className="size-5" />
               Trust & transparency
@@ -43,7 +44,7 @@ export function PolicyPage({
                 Last updated <time dateTime="2026-10-02">October 2, 2026</time>
               </span>
             </div>
-          </div>
+          </MotionReveal>
         </section>
         <div className="mx-auto grid max-w-[1180px] gap-10 px-5 py-12 sm:px-8 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-16 lg:py-16">
           <aside className="min-w-0">
@@ -72,7 +73,7 @@ export function PolicyPage({
               </ol>
             </nav>
           </aside>
-          <article className="min-w-0 max-w-3xl space-y-10 leading-relaxed text-muted-foreground [&_h2]:text-xl [&_h2]:font-semibold [&_h3]:font-semibold [&_p]:mt-3 [&_ul]:mt-3 [&_ul]:list-disc [&_ul]:space-y-2 [&_ul]:pl-5 [&_a]:text-primary [&_a]:underline [&_a]:underline-offset-4">
+          <article className="min-w-0 max-w-3xl space-y-10 text-base leading-7 text-muted-foreground [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:leading-snug [&_h3]:font-semibold [&_p]:mt-3 [&_ul]:mt-3 [&_ul]:list-disc [&_ul]:space-y-2 [&_ul]:pl-5 [&_a]:text-primary [&_a]:underline [&_a]:underline-offset-4">
             {children}
           </article>
         </div>

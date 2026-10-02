@@ -317,7 +317,7 @@ UI support tokens include dark blue `#0759CB` for accessible button hover states
 muted text `#526176`, pale surfaces `#EFF4FF` / `#EFF7FF`, and the existing form
 error color `#B42318`. These are implementation colors, not additions to the five
 media-kit swatches. Blue buttons use full-opacity white text, including on hover.
-Motion is limited to interaction feedback with reduced-motion support. No dark
+Motion uses subtle public marketing reveals and interaction feedback with reduced-motion support. No dark
 mode or new animation dependency is introduced.
 
 ### Component guidance
@@ -488,3 +488,77 @@ never grants permissions. Missing-page screens link to the public homepage and
 services; admin segment errors link back to the dashboard. No private record data
 is displayed. Proxy-blocked page requests render the shared 404 while preserving
 404 status and private/no-store/noindex headers; rejected API requests stay empty.
+
+## Public cosmetic polish — October 2, 2026
+
+Preserve the existing brand and public page structure. Use compact mobile logo
+and illustration panels; contain service artwork without cropping. Shared title
+bands use 40px mobile vertical padding and content sections use 40px mobile gaps.
+Desktop navigation marks the active page with a subtle blue underline.
+
+Below 640px, footer navigation groups use native expandable disclosures; company
+identity, location, and policy links stay visible. The cookie notice is a compact
+summary with the existing information drawer and acknowledgment behavior.
+Forms group related fields in labeled containers, with generous checkbox targets
+and readable help text. Careers filters share a container and empty results offer
+a general-application link without implying an available vacancy.
+
+## Homepage visual refresh — October 2, 2026
+
+The owner supplied `WhatsApp Image 2026-10-02 at 18.45.15.jpeg` as a layout
+reference. It informs the people-focused hero, compact values strip, service
+cards, process steps, and navy closing CTA. Its alternate logo, platform/client
+logos, numerical metrics, testimonials, and sample contacts are not approved
+TaskWavePH facts and must not be copied into the website.
+
+`public/images/homepage/team-collaboration.webp` is an AI-generated illustrative
+team scene, not a photograph of TaskWavePH employees or its office. It uses the
+brand's navy, blue, and white palette. The original generated image is 1536 × 1024;
+the website asset is WebP (quality 85, approximately 95 KB). Keep copy as accessible
+HTML and preserve the original logo separately. Homepage service cards use icons and text and link to matching Services anchors
+while retaining safe tracking. Service illustrations appear on the dedicated
+Services page.
+
+Keep the official tagline, original logo, Poppins, shared page width, mobile
+navigation, and brand tokens. The hero uses an eager optimized image; dedicated Services
+page images remain lazy-loaded. Decorative waves do not overlap text or controls.
+
+The homepage hero uses a cover photograph on the right with a white horizontal
+fade into the copy area on desktop. Below 1024px, the image follows the text as a
+full-width scene with a soft vertical white fade. Preserve text contrast, avoid
+placing mobile copy over faces, and keep the partnership caption inside the image.
+
+The closing homepage CTA uses a plain navy surface with white text and a white
+action button. Keep the desktop text/action columns balanced and stack them on
+mobile. Avoid decorative circles or additional generated background imagery here.
+
+## Public motion — October 2, 2026
+
+Use Motion’s lightweight `motion/react-mini` scoped animation API with
+IntersectionObserver for one-time marketing
+reveals: 12px vertical travel, opacity 0.55 to 1, 380ms with a restrained ease-out.
+Stagger adjacent cards by 40ms, capped at 120ms. Content is visible in server HTML
+and remains visible without JavaScript or observer/animation support. Never hide
+content again when it leaves the viewport. Do not animate form controls or whole
+page departures. Keep normal Next.js navigation and existing drawer transitions.
+
+Reduced motion disables reveals and hover movement, including live preference
+changes. Keyboard focus cancels a reveal immediately; focused content and anchor
+targets skip entrance effects. Public CTA hover rises 1px, press scales to 0.99,
+and linked service cards rise 3px on hover-capable pointer devices only. Keep
+animations scoped to public marketing components. Motion was approved by the owner
+on October 2, 2026. Use the mini React API for reveals; keep simple hover states
+in CSS. Cancel effects and clear temporary styles on focus, reduced motion, and
+unmount. Do not delay route navigation for exit effects.
+
+## Search and sharing
+
+Public page titles describe each page's topic; marketing copy addresses business
+clients and recruitment pages address applicants. Keep the official homepage
+headline unchanged. See [docs/SEO.md](docs/SEO.md) for page topics and indexing rules.
+
+Use the static 1200 × 630 white social card with the original transparent logo,
+Poppins, navy and blue, and the official “Outsource. Optimize. Grow.” tagline.
+Regenerate with `node scripts/generate-share-image.mjs`; no generated substitute
+logo or invented company facts. Homepage structured data identifies TaskWavePH
+and the website using the confirmed city only.

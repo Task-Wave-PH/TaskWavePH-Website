@@ -8,8 +8,8 @@ import {
 import { submissionsEnabled } from "@/lib/submission-env";
 import { pageMetadata } from "@/lib/page-metadata";
 export const metadata = pageMetadata(
-  "Business Enquiry",
-  "Tell TaskWavePH about your business support needs.",
+  "Discuss Your Outsourcing Needs",
+  "Discuss your outsourcing needs with TaskWavePH. Enquire about customer support, marketing, web development, virtual assistance, and business support.",
   "/business-enquiry",
 );
 export default async function Page({
@@ -25,7 +25,7 @@ export default async function Page({
       query={query}
       eyebrow="Work with us"
       title="Let’s talk about your business."
-      description="Tell us what you need, and which services interest you."
+      description="Tell us where your business needs outsourcing support and which TaskWavePH services interest you."
     >
       <p>
         {enabled

@@ -251,7 +251,7 @@ export function ApplicationForm({
       ].map((group) => (
         <fieldset
           key={group.title}
-          className="min-w-0 rounded-xl border bg-muted/20 p-4 sm:p-6"
+          className="min-w-0 rounded-xl border bg-secondary/30 p-4 sm:p-6"
         >
           <legend className="px-2 font-semibold text-brand-navy">
             {group.title}
@@ -361,7 +361,7 @@ export function ApplicationForm({
           {...register("message")}
           maxLength={2000}
           rows={4}
-          className="text-base"
+          className="min-h-32 text-base"
           aria-invalid={!!errors.message}
           aria-describedby={`message-hint${errors.message ? " message-error" : ""}`}
         />

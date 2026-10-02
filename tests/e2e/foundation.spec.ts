@@ -129,7 +129,7 @@ for (const width of [360, 390, 430, 768, 1024, 1440]) {
           route,
         )
       ) {
-        if (route === "/areas-of-work") {
+        if (route === "/" || route === "/areas-of-work") {
           for (const image of await page.locator("main img").all()) {
             await image.scrollIntoViewIfNeeded();
             await expect(image).toHaveJSProperty("complete", true);
@@ -146,6 +146,9 @@ for (const width of [360, 390, 430, 768, 1024, 1440]) {
           true,
         );
         await page.evaluate(() => document.fonts.ready);
+        await page.evaluate(() =>
+          window.scrollTo({ top: 0, behavior: "instant" }),
+        );
         await page.screenshot({
           path: test
             .info()

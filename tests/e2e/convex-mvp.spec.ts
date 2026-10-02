@@ -131,7 +131,7 @@ test("public response headers prevent framing and form errors describe their con
   await page.getByRole("button", { name: "Validate Enquiry" }).click();
   await expect(page.getByLabel("Tell us what you need")).toHaveAttribute(
     "aria-describedby",
-    "message-error",
+    "message-hint message-error",
   );
   await expect(
     page.getByRole("checkbox", { name: "Customer Support" }),

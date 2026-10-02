@@ -1,3 +1,4 @@
+import { MotionReveal } from "@/components/layout/motion-reveal";
 import { ContentPage } from "@/components/layout/content-page";
 import {
   ArrowRight,
@@ -56,7 +57,7 @@ const details = [
 ];
 
 export const metadata = pageMetadata(
-  "How It Works",
+  "How Outsourcing Support Works",
   "Share your business needs, discuss suitable outsourcing support, and agree on next steps with TaskWavePH.",
   "/how-it-works",
 );
@@ -140,8 +141,8 @@ export default async function Page({
               key={heading}
               className="grid gap-8 border-t pt-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-16"
             >
-              <div>
-                <div className="flex items-center gap-3 text-sm font-medium text-primary">
+              <MotionReveal>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm font-medium text-primary">
                   <span className="rounded-full bg-secondary px-3 py-1.5">
                     Step 0{index + 1}
                   </span>
@@ -153,8 +154,11 @@ export default async function Page({
                 <p className="mt-5 leading-relaxed text-muted-foreground">
                   {description}
                 </p>
-              </div>
-              <div className="rounded-2xl bg-secondary/70 p-6 sm:p-8">
+              </MotionReveal>
+              <MotionReveal
+                delay={60}
+                className="rounded-2xl bg-secondary/70 p-5 sm:p-8"
+              >
                 <Icon aria-hidden="true" className="size-7 text-primary" />
                 <h3 className="mt-4 text-lg font-semibold">
                   What we can discuss
@@ -181,7 +185,7 @@ export default async function Page({
                     {outcome}
                   </p>
                 </div>
-              </div>
+              </MotionReveal>
             </section>
           ),
         )}

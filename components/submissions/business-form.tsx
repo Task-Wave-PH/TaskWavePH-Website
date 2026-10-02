@@ -61,70 +61,78 @@ export function BusinessForm({
         await submission.submit(data);
       })}
     >
-      <div className="grid gap-6 sm:grid-cols-2">
-        {(
-          [
-            ["company", "Company"],
-            ["contactName", "Contact Name"],
-            ["email", "Email"],
-            ["phone", "Phone"],
-            ["companyWebsite", "Company Website"],
-          ] as const
-        ).map(([name, label]) => (
-          <FormField
-            key={name}
-            id={name}
-            label={label}
-            optional={name === "phone" || name === "companyWebsite"}
-            error={errors[name]?.message}
-          >
-            <Input
+      <fieldset className="min-w-0 rounded-xl border bg-secondary/30 p-4 sm:p-6">
+        <legend className="px-2 font-semibold text-brand-navy">
+          Company & contact
+        </legend>
+        <div className="grid gap-6 sm:grid-cols-2">
+          {(
+            [
+              ["company", "Company"],
+              ["contactName", "Contact Name"],
+              ["email", "Email"],
+              ["phone", "Phone"],
+              ["companyWebsite", "Company Website"],
+            ] as const
+          ).map(([name, label]) => (
+            <FormField
+              key={name}
               id={name}
-              type={
-                name === "email"
-                  ? "email"
-                  : name === "companyWebsite"
-                    ? "url"
-                    : name === "phone"
-                      ? "tel"
-                      : "text"
-              }
-              maxLength={
-                name === "companyWebsite" ? 2000 : name === "phone" ? 30 : 254
-              }
-              {...register(name)}
-              className="min-h-12 text-base"
-              autoComplete={
-                name === "company"
-                  ? "organization"
-                  : name === "contactName"
-                    ? "name"
-                    : name === "email"
-                      ? "email"
+              label={label}
+              optional={name === "phone" || name === "companyWebsite"}
+              error={errors[name]?.message}
+            >
+              <Input
+                id={name}
+                type={
+                  name === "email"
+                    ? "email"
+                    : name === "companyWebsite"
+                      ? "url"
                       : name === "phone"
                         ? "tel"
-                        : "url"
-              }
-              required={name !== "phone" && name !== "companyWebsite"}
-              aria-invalid={!!errors[name]}
-              aria-describedby={errors[name] ? `${name}-error` : undefined}
-            />
-          </FormField>
-        ))}
-      </div>
+                        : "text"
+                }
+                maxLength={
+                  name === "companyWebsite" ? 2000 : name === "phone" ? 30 : 254
+                }
+                {...register(name)}
+                className="min-h-12 text-base"
+                autoComplete={
+                  name === "company"
+                    ? "organization"
+                    : name === "contactName"
+                      ? "name"
+                      : name === "email"
+                        ? "email"
+                        : name === "phone"
+                          ? "tel"
+                          : "url"
+                }
+                required={name !== "phone" && name !== "companyWebsite"}
+                aria-invalid={!!errors[name]}
+                aria-describedby={errors[name] ? `${name}-error` : undefined}
+              />
+            </FormField>
+          ))}
+        </div>
+      </fieldset>
       <fieldset
         aria-describedby={errors.services ? "services-error" : undefined}
+        className="min-w-0 rounded-xl border bg-secondary/30 p-4 sm:p-6"
       >
-        <legend className="mb-4 font-medium">Services Interested In</legend>
+        <legend className="px-2 font-semibold text-brand-navy">
+          Services Interested In
+        </legend>
         <Controller
           control={control}
           name="services"
           render={({ field }) => (
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="mt-2 grid gap-3 sm:grid-cols-2">
               {services.map((service, index) => (
                 <label
                   key={service}
-                  className="flex min-h-11 items-center gap-3"
+                  className="flex min-h-12 cursor-pointer items-center gap-3 rounded-lg border bg-background px-3 py-3 text-sm leading-relaxed hover:border-primary/40 has-[:checked]:border-primary"
                 >
                   <Checkbox
                     inputRef={index === 0 ? field.ref : undefined}
@@ -160,6 +168,7 @@ export function BusinessForm({
       <FormField
         id="message"
         label="Tell us what you need"
+        hint="Describe the tasks or priorities you would like support with."
         error={errors.message?.message}
       >
         <Textarea
@@ -167,9 +176,9 @@ export function BusinessForm({
           maxLength={2000}
           {...register("message")}
           required
-          aria-describedby={errors.message ? "message-error" : undefined}
+          aria-describedby={`message-hint${errors.message ? " message-error" : ""}`}
           aria-invalid={!!errors.message}
-          className="text-base"
+          className="min-h-36 text-base"
         />
       </FormField>
       <Controller

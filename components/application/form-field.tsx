@@ -28,12 +28,19 @@ export function FormField({
       </Label>
       {children}
       {hint && (
-        <p id={`${id}-hint`} className="text-xs text-muted-foreground">
+        <p
+          id={`${id}-hint`}
+          className="text-sm leading-relaxed text-muted-foreground"
+        >
           {hint}
         </p>
       )}
       {error && (
-        <p id={`${id}-error`} role="alert" className="text-sm text-destructive">
+        <p
+          id={`${id}-error`}
+          role="alert"
+          className="text-sm leading-relaxed text-destructive"
+        >
           {error}
         </p>
       )}

@@ -133,3 +133,40 @@ test("policy pages, service footer links and workflow anchors preserve tracking"
     "http://localhost:3000/terms",
   );
 });
+
+test("mobile footer groups open with the keyboard and preserve tracked destinations", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/?source=footer-test");
+  await page
+    .getByRole("complementary", { name: "Cookie notice", exact: true })
+    .getByRole("button", { name: "Got it", exact: true })
+    .click();
+  const services = page.getByRole("navigation", {
+    name: "Footer services navigation",
+  });
+  const toggle = services.locator("summary");
+  await toggle.focus();
+  await page.keyboard.press("Enter");
+  const link = services.getByRole("link", {
+    name: "Digital Marketing",
+    exact: true,
+  });
+  await expect(link).toBeVisible();
+  await link.click();
+  await expect(page).toHaveURL(
+    /\/areas-of-work\?source=footer-test#digital-marketing$/,
+  );
+  await page.locator("footer").scrollIntoViewIfNeeded();
+  await expect(
+    page
+      .locator("footer")
+      .getByRole("link", { name: "Privacy Policy", exact: true }),
+  ).toBeVisible();
+  await page.setViewportSize({ width: 1024, height: 900 });
+  await expect(services.locator("summary")).toBeHidden();
+  await expect(
+    services.getByRole("link", { name: "Digital Marketing", exact: true }),
+  ).toBeVisible();
+});

@@ -2,6 +2,13 @@ import { v } from "convex/values";
 import { internalQuery, internalMutation } from "./_generated/server";
 import { requireAdmin } from "./adminAccess";
 import { resumeFile } from "./validators";
+import { limitAdminOperation } from "./adminRateLimits";
+export const permit = internalMutation({
+  args: {},
+  returns: v.object({ allowed: v.boolean(), retryAfterSeconds: v.number() }),
+  handler: async (ctx) =>
+    limitAdminOperation(ctx, await requireAdmin(ctx), "resume"),
+});
 export const find = internalQuery({
   args: { id: v.string() },
   returns: v.union(resumeFile, v.null()),

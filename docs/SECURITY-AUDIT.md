@@ -174,3 +174,81 @@ Review references: [OWASP authorization guidance](https://cheatsheetseries.owasp
 [OWASP origin/Fetch Metadata guidance](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html),
 [Vercel request-header behavior](https://vercel.com/docs/headers/request-headers).
 Next.js cache behavior was also checked against the installed framework docs.
+
+## October 2 follow-up: security and free-tier resource use
+
+Added persistent Convex budgets to expensive protected HTTP operations, with
+authorization before throttling and private 429/Retry-After responses:
+
+| Operation              | Per approved staff account | Deployment total   |
+| ---------------------- | -------------------------- | ------------------ |
+| CSV / XLSX export      | 5 per ten minutes          | 20 per ten minutes |
+| Resume view / download | 30 per minute              | 120 per minute     |
+
+Export denials stop before record pagination and workbook generation. Resume
+denials stop before storage access and do not create successful-view audit entries.
+The resume proxy cancels upstream work when the browser disconnects, preserves
+safe retry timing, and retains its 15-second transport deadline. Export transport
+retains its 25-second deadline. Neither can undo committed operations; synchronous
+workbook generation cannot be interrupted by abort signals. Endpoint budgets do
+not limit every direct authenticated Convex query.
+
+Verification passed: lint, typecheck, formatting, **156 unit/backend tests in 20
+files**, isolated production builds, **29 production browser tests**, and **10
+localhost preview/access browser tests**. Dependency audit reported **zero
+production dependency vulnerabilities**. Backend tests used convex-test, not
+cloud writes. One read-only public jobs query succeeded against the configured
+development deployment (zero published rows). No invitations, private record
+reads, cloud writes, migrations, or deployments were performed. Actual signed-in
+Owner/Staff verification, deployed limits, production edge behavior, account
+quotas, and service billing settings remain unverified.
+
+The isolated loopback load run used twenty samples for each route/concurrency
+pair, at concurrency one and five, with fewer than 500 total requests. There were
+zero benchmark errors. At concurrency five:
+
+| Route / outcome       | p95 milliseconds |
+| --------------------- | ---------------: |
+| Home                  |            27.24 |
+| Services              |            17.90 |
+| Careers               |            16.01 |
+| Apply                 |            19.01 |
+| Denied administration |            16.47 |
+| Denied export         |             2.09 |
+| Disabled submission   |             4.24 |
+
+These measurements use an Apple M4 and synthetic local fixtures after an isolation
+preflight, not cold starts or production network latency. The bounded published
+first-page cache retained its initial data, refreshed after the 60-second TTL
+(checked after 61 seconds), and job details reflected fixture updates immediately.
+Protected responses remained private/no-store. Direct confirmation access returned
+to the corresponding form. Tracking injection stayed inert. The ignored artifact
+is `output/security-audit/results.json`; the existing fixture script reproduces it.
+
+### Cost and quota considerations
+
+- Monitor Convex database storage/I/O, file storage/bandwidth, function calls, and
+  action compute in the deployment dashboard. Scheduled cleanup, subscriptions,
+  exports, and CV reads contribute usage. Free-plan quotas are hard limits;
+  throttling reduces abuse but cannot guarantee uninterrupted free service.
+  See [Convex limits](https://docs.convex.dev/production/state/limits).
+- Hourly orphan cleanup paginates storage in batches of 100 and checks application
+  and pending-upload indexes for older files. Its reads grow with total stored CVs.
+  Preserve the one-hour orphan policy and monitor this path as storage grows;
+  do not lengthen cleanup intervals or delete linked resumes to reduce usage.
+- Public job queries are readable directly from Convex. The Next.js 60-second
+  cache reduces website traffic to that backend, but cannot prevent direct reads.
+  Private authorization and current-job eligibility checks remain uncached.
+- Confirm Clerk and Turnstile usage/configuration in their account dashboards;
+  public pricing does not establish this project's active plan or remaining quota.
+  See [Clerk pricing](https://clerk.com/pricing) and
+  [Turnstile plans](https://developers.cloudflare.com/turnstile/plans/).
+- Vercel Hobby is limited to personal, non-commercial use. TaskWavePH is a business
+  website, so do not assume Hobby covers its production deployment; the owner
+  should select suitable hosting terms. See
+  [Vercel Hobby](https://vercel.com/docs/plans/hobby).
+
+No new dependencies, environment variables, paid infrastructure, or datastore
+were introduced. Deploy the reviewed Convex functions before the matching Next.js
+routes because they now depend on the new budget mutation. Deployment remains a
+separate authorized step.

@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import {
@@ -10,7 +10,6 @@ import {
   useQuery,
 } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { buttonVariants } from "@/components/ui/button";
 import { ApplicantDetails } from "./applicant-details";
 import { ExportButtons } from "./export-buttons";
 import type { ApplicantView } from "@/features/applications/admin-types";
@@ -43,27 +42,31 @@ const title = (kind: Kind) =>
   kind === "applications" ? "Applications" : "Business Leads";
 export function StaffGate({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useConvexAuth();
-  const { isLoaded } = useAuth();
+  const { isLoaded, isSignedIn } = useAuth();
+  const router = useRouter();
+  useEffect(() => {
+    if (isLoaded && !isSignedIn) router.replace("/admin/sign-in");
+  }, [isLoaded, isSignedIn, router]);
+  if (isLoaded && !isSignedIn)
+    return <AccessLoading message="Opening staff sign-in…" />;
   if (!isLoaded || isLoading) return <AccessLoading />;
   if (!isAuthenticated)
-    return (
-      <main className="p-8">
-        <h1 className="text-2xl font-semibold">Staff sign-in</h1>
-        <Link
-          href="/admin/sign-in"
-          className={buttonVariants({ className: "mt-5 min-h-11" })}
-        >
-          Sign in
-        </Link>
-      </main>
-    );
+    return <AccessLoading message="Connecting to your staff workspace…" />;
   return <Access>{children}</Access>;
 }
 function Access({ children }: { children: React.ReactNode }) {
   const access = useQuery(api.staffStatus.current);
+  const current = useQuery(
+    api.staffManagement.current,
+    access === true ? {} : "skip",
+  );
   if (access === undefined)
     return <AccessLoading message="Checking permissions…" />;
   if (!access) return <AccessDenied />;
+  if (current === undefined)
+    return (
+      <AccessLoading message="Checking your role and available features…" />
+    );
   return children;
 }
 function Navigation({ preview = false }: { preview?: boolean }) {

@@ -35,6 +35,18 @@ export async function GET(request: Request) {
         fetch(input, { ...init, cache: "no-store", signal }),
     });
     client.setAuth(token);
+    const budget = await client.mutation(api.exports.begin, {});
+    if (!budget.allowed)
+      return Response.json(
+        { error: "RATE_LIMITED" },
+        {
+          status: 429,
+          headers: {
+            ...headers,
+            "Retry-After": String(budget.retryAfterSeconds),
+          },
+        },
+      );
     const rows: ApplicantView[] = [];
     let cursor: string | null = null;
     const deadline = Date.now() + 25000;

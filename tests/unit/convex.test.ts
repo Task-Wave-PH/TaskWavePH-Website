@@ -416,6 +416,34 @@ describe("Convex intake and administration", () => {
     expect(download.headers.get("cache-control")).toContain("no-store");
     expect(await download.text()).toContain("%PDF-");
 
+    // Two successful HTTP reads consumed two of the thirty per-minute slots.
+    for (let i = 0; i < 28; i++)
+      await admin.mutation(internal.downloads.permit, {});
+    const auditCount = await t.run(
+      async (ctx) =>
+        (
+          await ctx.db
+            .query("adminActivity")
+            .withIndex("by_record", (q) => q.eq("record", row!._id))
+            .take(100)
+        ).length,
+    );
+    const denied = await admin.fetch(`/resume?id=${row!._id}`);
+    expect(denied.status).toBe(429);
+    expect(Number(denied.headers.get("retry-after"))).toBeGreaterThan(0);
+    expect(await denied.text()).not.toContain("%PDF-");
+    expect(
+      await t.run(
+        async (ctx) =>
+          (
+            await ctx.db
+              .query("adminActivity")
+              .withIndex("by_record", (q) => q.eq("record", row!._id))
+              .take(100)
+          ).length,
+      ),
+    ).toBe(auditCount);
+
     await admin.mutation(api.admin.remove, {
       kind: "applications",
       id: row!._id,

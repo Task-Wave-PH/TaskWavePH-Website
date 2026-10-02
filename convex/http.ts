@@ -202,6 +202,15 @@ http.route({
         return new Response("Invalid mode", { status: 400, headers });
       const file = await ctx.runQuery(internal.downloads.find, { id });
       if (!file) return new Response("Not found", { status: 404, headers });
+      const budget = await ctx.runMutation(internal.downloads.permit, {});
+      if (!budget.allowed)
+        return new Response("Too many file requests. Please try again later.", {
+          status: 429,
+          headers: {
+            ...headers,
+            "Retry-After": String(budget.retryAfterSeconds),
+          },
+        });
       const blob = await ctx.storage.get(file.storageId);
       if (!blob) return new Response("Not found", { status: 404, headers });
       await ctx.runMutation(internal.downloads.audit, {

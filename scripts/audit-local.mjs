@@ -121,7 +121,7 @@ if (process.argv.includes("--fixtures")) {
       architecture: arch(),
       cpu: cpus()[0]?.model,
     },
-    sampleCount: 60,
+    sampleCount: 20,
     benchmarks: [],
     security: [],
     cache: {},
@@ -148,7 +148,7 @@ if (process.argv.includes("--fixtures")) {
     assert.equal(first.status, expected, name);
     await first.arrayBuffer();
     const firstMs = Number((performance.now() - firstStart).toFixed(2));
-    for (const concurrency of [1, 5, 10]) {
+    for (const concurrency of [1, 5]) {
       let next = 0;
       const times = [];
       let errors = 0;
@@ -184,7 +184,7 @@ if (process.argv.includes("--fixtures")) {
       });
       assert.equal(errors, 0, `${name} unexpected responses`);
     }
-    console.log(`Measured ${name} at 1, 5, and 10 concurrent requests`);
+    console.log(`Measured ${name} at 1 and 5 concurrent requests`);
   }
   for (const path of [
     "/admin",

@@ -482,3 +482,22 @@ deletion. It temporarily publishes a clearly synthetic development role, cleans
 its disposable applicant/lead/job records, and revokes its temporary CLI staff
 approval. CLI identity testing is not real Clerk authentication. This command does
 not configure or deploy production services.
+
+## Administrative resource limits
+
+Exports now consume a persistent Convex budget before pagination/workbook creation:
+five requests per staff account and twenty across the deployment per ten minutes.
+Resume viewing and downloads share a separate budget: thirty per staff account and
+120 across the deployment per minute, checked before storage reads. Authorization
+is checked first, and denials return HTTP 429 with `Retry-After` and private/no-store
+headers. Failed or disconnected requests can consume their initial allowance.
+
+The Next.js export transport has a 25-second deadline. Resume transports have a
+15-second deadline and cancel when the requesting browser disconnects. These
+controls protect these expensive HTTP endpoints; ordinary authorized Convex
+queries remain available and are not covered by the export budget.
+
+Deploy the reviewed Convex functions before deploying the matching Next.js routes;
+the new routes require `exports:begin` and the resume handler requires its internal
+permit mutation. This audit has not deployed either service. No environment
+variables or paid infrastructure were added.

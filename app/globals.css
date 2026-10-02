@@ -138,3 +138,9 @@
     transition: none;
   }
 }
+
+@keyframes access-recovery {
+  to {
+    visibility: visible;
+  }
+}

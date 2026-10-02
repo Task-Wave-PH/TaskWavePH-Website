@@ -163,6 +163,13 @@ add noindex, and send private/no-store responses. Host routing is not authorizat
 
 ## Submission reliability and public caching
 
+- Protected export requests consume persistent per-staff/global budgets before
+  fetching records or creating workbooks (5/20 per ten minutes). Resume reads
+  consume separate budgets before file access (30/120 per minute). Return private
+  HTTP 429 responses with Retry-After; authorization must precede budget checks.
+- Cancel protected upstream fetches when callers disconnect and keep bounded
+  deadlines. These endpoint limits do not replace backend authorization or cap
+  every authenticated Convex query.
 - Attempt throttling runs before upload reading and challenge verification. Use
   the existing persistent Convex limiter; return denials so budget updates commit.
   Keep bounded retry timing and safe public error codes, including JOB_UNAVAILABLE.

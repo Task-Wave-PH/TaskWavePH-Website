@@ -33,7 +33,9 @@ export function ExportButtons({
           throw new Error(
             response.status === 413
               ? "More than 5,000 records match. Narrow the status filter before exporting."
-              : "Unable to export. Check your access and try again.",
+              : response.status === 429
+                ? "Export limit reached. Please wait a few minutes before trying again."
+                : "Unable to export. Check your access and try again.",
           );
         blob = await response.blob();
       }

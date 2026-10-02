@@ -456,6 +456,11 @@ Brand-theme descriptions are website guidance, not additional media-kit claims.
 
 ## Access and missing-page screens
 
+Staff entry shows the branded loader until sign-in, approval, and role checks
+complete. After 20 seconds, show a native retry link that also works before
+authentication scripts hydrate. Show recovery immediately for reduced motion.
+Keep dashboard content blocked while checking; signed-out users go to login.
+
 ### Owner user management
 
 The Users section belongs to the existing dashboard shell and is visible only to

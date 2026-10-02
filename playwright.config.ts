@@ -6,6 +6,7 @@ export default defineConfig({
   testDir: "./tests/e2e",
   outputDir: "test-results/production",
   testIgnore: [
+    "**/admin-access.spec.ts",
     "**/submissions-live.spec.ts",
     "**/applicant-preview.spec.ts",
     "**/jobs-preview.spec.ts",

@@ -4,6 +4,8 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { getSiteUrl } from "@/lib/env";
 import "./globals.css";
+import { headers } from "next/headers";
+import { PublicAnalytics } from "@/components/layout/public-analytics";
 
 const poppins = localFont({
   src: [
@@ -53,6 +55,11 @@ export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   const localPreview = await isLocalPreview();
+  const site = new URL(getSiteUrl());
+  const analyticsEnabled =
+    process.env.VERCEL_ENV === "production" &&
+    site.protocol === "https:" &&
+    (await headers()).get("host") === site.host;
   return (
     <html lang="en" data-scroll-behavior="smooth" className={poppins.variable}>
       <body className="flex min-h-dvh flex-col antialiased">
@@ -67,6 +74,7 @@ export default async function RootLayout({
         ) : (
           children
         )}
+        {analyticsEnabled && <PublicAnalytics publicOrigin={site.origin} />}
       </body>
     </html>
   );

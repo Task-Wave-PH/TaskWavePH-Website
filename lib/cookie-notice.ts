@@ -1,5 +1,5 @@
 export const COOKIE_NOTICE_NAME = "tw-cookie-notice";
-export const COOKIE_NOTICE_VERSION = "1";
+export const COOKIE_NOTICE_VERSION = "2";
 export const COOKIE_NOTICE_MAX_AGE = 180 * 24 * 60 * 60;
 
 export function hasCookieAcknowledgment(cookieHeader: string) {

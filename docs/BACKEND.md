@@ -61,8 +61,8 @@ The dashboard uses the brand palette and shadcn Sidebar/Select/Card primitives.
 Public footers provide Privacy Policy (`/privacy`), Website Terms (`/terms`), and a
 reopenable cookie-information Sheet. The public notice stores only
 `tw-cookie-notice=1` for 180 days, with Path=/, SameSite=Lax, and Secure on HTTPS.
-It remembers acknowledgment rather than optional tracking consent. No analytics
-or advertising integration is installed. Bump the version when the notice changes;
+It remembers acknowledgment rather than optional tracking consent. Public pages
+use cookie-free visitor analytics; no advertising integration is installed. Bump the version when the notice changes;
 older acknowledgments will display the updated notice. If storage is unavailable,
 dismissal works for the current mounted notice and may not survive navigation/reload.
 Admin and development-preview routes omit this public notice.
@@ -488,6 +488,24 @@ deletion. It temporarily publishes a clearly synthetic development role, cleans
 its disposable applicant/lead/job records, and revokes its temporary CLI staff
 approval. CLI identity testing is not real Clerk authentication. This command does
 not configure or deploy production services.
+
+## Public Web Analytics
+
+The owner requested Vercel Web Analytics on October 2, 2026. The root layout mounts
+the official Next.js SDK only on the configured public HTTPS host when
+`VERCEL_ENV=production`. A public-path allowlist excludes administration,
+development previews, confirmation pages, and arbitrary paths. `beforeSend`
+removes queries/fragments from page-view URLs and rejects custom events or other
+origins. No form fields or private records are sent as event properties.
+
+Enable **Web Analytics** in the Vercel project dashboard and deploy the code to
+start receiving page views. No additional secret or public environment variable
+is required; existing `NEXT_PUBLIC_SITE_URL` must match the production host.
+This integration does not add Speed Insights, session replay, or advertising.
+The cookie notice version is now 2 so returning visitors see the revised notice.
+Account-side enablement, usage limits, and live ingestion are not verified locally.
+See [Vercel Web Analytics setup](https://vercel.com/docs/analytics/quickstart) and
+[privacy information](https://vercel.com/docs/analytics/privacy-policy).
 
 ## Administrative resource limits
 

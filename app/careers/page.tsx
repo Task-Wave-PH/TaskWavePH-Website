@@ -51,7 +51,9 @@ export default async function Page({
   let nextHref: string | undefined;
   let unavailable = false;
   try {
-    const client = publicJobsClient({ cacheFirstPage: !cursor });
+    // Keep the list as fresh as role details: withdrawn postings must not
+    // remain as cached cards linking to a now-unavailable role.
+    const client = publicJobsClient();
     if (!client) unavailable = true;
     else {
       const result = await client.query(api.jobs.published, {

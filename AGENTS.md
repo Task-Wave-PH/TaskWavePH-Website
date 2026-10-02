@@ -100,6 +100,10 @@ add noindex, and send private/no-store responses. Host routing is not authorizat
 
 ## Applicant review extension
 
+- Applications include an optional Referred by name/code (trimmed, max 200
+  characters). Save it only as private application data, display it read-only,
+  and include it in protected exports. Never include it in tracking URLs or logs.
+
 - Read docs/HIRING-REFERENCE.md for the owner-approved screening reference.
   Additional screening fields are optional; preserve historical records and each
   job's work arrangement. Missing-information requests are copied for staff
@@ -186,6 +190,7 @@ add noindex, and send private/no-store responses. Host routing is not authorizat
 - Preserve idempotency tokens for unchanged retries after uncertain failures.
   Disabled buttons/cooldowns supplement server protections. Challenge retries
   retain entries without browser-storage persistence.
-- Cache only bounded first-page published-job reads for 60 seconds in production.
-  Keep private data, arbitrary cursors, tracking, and eligibility checks uncached.
-  Public lists may lag while revalidating; saves always check current job status.
+- Careers lists and role details read current published jobs without persistent
+  caching. Only sitemap generation may cache a bounded first job page for 60
+  seconds in production. Keep private data, arbitrary cursors, tracking, and
+  eligibility checks uncached; saves always check current job status.

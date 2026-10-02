@@ -4,10 +4,26 @@ import {
   createExport,
   toCsv,
   MAX_EXPORT_ROWS,
+  exportColumns,
 } from "../../features/applications/export";
 import { previewApplicants } from "../../features/applications/preview-data";
 import { sampleResumeBytes } from "../../features/applications/sample-resume";
 describe("applicant exports", () => {
+  it("exports referrals safely and leaves historical referrals blank", async () => {
+    const row = previewApplicants()[0];
+    row.data.referredBy = "=REF-001";
+    expect(toCsv([row])).toContain('"\'=REF-001"');
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.load(
+      new Uint8Array(await createExport([row], "xlsx")).buffer,
+    );
+    const column = exportColumns.indexOf("Referred By") + 1;
+    expect(
+      workbook.getWorksheet("Applicants")!.getRow(2).getCell(column).value,
+    ).toBe("=REF-001");
+    delete row.data.referredBy;
+    expect(toCsv([row])).toMatch(/,""\r\n$/);
+  });
   it("quotes cells, handles line breaks and protects spreadsheet formulas", () => {
     const row = previewApplicants()[0];
     row.data.firstName = '=HYPERLINK("bad")';

@@ -68,6 +68,7 @@ describe("Convex intake and administration", () => {
       distanceFromDagupan: "30 minutes",
       relocationPreference: "Discuss first" as const,
       portfolio: "https://example.com/work",
+      referredBy: "Synthetic Referrer",
     };
     await t.mutation(internal.intake.reserve, {
       kind: "applications",

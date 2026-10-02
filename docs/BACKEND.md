@@ -30,6 +30,36 @@ credentialed job queries never qualify for public first-page caching.
 
 ## What is implemented
 
+### Referrals and campaign links
+
+Applicants may optionally enter a **Referred by** name or code (up to 200
+characters). Staff see it in applicant details and CSV/XLSX exports. Historical
+applications show Not provided. It is self-reported, not a verified employee
+identity, and is separate from campaign attribution.
+
+For a LinkedIn post linking to Careers:
+
+```text
+https://www.taskwaveph.com/careers?source=linkedin&campaign=october-2026&utm_source=linkedin&utm_medium=social&utm_campaign=october-2026
+```
+
+For a printed QR code linking directly to Apply:
+
+```text
+https://www.taskwaveph.com/apply?source=job-fair-qr&campaign=october-2026&utm_source=job-fair&utm_medium=qr&utm_campaign=october-2026
+```
+
+Encode the entire URL when creating a QR code. Use consistent campaign names;
+source identifies the placement, utm_source the channel, and utm_medium its
+format (such as social or qr). Existing navigation carries the allowlisted
+parameters through Careers, role details, and Apply. Staff can inspect them in
+applicant details and exports. Do not put names, email addresses, phone numbers,
+or referral names into campaign URLs. Referral input is not populated from URLs.
+
+Deploy the additive optional Convex field before deploying the updated form.
+Old applications require no backfill. Blank referrals are omitted, preserving
+the serialized payload and fingerprint for unchanged historical retries.
+
 Applications and business leads are stored in Convex. Optional PDF resumes are
 stored in Convex file storage. Next.js validates form requests, verifies Turnstile,
 and calls a secret-authenticated Convex HTTP action. The backend revalidates,
@@ -426,13 +456,15 @@ saving entries in browser storage. The notice acknowledgment is separate from
 form consent. Public responses deny framing and objects and restrict base URLs;
 the CSP intentionally does not yet impose a strict script allowlist.
 
-In production, Next.js fetch caching revalidates bounded first-page published-job
-reads after 60 seconds. Keys include deployment URL, validated filters, and page
-size; tracking parameters and private records never enter these requests. The
-sitemap reuses its first job page, while cursor pages remain uncached. Development
-bypasses this cache. Role details are deduplicated only within one render; details
-and transaction-time eligibility remain fresh. Time-based revalidation may serve
-stale listings during refresh or an outage; a stale card cannot authorize a save.
+Careers lists bypass persistent fetch caching, just like role details, so a job
+changed to Draft, Closed, or Archived disappears on the next page request. Already
+open pages are snapshots until reloaded; this is not a live subscription.
+Only sitemap generation caches its bounded first job page for 60 seconds in
+production; cursor pages remain uncached. Keys include deployment URL, validated
+filters, and page size; tracking and private records never enter these requests.
+Development bypasses this cache. Role details are deduplicated only within one
+render; transaction-time eligibility remains fresh. Sitemap revalidation may
+serve stale URLs during refresh; an old URL cannot authorize an application save.
 See [Next.js fetch caching](https://nextjs.org/docs/app/api-reference/functions/fetch).
 
 Run `npm run convex:limits:smoke` to verify authentication and the persistent

@@ -50,6 +50,10 @@ test("form validates, focuses errors, requires consent, and sends no application
   await page
     .getByLabel("Position Interested In", { exact: true })
     .fill("Customer Service");
+  const referral = page.getByLabel(/^Referred by\s*\(optional\)$/);
+  await expect(referral).toHaveValue("");
+  await expect(referral).toHaveAttribute("maxlength", "200");
+  await referral.fill("Synthetic Referrer");
   await page.getByRole("button", { name: "Validate Application" }).click();
   await expect(consent).toBeFocused();
   await consent.press("Space");
@@ -59,6 +63,7 @@ test("form validates, focuses errors, requires consent, and sends no application
     "Application details validated",
   );
   await expect(page).toHaveURL(/\/apply\?source=office-qr$/);
+  await expect(referral).toHaveValue("Synthetic Referrer");
   expect(posts).toEqual([]);
   await page.getByLabel("First Name", { exact: true }).fill("Marian");
   await expect(page.getByRole("status")).toHaveCount(0);

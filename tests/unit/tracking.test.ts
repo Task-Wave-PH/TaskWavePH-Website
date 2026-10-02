@@ -14,6 +14,7 @@ describe("campaign tracking", () => {
         utm_source: "qr",
         email: "private",
         phone: "private",
+        referredBy: "Private referrer",
       }),
     ).toEqual({
       source: "cite",

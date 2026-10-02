@@ -33,7 +33,9 @@ export function MotionReveal({
       clearStyles();
     };
     let observer: IntersectionObserver | undefined;
-    let entered = false;
+    // Avoid replaying an entrance over content already painted on first load.
+    const bounds = node.getBoundingClientRect();
+    let entered = bounds.bottom > 0 && bounds.top < window.innerHeight;
     const stop = () => {
       cancel();
       observer?.disconnect();

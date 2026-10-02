@@ -224,3 +224,71 @@ test("reveals play once, cancel on keyboard focus, and stop when reduced motion 
   await expect(reveal).toHaveCSS("opacity", "1");
   await expect(reveal).toHaveCSS("transform", "none");
 });
+
+for (const width of [390, 1440]) {
+  test(`first screen stays usable while images and fonts load at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    let release!: () => void;
+    const assetsReady = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    await page.route("**/_next/image?**", async (route) => {
+      await assetsReady;
+      await route.continue();
+    });
+    await page.route("**/*.woff2", async (route) => {
+      await assetsReady;
+      await route.continue();
+    });
+    try {
+      await page.goto("/", { waitUntil: "domcontentloaded" });
+      const hero = page.getByAltText(
+        "Illustrative scene of Filipino professionals collaborating around a laptop",
+      );
+      const heading = page.getByRole("heading", { level: 1 });
+      await expect(heading).toBeVisible();
+      await expect(
+        page.getByRole("link", { name: "Discuss Your Business Needs" }).first(),
+      ).toBeVisible();
+      await expect(hero).toHaveJSProperty("complete", false);
+      await expect(hero).toHaveCSS("background-image", /data:image/);
+      const before = await hero.boundingBox();
+      expect(before).not.toBeNull();
+      const logo = page
+        .getByRole("navigation", { name: "Main navigation" })
+        .getByRole("link", { name: "TaskWavePH home", exact: true })
+        .locator("img");
+      await expect(logo).toHaveAttribute("fetchpriority", "high");
+      const reveal = page.locator(
+        "section[aria-labelledby='hero-title'] [data-motion-reveal]",
+      );
+      await expect(reveal).toHaveCSS("opacity", "1");
+      expect(await reveal.evaluate((node) => node.getAnimations().length)).toBe(
+        0,
+      );
+      release();
+      await page.evaluate(() => document.fonts.ready);
+      await expect(hero).toHaveJSProperty("complete", true);
+      await expect(hero).toHaveCSS("background-image", "none");
+      expect(
+        await hero.evaluate((node) => (node as HTMLImageElement).naturalWidth),
+      ).toBeGreaterThan(0);
+      const after = await hero.boundingBox();
+      expect(after?.width).toBeCloseTo(before!.width, 0);
+      expect(after?.height).toBeCloseTo(before!.height, 0);
+      const fonts = await page.evaluate(() =>
+        performance
+          .getEntriesByType("resource")
+          .map((entry) => entry.name)
+          .filter((name) => /\.(ttf|woff2)(\?|$)/.test(name)),
+      );
+      expect(fonts.length).toBeGreaterThan(0);
+      expect(fonts.every((name) => name.endsWith(".woff2"))).toBe(true);
+    } finally {
+      release();
+    }
+  });
+}

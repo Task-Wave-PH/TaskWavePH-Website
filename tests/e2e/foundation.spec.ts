@@ -132,7 +132,29 @@ for (const width of [360, 390, 430, 768, 1024, 1440]) {
         if (route === "/" || route === "/areas-of-work") {
           for (const image of await page.locator("main img").all()) {
             await image.scrollIntoViewIfNeeded();
-            await expect(image).toHaveJSProperty("complete", true);
+            // Cold CI image optimization can outlast the usual UI assertion
+            // deadline. This checks asset readiness, not loading performance.
+            try {
+              await expect(image).toHaveJSProperty("complete", true, {
+                timeout: 15_000,
+              });
+            } catch (error) {
+              const state = await image.evaluate((node) => {
+                const image = node as HTMLImageElement;
+                return {
+                  currentSrc: image.currentSrc,
+                  complete: image.complete,
+                  naturalWidth: image.naturalWidth,
+                  bounds: image.getBoundingClientRect().toJSON(),
+                };
+              });
+              throw new Error(
+                `Image readiness failed: ${JSON.stringify(state)}`,
+                {
+                  cause: error,
+                },
+              );
+            }
             expect(
               await image.evaluate(
                 (node) => (node as HTMLImageElement).naturalWidth,

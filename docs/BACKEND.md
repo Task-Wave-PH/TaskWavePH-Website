@@ -207,6 +207,11 @@ CLI identity checks and mocked Clerk responses do not verify browser signup.
 
 ## Production preparation (not deployed by this task)
 
+Follow [the production setup checklist](PRODUCTION-SETUP.md) for the confirmed
+production target, dashboard variable locations, manual deployment order, Owner
+bootstrap, and acceptance checks. Development-only configure and smoke scripts
+must not be used for production setup.
+
 Use separate Convex and Clerk production instances. Set the Convex server secret
 and issuer in the production backend. Configure keys independently on the frontend
 host. Use real Turnstile keys, approved privacy settings, and HTTPS.

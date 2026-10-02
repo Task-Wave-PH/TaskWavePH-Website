@@ -70,10 +70,10 @@ export default async function PrivacyPage({
         </p>
         <h3 className="mt-5">Submission and website information</h3>
         <p>
-          We record when information is submitted, the form’s consent version,
-          and approved campaign or source information supplied in the link you
-          used. We use security checks and limited technical signals to protect
-          submissions from abuse.
+          We keep a record of your submission date and consent. We may also
+          record which campaign or referral link brought you to the website.
+          Limited browser and connection information is used to help prevent
+          spam, fraud, and misuse.
         </p>
         <p>
           Please provide only information relevant to your application or
@@ -99,53 +99,46 @@ export default async function PrivacyPage({
         <p>
           Recruitment and enquiry forms ask for your agreement before
           submission. Providing information does not guarantee employment,
-          contact, or a business partnership. We have not installed analytics or
-          advertising tools on this website.
+          contact, or a business partnership. This website does not currently
+          use advertising or analytics tracking tools.
         </p>
       </section>
       <section id="sharing">
         <h2>Access and service providers</h2>
         <p>
-          Application and enquiry records are available to approved TaskWavePH
-          staff for the purposes described above. Signing in alone does not
-          grant access to those records.
+          Access to application and enquiry information is limited to authorized
+          TaskWavePH personnel who review recruitment applications, respond to
+          business enquiries, or administer these services.
         </p>
         <p>
-          Convex provides record and resume storage. Clerk provides staff
-          authentication when enabled. Cloudflare Turnstile provides
-          form-security checks, and Vercel provides website hosting. These
-          providers may process technical information needed to deliver their
-          services. Infrastructure may process information outside the
-          Philippines.
+          We use service providers to host this website, store submitted
+          information, support authorized staff access, and protect forms from
+          abuse. These providers may process personal and technical information
+          needed to provide their services. Information may be stored or
+          processed outside the Philippines.
         </p>
         <p>
-          Uploaded resume files do not have public download links. Staff access
-          to viewing and downloads is checked separately. For information about
-          Turnstile’s processing, see{" "}
-          <a
-            href="https://www.cloudflare.com/turnstile-privacy-policy/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Cloudflare’s Turnstile Privacy Notice
-          </a>
-          .
+          Uploaded resumes are not publicly available. Only authorized staff may
+          view or download them for recruitment review. Contact us using the
+          details below if you have questions about our use of service
+          providers.
         </p>
       </section>
       <section id="retention">
         <h2>Storage and retention</h2>
         <p>
           {information.retention ??
-            "TaskWavePH is finalizing its retention periods before collecting real applicant and business enquiry information. No fixed retention period is represented by this development draft."}
+            "Our data retention notice is being finalized. Applications and business enquiries are not open for personal information collection until this notice is approved."}
         </p>
         <p>
-          Approved staff can delete records and their attached resumes.
-          Temporary resume uploads that are not linked to a saved application
+          Records and attached resumes may be deleted in accordance with our
+          retention notice and applicable requests. Incomplete resume uploads
           are scheduled for removal after one hour.
         </p>
         <p>
-          We use access controls and validation to protect information. Keep the
-          information you share relevant to your application or enquiry.
+          We use access restrictions and security checks to help protect your
+          information. No online service can guarantee complete security. Keep
+          the information you share relevant to your application or enquiry.
         </p>
       </section>
       <section id="choices">
@@ -205,8 +198,8 @@ export default async function PrivacyPage({
                   Submission receipts
                 </th>
                 <td className="p-4">
-                  Allow the matching confirmation page after a verified save;
-                  contain no applicant details or record IDs.
+                  Display confirmation after a successful submission, without
+                  storing your application details in the cookie.
                 </td>
                 <td className="p-4">{RECEIPT_MAX_AGE / 60} minutes</td>
               </tr>
@@ -215,28 +208,28 @@ export default async function PrivacyPage({
                   Notice acknowledgment
                 </th>
                 <td className="p-4">
-                  Remember the notice version you acknowledged.
+                  Remember that you acknowledged the current cookie notice.
                 </td>
                 <td className="p-4">{COOKIE_NOTICE_MAX_AGE / 86400} days</td>
               </tr>
               <tr>
                 <th scope="row" className="p-4 font-medium">
-                  Staff authentication
+                  Staff sign-in
                 </th>
                 <td className="p-4">
-                  Keep approved staff signed in when Clerk is configured.
+                  Keep authorized staff signed in to the private workspace.
                 </td>
-                <td className="p-4">Provider/session dependent</td>
+                <td className="p-4">Depends on the sign-in session</td>
               </tr>
               <tr>
                 <th scope="row" className="p-4 font-medium">
-                  Form-security services
+                  Form protection
                 </th>
                 <td className="p-4">
-                  Turnstile checks protect submissions. Clearance cookies depend
-                  on the widget and Cloudflare configuration.
+                  Help distinguish genuine visitors from automated abuse.
+                  Security services may use cookies depending on their settings.
                 </td>
-                <td className="p-4">Configuration dependent</td>
+                <td className="p-4">Depends on the security service</td>
               </tr>
             </tbody>
           </table>
@@ -268,8 +261,8 @@ export default async function PrivacyPage({
         ) : (
           <p>
             TaskWavePH is finalizing its published privacy contact and
-            request-handling details before real-data collection opens. Do not
-            send real personal information through this development site.
+            request-handling details. Please do not submit personal information
+            until our collection notice is finalized.
           </p>
         )}
         <p>

@@ -40,7 +40,7 @@ export function PolicyPage({
                 {status}
               </span>
               <span>
-                Last updated <time dateTime="2026-10-01">October 1, 2026</time>
+                Last updated <time dateTime="2026-10-02">October 2, 2026</time>
               </span>
             </div>
           </div>

@@ -29,21 +29,17 @@ export default async function TermsPage({
     <PolicyPage
       query={query}
       title="Website Terms"
-      description="A clear starting point for using our website and sharing an application or business enquiry."
-      status="Development draft"
+      description="Please read these terms when using our website, applying for a role, or making a business enquiry."
+      status="Published website terms"
       sections={sections}
     >
       <section id="website">
         <h2>About these terms</h2>
         <p>
-          These terms describe the intended use of the TaskWavePH public
-          website. The site introduces our outsourcing and business support
-          services and provides recruitment and business-enquiry forms when
-          submissions are enabled.
-        </p>
-        <p className="rounded-xl border bg-secondary/60 p-4 text-sm">
-          These website terms are a development draft for review before launch.
-          Development forms should receive test information only.
+          These terms explain how to use the TaskWavePH website. You can learn
+          about our outsourcing and business support services, explore open
+          roles, and submit an application or business enquiry when the relevant
+          forms are available.
         </p>
       </section>
       <section id="use">
@@ -76,10 +72,10 @@ export default async function TermsPage({
           endorsement or affiliation.
         </p>
         <p>
-          Some website illustrations are AI-generated conceptual artwork. They
-          do not depict verified TaskWavePH staff, clients, or facilities.
-          Service categories and examples describe areas of support; they are
-          not promises of specific outcomes or verified vacancies.
+          Some illustrations are created with artificial intelligence and are
+          used to represent our services. They are not photographs of our staff,
+          clients, or facilities. Service descriptions explain areas of support
+          and do not guarantee particular results or identify open roles.
         </p>
       </section>
       <section id="applications">
@@ -92,10 +88,10 @@ export default async function TermsPage({
           opportunity.
         </p>
         <p>
-          Optional resumes must be PDFs no larger than 2 MB. A confirmation page
-          means the submission was saved, not that you have been shortlisted or
-          hired. If submission fails, follow the form’s instructions and try
-          again.
+          If you choose to upload a resume, use a PDF file no larger than 2 MB.
+          Submission confirmation acknowledges receipt of your information; it
+          does not confirm shortlisting or employment. If you receive an error,
+          follow the instructions on the form before trying again.
         </p>
       </section>
       <section id="enquiries">
@@ -114,9 +110,9 @@ export default async function TermsPage({
       <section id="providers">
         <h2>Links and service availability</h2>
         <p>
-          External links and service providers may have their own terms and
-          privacy notices. Review those notices when using third-party services
-          or sharing information through an external resume link.
+          Links to other websites are provided for convenience. Those websites
+          may have their own terms and privacy policies. Review them before
+          sharing information, including through a resume or portfolio link.
         </p>
         <p>
           Website functions may be interrupted for maintenance or technical
@@ -135,9 +131,10 @@ export default async function TermsPage({
           not replace the separate consent required by submission forms.
         </p>
         <p>
-          We may update these terms as the website develops. The version date
-          appears at the top of this page. Confirmed employment or service
-          agreements are handled separately from these website-use terms.
+          We may update these terms when our website or services change. The
+          update date appears at the top of this page. Confirmed employment or
+          service agreements are handled separately from these website-use
+          terms.
         </p>
       </section>
     </PolicyPage>

@@ -11,6 +11,7 @@ On October 2, 2026, setup progressed to:
 - Clerk application: `app_3K6WAnlhWMmeeTNkaYJRA5dAR4h` (Task Wave Web app).
 - Clerk production instance: `ins_3K84DnUuJ2ramK85SeO1XRV4lxb`.
 - Clerk CLI verified domain DNS, SSL, email, and the Google connection as complete.
+- The owner approved the current Website Terms for publication on October 2, 2026.
 - Convex production dashboard: https://dashboard.convex.dev/d/fabulous-crane-816.
 - Convex production backend deployment: reported successful by the owner after
   correcting the Clerk issuer URL; authenticated production behavior is not yet verified.

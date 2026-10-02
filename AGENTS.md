@@ -127,7 +127,11 @@ add noindex, and send private/no-store responses. Host routing is not authorizat
 - Footer cookie information can be reopened; admin and preview pages omit the notice.
 - Privacy content uses configured organization/contact/retention values and stays
   a development draft until production privacy configuration is complete and approved.
-  Website Terms remain a draft pending owner review. Do not invent legal contacts,
+  The owner approved the current Website Terms for publication on October 2, 2026.
+  Public policies use plain language and service-provider categories rather than
+  stack names, deployment details, or internal access workflows. Preserve data-use,
+  overseas-processing, retention, consent, cookie, and rights disclosures.
+  Keep their published label; substantive changes require owner review. Do not invent legal contacts,
   retention periods, operational agreements, or compliance claims.
 - The How It Works timeline expands the existing three-step enquiry journey. It is
   website guidance inspired by the brand, not an official media-kit onboarding process.

@@ -1,4 +1,5 @@
 "use client";
+import { adminOperation } from "@/features/admin/operation-feedback";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useState } from "react";
@@ -66,7 +67,13 @@ export function ApplicantDetails({
     setBusy(true);
     setMessage("");
     try {
-      await onSave(status, notes, baseline);
+      await adminOperation(() => onSave(status, notes, baseline), {
+        loading: "Saving application review…",
+        success: "Application review saved.",
+        error:
+          "Unable to save the application review. Check the page for details.",
+        preview: backHref.startsWith("/dev-preview"),
+      });
       setBaseline({ status, notes: notes.trim() });
       setNotes(notes.trim());
       setMessage("Changes saved.");
@@ -84,7 +91,12 @@ export function ApplicantDetails({
     setBusy(true);
     setMessage("");
     try {
-      await onDelete();
+      await adminOperation(onDelete, {
+        loading: "Deleting application…",
+        success: "Application deleted.",
+        error: "Unable to delete. Check your access and try again.",
+        preview: backHref.startsWith("/dev-preview"),
+      });
     } catch {
       setMessage("Unable to delete. Check your access and try again.");
     } finally {

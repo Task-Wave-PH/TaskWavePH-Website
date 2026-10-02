@@ -1,4 +1,5 @@
 "use client";
+import { adminOperation } from "@/features/admin/operation-feedback";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -248,10 +249,21 @@ function Records({ kind }: { kind: Kind }) {
                 setMarking(true);
                 setMessage("");
                 try {
-                  await prioritize({
-                    id: row.id as Id<"businessLeads">,
-                    priority: !row.priority,
-                  });
+                  await adminOperation(
+                    () =>
+                      prioritize({
+                        id: row.id as Id<"businessLeads">,
+                        priority: !row.priority,
+                      }),
+                    {
+                      loading: "Updating priority…",
+                      success: row.priority
+                        ? "Priority removed."
+                        : "Lead marked as priority.",
+                      error:
+                        "Unable to change priority. Check your access and try again.",
+                    },
+                  );
                 } catch {
                   setMessage(
                     "Unable to change priority. Check your access and try again.",

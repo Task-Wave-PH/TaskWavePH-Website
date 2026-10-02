@@ -1,4 +1,5 @@
 "use client";
+import { adminOperation } from "@/features/admin/operation-feedback";
 import { useState } from "react";
 import Link from "next/link";
 import { Star, ArrowLeft } from "lucide-react";
@@ -48,7 +49,12 @@ export function LeadDetails({
     setBusy(true);
     setMessage("");
     try {
-      await action();
+      await adminOperation(action, {
+        loading: "Saving enquiry changes…",
+        success: "Enquiry changes saved.",
+        error: "Unable to save enquiry changes. Check the page for details.",
+        preview: backHref.startsWith("/dev-preview"),
+      });
       setMessage("Changes saved.");
     } catch (error) {
       setMessage(
@@ -239,6 +245,7 @@ export function LeadDetails({
                 description="Permanently remove this enquiry and its internal notes."
                 disabled={busy}
                 onDelete={onDelete}
+                preview={backHref.startsWith("/dev-preview")}
               />
             </div>
           </CardContent>

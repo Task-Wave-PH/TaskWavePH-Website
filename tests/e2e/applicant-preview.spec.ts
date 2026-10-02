@@ -1,6 +1,25 @@
 import { test, expect } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import ExcelJS from "exceljs";
+test("failed sample export shows safe feedback and re-enables actions", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    URL.createObjectURL = () => {
+      throw new Error("Private diagnostic fixture");
+    };
+  });
+  await page.goto("/dev-preview/applications");
+  await page.getByRole("button", { name: "Export CSV", exact: true }).click();
+  const toast = page
+    .locator("[data-sonner-toast]")
+    .filter({ hasText: "Unable to export. Check your access and try again." });
+  await expect(toast).toBeVisible();
+  await expect(page.getByText("Private diagnostic fixture")).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Export CSV", exact: true }),
+  ).toBeEnabled();
+});
 test("malformed CV reports an unreadable file without enabling viewer controls", async ({
   page,
 }) => {
@@ -43,6 +62,16 @@ test("sample applicant details support review, PDF viewing and confirmed deletio
   await page.getByLabel("Internal notes").fill("Reviewed in the preview.");
   await page.getByRole("button", { name: "Save changes" }).click();
   await expect(page.getByText("Changes saved.", { exact: true })).toBeVisible();
+  await expect(
+    page
+      .locator("[data-sonner-toast]")
+      .filter({ hasText: "Application review saved." }),
+  ).toBeVisible();
+  await expect(
+    page
+      .locator("[data-sonner-toast]")
+      .filter({ hasText: "Sample preview only" }),
+  ).toBeVisible();
   await page.getByRole("tab", { name: "CV", exact: true }).click();
   await expect(
     page.getByRole("tabpanel", { name: "CV", exact: true }).locator("canvas"),
@@ -82,6 +111,11 @@ test("sample applicant details support review, PDF viewing and confirmed deletio
     .click();
   await expect(page).toHaveURL(/\/dev-preview\/applications$/);
   await expect(
+    page
+      .locator("[data-sonner-toast]")
+      .filter({ hasText: "Application deleted." }),
+  ).toBeVisible();
+  await expect(
     page.getByRole("link", { name: "Sample Applicant 1", exact: true }),
   ).toHaveCount(0);
 });
@@ -120,6 +154,24 @@ test("details fit a mobile screen and handle missing CVs and records", async ({
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth),
     ).toBeLessThanOrEqual(width);
+    if (width === 360) {
+      await page
+        .getByLabel("Internal notes")
+        .fill("Synthetic mobile toast check.");
+      await page
+        .getByRole("button", { name: "Save changes", exact: true })
+        .click();
+      const toast = page
+        .locator("[data-sonner-toast]")
+        .filter({ hasText: "Application review saved." });
+      await expect(toast).toBeVisible();
+      await expect
+        .poll(async () => {
+          const bounds = await toast.boundingBox();
+          return !!bounds && bounds.x >= 0 && bounds.x + bounds.width <= width;
+        })
+        .toBe(true);
+    }
   }
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole("tab", { name: "CV", exact: true }).click();

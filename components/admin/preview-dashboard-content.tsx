@@ -1,4 +1,5 @@
 "use client";
+import { adminOperation } from "@/features/admin/operation-feedback";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { PreviewApplicantsList } from "./preview-applicants-list";
@@ -48,7 +49,16 @@ function PreviewLeadsList() {
         setPriority(value);
         setLimit(20);
       }}
-      onPriority={(row) => prioritizeLead(row.id, !row.priority)}
+      onPriority={(row) => {
+        void adminOperation(async () => prioritizeLead(row.id, !row.priority), {
+          loading: "Updating priority…",
+          success: row.priority
+            ? "Priority removed."
+            : "Lead marked as priority.",
+          error: "Unable to change sample priority.",
+          preview: true,
+        }).catch(() => {});
+      }}
       more={filtered.length > limit ? () => setLimit((v) => v + 20) : undefined}
     />
   );

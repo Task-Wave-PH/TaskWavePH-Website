@@ -1,4 +1,5 @@
 "use client";
+import { adminOperation } from "@/features/admin/operation-feedback";
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import {
@@ -191,7 +192,11 @@ function UsersContent() {
     setNotice("");
     setFailure(false);
     try {
-      await operation();
+      await adminOperation(operation, {
+        loading: "Updating team access…",
+        success,
+        error: message,
+      });
       setNotice(success);
       return true;
     } catch (error) {

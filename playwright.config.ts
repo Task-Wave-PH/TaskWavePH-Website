@@ -1,4 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
+import { browserTestEnv } from "./scripts/browser-test-env.mjs";
 
 const port = process.env.PLAYWRIGHT_PORT ?? "3000";
 const baseURL = `http://127.0.0.1:${port}`;
@@ -23,10 +24,6 @@ export default defineConfig({
     url: baseURL,
     reuseExistingServer: false,
     timeout: 60_000,
-    env: {
-      SUBMISSIONS_ENABLED: "false",
-      CLERK_SECRET_KEY: "",
-      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "",
-    },
+    env: browserTestEnv,
   },
 });

@@ -31,7 +31,7 @@ npm run typecheck
 npm run format:check
 npm run test
 npm run build
-npm run test:e2e
+npm run test:e2e # builds an isolated production fixture first
 npm run convex:check
 npm run convex:smoke
 npm run convex:seed
@@ -41,6 +41,16 @@ npm run test:preview
 # With local Convex running:
 npm run test:submissions
 ```
+
+The public browser command always builds `.next-verify` with live services and
+submissions disabled, regardless of `.env.local`. It uses port 3100 by default;
+set `PLAYWRIGHT_PORT` to choose another port. Pass focused tests after `--`.
+It preserves the development server and live jobs. Do not replace it with bare
+`playwright test` against an old build containing configured provider URLs.
+
+GitHub runs the same quality gate for PRs and main; it performs no deploys, seeds,
+production writes, or invitations. See [launch acceptance](docs/LAUNCH-CHECKLIST.md)
+and [backup/recovery](docs/RECOVERY.md) for remaining production verification.
 
 Backend tests cover permissions, revocation, retries, rate limits, cleanup,
 validation, and file deletion. The smoke command creates synthetic development

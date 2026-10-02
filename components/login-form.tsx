@@ -12,7 +12,7 @@ import {
 // Adapted from shadcn login-03; Clerk handles authentication and recovery.
 export function LoginForm({ preview = false }: { preview?: boolean }) {
   return (
-    <Card className="overflow-hidden border-border/70 shadow-sm">
+    <Card className="min-w-0 overflow-visible border-border/70 shadow-sm">
       <CardHeader className="text-center">
         <h1 className="text-2xl font-semibold text-brand-navy">Welcome back</h1>
         <CardDescription>
@@ -54,11 +54,15 @@ export function LoginForm({ preview = false }: { preview?: boolean }) {
             forceRedirectUrl="/admin"
             signUpUrl="/admin/sign-up"
             appearance={{
+              options: { elevation: "flush" },
               elements: {
-                rootBox: { width: "100%", maxWidth: "100%" },
+                rootBox: { width: "100%", maxWidth: "100%", minWidth: 0 },
                 cardBox: {
                   width: "100%",
                   maxWidth: "100%",
+                  minWidth: 0,
+                  overflow: "visible",
+                  boxSizing: "border-box",
                   border: "none",
                   boxShadow: "none",
                   background: "transparent",
@@ -66,11 +70,28 @@ export function LoginForm({ preview = false }: { preview?: boolean }) {
                 card: {
                   width: "100%",
                   maxWidth: "100%",
+                  minWidth: 0,
+                  overflow: "visible",
+                  boxSizing: "border-box",
                   border: "none",
                   boxShadow: "none",
                   background: "transparent",
                   padding: 0,
                 },
+                main: { width: "100%", minWidth: 0 },
+                formField: { minWidth: 0 },
+                formFieldInput: {
+                  width: "100%",
+                  minWidth: 0,
+                  boxSizing: "border-box",
+                },
+                alert: { width: "100%", minWidth: 0, boxSizing: "border-box" },
+                alertText: {
+                  minWidth: 0,
+                  overflowWrap: "anywhere",
+                  whiteSpace: "normal",
+                },
+                headerSubtitle: { minWidth: 0, overflowWrap: "anywhere" },
                 // Keep password, recovery, and verification instructions visible.
                 header: {
                   '&:has([data-localization-key="signIn.start.title"])': {

@@ -12,6 +12,23 @@ const valid = {
 };
 
 describe("application boundary validation", () => {
+  it("accepts optional referrals, trims names or codes and bounds their length", () => {
+    expect(applicationSchema.parse(valid).referredBy).toBeUndefined();
+    expect(
+      applicationSchema.parse({ ...valid, referredBy: "  " }).referredBy,
+    ).toBeUndefined();
+    expect(
+      applicationSchema.parse({ ...valid, referredBy: " Sample Referrer " })
+        .referredBy,
+    ).toBe("Sample Referrer");
+    expect(
+      applicationSchema.parse({ ...valid, referredBy: "REF-001" }).referredBy,
+    ).toBe("REF-001");
+    expect(
+      applicationSchema.safeParse({ ...valid, referredBy: "x".repeat(201) })
+        .success,
+    ).toBe(false);
+  });
   it("keeps the legacy serialized payload unchanged when screening fields are blank", () => {
     const originalPayload = {
       firstName: "Maria",
@@ -41,6 +58,7 @@ describe("application boundary validation", () => {
       distanceFromDagupan: "",
       relocationPreference: "",
       portfolio: "",
+      referredBy: "",
     });
     expect(website).toBe("");
     expect(JSON.stringify(parsed)).toBe(JSON.stringify(originalPayload));

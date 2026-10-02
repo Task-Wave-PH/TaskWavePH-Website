@@ -35,6 +35,7 @@ export const applicationData = v.object({
   portfolio: v.optional(v.string()),
   resume: v.string(),
   message: v.string(),
+  referredBy: v.optional(v.string()),
   privacyConsent: v.boolean(),
   ...trackingFields,
 });

@@ -163,6 +163,7 @@ export function ApplicantDetails({
                   ["Associated Job", d.jobTitle],
                   ["Job ID", d.jobId],
                   ["Employment status", d.employmentStatus],
+                  ["Referred by", d.referredBy],
                   ["Message / notes", d.message],
                 ])}
               </CardContent>

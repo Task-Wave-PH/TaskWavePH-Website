@@ -104,6 +104,7 @@ export const applicationSchema = z.object({
     }
   }, "Enter a link starting with http:// or https://."),
   message: optionalText(2000),
+  referredBy: screeningText(200),
   privacyConsent: z
     .boolean()
     .refine((value) => value, "Please agree to the privacy notice."),

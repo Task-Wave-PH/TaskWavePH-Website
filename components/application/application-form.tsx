@@ -180,6 +180,7 @@ export function ApplicationForm({
       portfolio: "",
       resume: "",
       message: "",
+      referredBy: "",
       privacyConsent: false,
       website: "",
       ...tracking,
@@ -347,6 +348,22 @@ export function ApplicationForm({
               </SelectContent>
             </Select>
           )}
+        />
+      </FormField>
+      <FormField
+        id="referredBy"
+        label="Referred by"
+        optional
+        error={errors.referredBy?.message}
+        hint="Enter the name or code of the person who referred you, if applicable."
+      >
+        <Input
+          id="referredBy"
+          {...register("referredBy")}
+          maxLength={200}
+          className="min-h-11 text-base"
+          aria-invalid={!!errors.referredBy}
+          aria-describedby={`referredBy-hint${errors.referredBy ? " referredBy-error" : ""}`}
         />
       </FormField>
       <FormField

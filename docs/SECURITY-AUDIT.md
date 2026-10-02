@@ -77,6 +77,10 @@ Raw measurements are in `output/security-audit/results.json` (ignored artifact).
 
 ## Cache, expiry, and timeout checks
 
+Update: Careers now bypasses the persistent first-page cache to keep withdrawn
+roles out of new page loads. The 60-second cache below now applies only to
+sitemap generation; the earlier timing measurements describe the prior behavior.
+
 | Control                                     | Configured behavior                                                    | Verification                                                                                                                                                                                                     |
 | ------------------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Public job first page                       | 60-second revalidation; bounded filters/pages only                     | Real elapsed-time fixture check retained the initial list, returned changed details immediately, and refreshed the list after 61 seconds. Time-based revalidation may serve one stale response while refreshing. |
@@ -236,8 +240,9 @@ is `output/security-audit/results.json`; the existing fixture script reproduces 
   and pending-upload indexes for older files. Its reads grow with total stored CVs.
   Preserve the one-hour orphan policy and monitor this path as storage grows;
   do not lengthen cleanup intervals or delete linked resumes to reduce usage.
-- Public job queries are readable directly from Convex. The Next.js 60-second
-  cache reduces website traffic to that backend, but cannot prevent direct reads.
+- Public job queries are readable directly from Convex. Careers reads current
+  postings on each request; only the sitemap retains a 60-second first-page cache.
+  Website caching cannot prevent direct backend reads.
   Private authorization and current-job eligibility checks remain uncached.
 - Confirm Clerk and Turnstile usage/configuration in their account dashboards;
   public pricing does not establish this project's active plan or remaining quota.

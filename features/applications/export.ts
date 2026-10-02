@@ -35,6 +35,7 @@ export const exportColumns = [
   "Distance / Travel Time from Dagupan",
   "Relocation Preference",
   "Portfolio / Project Link",
+  "Referred By",
 ];
 export function exportValues(record: ApplicantView): (string | number)[] {
   const d = record.data;
@@ -73,6 +74,7 @@ export function exportValues(record: ApplicantView): (string | number)[] {
     d.distanceFromDagupan ?? "",
     d.relocationPreference ?? "",
     d.portfolio ?? "",
+    d.referredBy ?? "",
   ];
 }
 function csvCell(value: string | number) {

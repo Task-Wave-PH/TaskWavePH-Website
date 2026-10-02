@@ -423,6 +423,11 @@ information uses shadcn Sheet and Buttons; it is an informational notice, not
 marketing consent. Preserve the distinction between draft policy status and approved
 production configuration.
 
+Public Privacy and Terms copy should use professional, plain language. Describe
+service providers by their purpose rather than naming the development stack, and
+keep collection, access, overseas processing, retention, cookies, and request rights
+clear. The owner approved publication of Website Terms on October 2, 2026.
+
 How It Works expands the existing Share needs / Discuss suitable support / Agree
 next steps journey into a connected numbered timeline and detailed discussion
 sections. Desktop connectors become vertical on mobile. This is inferred website

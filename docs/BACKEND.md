@@ -75,8 +75,9 @@ configuration; do not claim a fixed cookie list/lifetime for third-party service
 The privacy page validates and renders existing organization/contact/retention
 configuration. Production publication requires all three fields plus approved
 policy status; development remains labeled as a draft even with those fields set.
-Website Terms remain a development draft pending review. This work does not approve
-legal wording or enable production collection. Guidance references:
+The owner approved the current Website Terms for publication on October 2, 2026;
+their page shows published status. This does not enable production collection or
+replace the separate privacy configuration and approval. Guidance references:
 [NPC privacy-notice guidance](https://privacy.gov.ph/wp-content/uploads/2023/05/compendium_2018_1519.pdf),
 [Cloudflare clearance documentation](https://developers.cloudflare.com/cloudflare-challenges/concepts/clearance/),
 and [Turnstile’s privacy notice](https://www.cloudflare.com/turnstile-privacy-policy/).

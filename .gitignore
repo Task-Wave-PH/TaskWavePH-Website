@@ -58,3 +58,5 @@ credentials*.json
 /.next-verify/
 /.playwright-cli/
 /output/playwright/
+/output/security-audit/
+/.next-security-audit/

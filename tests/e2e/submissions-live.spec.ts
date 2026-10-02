@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { sampleResumeBytes } from "../../features/applications/sample-resume";
 // Only the human widget is substituted. Next.js verifies the official Cloudflare
 // test token server-side and writes to the real development Convex backend.
 async function challenge(page: Page) {
@@ -36,7 +37,7 @@ test("real form/API confirms a saved application with a PDF", async ({
   await page.getByLabel(/Resume PDF/).setInputFiles({
     name: "synthetic-resume.pdf",
     mimeType: "application/pdf",
-    buffer: Buffer.from("%PDF-1.4\n%Development only\n%%EOF"),
+    buffer: Buffer.from(sampleResumeBytes()),
   });
   const saved = page.waitForResponse((response) =>
     response.url().endsWith("/api/applications"),

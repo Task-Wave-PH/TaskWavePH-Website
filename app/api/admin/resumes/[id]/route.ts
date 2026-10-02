@@ -6,6 +6,7 @@ export async function GET(
   const headers = {
     "Cache-Control": "private, no-store",
     "X-Robots-Tag": "noindex",
+    "X-Content-Type-Options": "nosniff",
   };
   const mode = new URL(request.url).searchParams.get("mode") ?? "download";
   if (!["view", "download"].includes(mode))
@@ -24,13 +25,19 @@ export async function GET(
       {
         headers: { Authorization: `Bearer ${token}` },
         cache: "no-store",
-        signal: AbortSignal.timeout(15000),
+        signal: AbortSignal.any([request.signal, AbortSignal.timeout(15000)]),
       },
     );
     if (!response.ok)
       return new Response("Access denied or file unavailable", {
         status: response.status,
-        headers,
+        headers: {
+          ...headers,
+          ...(response.status === 429 &&
+          /^\d{1,4}$/.test(response.headers.get("retry-after") ?? "")
+            ? { "Retry-After": response.headers.get("retry-after")! }
+            : {}),
+        },
       });
     return new Response(response.body, {
       headers: {

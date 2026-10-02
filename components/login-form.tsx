@@ -19,9 +19,9 @@ export function LoginForm({ preview = false }: { preview?: boolean }) {
           Sign in to the TaskWavePH staff workspace.
         </CardDescription>
       </CardHeader>
-      <CardContent className="flex justify-center px-2 pb-6 sm:px-6">
+      <CardContent className="flex min-w-0 justify-center px-5 pb-6 sm:px-6">
         {preview ? (
-          <div className="w-full space-y-5 px-4">
+          <div className="w-full space-y-5">
             <div className="space-y-2">
               <Label htmlFor="preview-email">Email address</Label>
               <Input
@@ -52,13 +52,32 @@ export function LoginForm({ preview = false }: { preview?: boolean }) {
           <SignIn
             routing="hash"
             forceRedirectUrl="/admin"
+            signUpUrl="/admin/sign-up"
             appearance={{
               elements: {
-                rootBox: "w-full",
-                cardBox: "w-full shadow-none",
-                card: "w-full bg-transparent shadow-none p-0",
-                header: "hidden",
-                footerAction: "hidden",
+                rootBox: { width: "100%", maxWidth: "100%" },
+                cardBox: {
+                  width: "100%",
+                  maxWidth: "100%",
+                  border: "none",
+                  boxShadow: "none",
+                  background: "transparent",
+                },
+                card: {
+                  width: "100%",
+                  maxWidth: "100%",
+                  border: "none",
+                  boxShadow: "none",
+                  background: "transparent",
+                  padding: 0,
+                },
+                // Keep password, recovery, and verification instructions visible.
+                header: {
+                  '&:has([data-localization-key="signIn.start.title"])': {
+                    display: "none",
+                  },
+                },
+                footerAction: { display: "none" },
               },
               variables: {
                 colorPrimary: "#0D6EFD",

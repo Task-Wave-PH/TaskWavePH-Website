@@ -2,11 +2,12 @@
 import { convexTest } from "convex-test";
 import aggregate from "@convex-dev/aggregate/test";
 import rateLimiter from "@convex-dev/rate-limiter/test";
-import { describe, it, expect, vi } from "vitest";
+import { afterEach, describe, it, expect, vi } from "vitest";
 import schema from "../../convex/schema";
 import { api, internal } from "../../convex/_generated/api";
 import { applicationSchema } from "../../features/applications/schema";
 const modules = import.meta.glob("../../convex/**/*.ts");
+afterEach(() => vi.useRealTimers());
 function setup() {
   const t = convexTest(schema, modules);
   rateLimiter.register(t);
@@ -56,6 +57,197 @@ const options = {
   paginationOpts: { numItems: 20, cursor: null },
 };
 describe("Convex intake and administration", () => {
+  it("persists screening fields and returns them only to approved staff", async () => {
+    const t = setup();
+    const token = crypto.randomUUID();
+    const screening = {
+      expectedSalary: "PHP 25,000/month",
+      previousSalary: "",
+      strengthOne: "Communication",
+      strengthTwo: "Organization",
+      distanceFromDagupan: "30 minutes",
+      relocationPreference: "Discuss first" as const,
+      portfolio: "https://example.com/work",
+    };
+    await t.mutation(internal.intake.reserve, {
+      kind: "applications",
+      token,
+      fingerprint: "screening",
+      rateKey: crypto.randomUUID(),
+    });
+    await t.mutation(internal.intake.save, {
+      kind: "applications",
+      token: `applications:${token}`,
+      fingerprint: "screening",
+      data: { ...data, ...screening },
+    });
+    const row = await t.run((ctx) => ctx.db.query("applications").first());
+    const { previousSalary, ...providedScreening } = screening;
+    expect(previousSalary).toBe("");
+    expect(row?.data).toMatchObject(providedScreening);
+    expect(row?.data).not.toHaveProperty("previousSalary");
+    await expect(
+      t.query(api.admin.detail, { kind: "applications", id: row!._id }),
+    ).rejects.toThrow();
+    const admin = await staff(t);
+    expect(
+      (
+        await admin.query(api.admin.detail, {
+          kind: "applications",
+          id: row!._id,
+        })
+      )?.data,
+    ).toMatchObject(providedScreening);
+  });
+  it("rejects reservations at the exact one-hour expiry and cleans them", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(Date.UTC(2026, 9, 2));
+    const t = setup();
+    const token = crypto.randomUUID();
+    await t.mutation(internal.intake.reserve, {
+      kind: "applications",
+      token,
+      fingerprint: "fixture",
+      rateKey: crypto.randomUUID(),
+    });
+    vi.setSystemTime(Date.now() + 3600000);
+    await expect(
+      t.mutation(internal.intake.save, {
+        kind: "applications",
+        token: `applications:${token}`,
+        fingerprint: "fixture",
+        data,
+      }),
+    ).rejects.toThrow("Invalid reservation");
+    await t.mutation(internal.intake.cleanup, {});
+    expect(
+      await t.run((ctx) => ctx.db.query("pendingUploads").first()),
+    ).toBeNull();
+  });
+  it("returns uncached download denials for invalid modes and anonymous callers", async () => {
+    const t = setup();
+    for (const [path, status] of [
+      ["/resume?id=forged", 403],
+      ["/resume?id=forged&mode=bad", 400],
+    ] as const) {
+      const response = await t.fetch(path);
+      expect(response.status).toBe(status);
+      expect(response.headers.get("cache-control")).toBe("private, no-store");
+      expect(response.headers.get("x-robots-tag")).toBe("noindex");
+    }
+  });
+  it("rejects stale applicant and lead reviews without overwriting newer notes", async () => {
+    const t = setup();
+    const admin = await staff(t);
+    const { row } = await save(t);
+    const expected = { status: row.status, notes: row.notes };
+    await admin.mutation(api.admin.update, {
+      kind: "applications",
+      id: row._id,
+      status: "Reviewed",
+      notes: "Newer review",
+      expected,
+    });
+    await expect(
+      admin.mutation(api.admin.update, {
+        kind: "applications",
+        id: row._id,
+        status: "Closed",
+        notes: "Stale review",
+        expected,
+      }),
+    ).rejects.toThrow("EDIT_CONFLICT");
+    expect(await t.run((ctx) => ctx.db.get(row._id))).toMatchObject({
+      status: "Reviewed",
+      notes: "Newer review",
+    });
+    const id = await t.run((ctx) =>
+      ctx.db.insert("businessLeads", {
+        data: {
+          company: "Sample Company",
+          contactName: "Sample Contact",
+          email: "sample@example.invalid",
+          phone: "",
+          companyWebsite: "",
+          services: ["Customer Support"],
+          message: "Sample business enquiry",
+          privacyConsent: true,
+          source: "",
+          campaign: "",
+          utm_source: "",
+          utm_medium: "",
+          utm_campaign: "",
+          landing_page: "/business-enquiry",
+        },
+        reference: "sample",
+        submittedAt: Date.now(),
+        status: "New",
+        notes: "",
+        submissionToken: "sample",
+        fingerprint: "sample",
+        consentVersion: "sample",
+      }),
+    );
+    await admin.mutation(api.admin.update, {
+      kind: "businessLeads",
+      id,
+      status: "Contacted",
+      notes: "Newer enquiry",
+      expected: { status: "New", notes: "" },
+    });
+    await expect(
+      admin.mutation(api.admin.update, {
+        kind: "businessLeads",
+        id,
+        status: "Closed",
+        notes: "Stale enquiry",
+        expected: { status: "New", notes: "" },
+      }),
+    ).rejects.toThrow("EDIT_CONFLICT");
+    expect(await t.run((ctx) => ctx.db.get(id))).toMatchObject({
+      status: "Contacted",
+      notes: "Newer enquiry",
+    });
+  });
+  it("returns safe validation errors for malformed authenticated submissions", async () => {
+    const t = setup();
+    vi.stubEnv("CONVEX_SERVER_SECRET", "test-secret");
+    try {
+      const headers = {
+        Authorization: "Bearer test-secret",
+        "x-rate-key": "a".repeat(64),
+      };
+      const malformed = await t.fetch("/submit", {
+        method: "POST",
+        headers: {
+          ...headers,
+          "Content-Type": "multipart/form-data; boundary=test",
+        },
+        body: "broken multipart",
+      });
+      expect(malformed.status).toBe(400);
+      expect(await malformed.json()).toEqual({ error: "INVALID_SUBMISSION" });
+      const body = new FormData();
+      body.set("kind", "applications");
+      body.set("submissionToken", crypto.randomUUID());
+      body.set("fields", "{broken");
+      const invalidJson = await t.fetch("/submit", {
+        method: "POST",
+        headers,
+        body,
+      });
+      expect(invalidJson.status).toBe(400);
+      expect(await invalidJson.json()).toEqual({ error: "INVALID_SUBMISSION" });
+      expect(
+        await t.run((ctx) => ctx.db.query("pendingUploads").first()),
+      ).toBeNull();
+      expect(
+        await t.run((ctx) => ctx.db.query("applications").first()),
+      ).toBeNull();
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
   it("normalizes data, generates a reference and makes retries idempotent", async () => {
     const t = setup();
     const saved = await save(t);
@@ -224,6 +416,34 @@ describe("Convex intake and administration", () => {
     expect(download.headers.get("cache-control")).toContain("no-store");
     expect(await download.text()).toContain("%PDF-");
 
+    // Two successful HTTP reads consumed two of the thirty per-minute slots.
+    for (let i = 0; i < 28; i++)
+      await admin.mutation(internal.downloads.permit, {});
+    const auditCount = await t.run(
+      async (ctx) =>
+        (
+          await ctx.db
+            .query("adminActivity")
+            .withIndex("by_record", (q) => q.eq("record", row!._id))
+            .take(100)
+        ).length,
+    );
+    const denied = await admin.fetch(`/resume?id=${row!._id}`);
+    expect(denied.status).toBe(429);
+    expect(Number(denied.headers.get("retry-after"))).toBeGreaterThan(0);
+    expect(await denied.text()).not.toContain("%PDF-");
+    expect(
+      await t.run(
+        async (ctx) =>
+          (
+            await ctx.db
+              .query("adminActivity")
+              .withIndex("by_record", (q) => q.eq("record", row!._id))
+              .take(100)
+          ).length,
+      ),
+    ).toBe(auditCount);
+
     await admin.mutation(api.admin.remove, {
       kind: "applications",
       id: row!._id,
@@ -266,6 +486,20 @@ describe("Convex intake and administration", () => {
     expect(
       (await t.mutation(internal.intake.attempt, { rateKey: "c".repeat(64) }))
         .allowed,
+    ).toBe(true);
+  });
+  it("restores attempt eligibility after the returned cooldown", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(Date.UTC(2026, 9, 2));
+    const t = setup();
+    const rateKey = "d".repeat(64);
+    for (let i = 0; i < 20; i++)
+      await t.mutation(internal.intake.attempt, { rateKey });
+    const denied = await t.mutation(internal.intake.attempt, { rateKey });
+    expect(denied.allowed).toBe(false);
+    vi.setSystemTime(Date.now() + denied.retryAfterSeconds * 1000 + 1);
+    expect(
+      (await t.mutation(internal.intake.attempt, { rateKey })).allowed,
     ).toBe(true);
   });
   it("authenticates attempt checks and applies a shared global budget", async () => {

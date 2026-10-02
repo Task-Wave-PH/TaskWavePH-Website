@@ -27,7 +27,11 @@ export function LeadDetails({
 }: {
   record: LeadView;
   backHref: string;
-  onSave: (status: LeadView["status"], notes: string) => Promise<void>;
+  onSave: (
+    status: LeadView["status"],
+    notes: string,
+    expected: Pick<LeadView, "status" | "notes">,
+  ) => Promise<void>;
   onPriority: (priority: boolean) => Promise<void>;
   onDelete: () => Promise<void>;
 }) {
@@ -36,24 +40,35 @@ export function LeadDetails({
     [busy, setBusy] = useState(false),
     [message, setMessage] = useState("");
   const d = record.data;
+  const [baseline, setBaseline] = useState({
+    status: record.status,
+    notes: record.notes,
+  });
   async function perform(action: () => Promise<void>) {
     setBusy(true);
     setMessage("");
     try {
       await action();
       setMessage("Changes saved.");
-    } catch {
-      setMessage("Unable to save. Check your access and try again.");
+    } catch (error) {
+      setMessage(
+        error instanceof Error && error.message.includes("EDIT_CONFLICT")
+          ? "This enquiry changed while you were editing. Copy your changes, refresh, and review the latest record before saving."
+          : "Unable to save. Check your access and try again.",
+      );
     } finally {
       setBusy(false);
     }
   }
   const fields = (rows: [string, string][]) => (
-    <dl className="grid gap-5 sm:grid-cols-2">
+    <dl className="grid gap-3 sm:grid-cols-2">
       {rows.map(([label, value]) => (
-        <div key={label} className="min-w-0">
-          <dt className="text-sm font-medium">{label}</dt>
-          <dd className="mt-2 whitespace-pre-wrap break-words text-sm leading-relaxed text-muted-foreground">
+        <div
+          key={label}
+          className="min-w-0 rounded-lg border border-border/70 bg-muted/30 p-4"
+        >
+          <dt className="text-xs font-medium text-muted-foreground">{label}</dt>
+          <dd className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-brand-navy">
             {value || "Not provided"}
           </dd>
         </div>
@@ -115,7 +130,7 @@ export function LeadDetails({
               <CardTitle>Enquiry</CardTitle>
             </CardHeader>
             <CardContent className="space-y-5">
-              <div className="space-y-2">
+              <div className="rounded-lg border border-border/70 bg-muted/30 p-4 space-y-3">
                 <p className="text-sm font-medium">Services of interest</p>
                 <div className="flex flex-wrap gap-2">
                   {d.services.map((service) => (
@@ -129,7 +144,7 @@ export function LeadDetails({
                   ))}
                 </div>
               </div>
-              <div className="space-y-2">
+              <div className="rounded-lg border border-border/70 bg-muted/30 p-4 space-y-3">
                 <p className="text-sm font-medium">Message</p>
                 <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-muted-foreground">
                   {d.message || "Not provided"}
@@ -165,6 +180,7 @@ export function LeadDetails({
             <div className="space-y-2">
               <Label htmlFor="lead-status">Status</Label>
               <Select
+                disabled={busy}
                 value={status}
                 onValueChange={(value) => {
                   if (value) setStatus(value as LeadView["status"]);
@@ -185,6 +201,7 @@ export function LeadDetails({
             <div className="space-y-2">
               <Label htmlFor="lead-notes">Internal notes</Label>
               <Textarea
+                disabled={busy}
                 id="lead-notes"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
@@ -198,7 +215,13 @@ export function LeadDetails({
             <Button
               className="min-h-11 w-full"
               disabled={busy}
-              onClick={() => perform(() => onSave(status, notes))}
+              onClick={() =>
+                perform(async () => {
+                  await onSave(status, notes, baseline);
+                  setBaseline({ status, notes: notes.trim() });
+                  setNotes(notes.trim());
+                })
+              }
             >
               {busy ? "Saving…" : "Save changes"}
             </Button>

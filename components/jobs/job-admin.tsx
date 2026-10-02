@@ -166,7 +166,7 @@ function LiveEditor({ id }: { id: string }) {
   if (id !== "new" && !job) return <p role="status">Posting not found.</p>;
   return (
     <JobEditor
-      key={`${job?._id}-${job?.updatedAt}`}
+      key={job?._id ?? "new"}
       job={job ?? undefined}
       deletionAllowed={canDelete}
       onDelete={
@@ -177,8 +177,11 @@ function LiveEditor({ id }: { id: string }) {
             }
           : undefined
       }
-      onSave={async (data) => {
-        const saved = await save({ data, ...(job ? { id: job._id } : {}) });
+      onSave={async (data, expectedUpdatedAt) => {
+        const saved = await save({
+          data,
+          ...(job ? { id: job._id, expectedUpdatedAt } : {}),
+        });
         if (!job) router.push(`/admin/jobs/${saved}`);
       }}
       onStatus={

@@ -11,6 +11,12 @@ function privateResponse(response: NextResponse) {
   response.headers.set("Cache-Control", "private, no-store");
   return response;
 }
+function missingPage(request: NextRequest) {
+  const url = request.nextUrl.clone();
+  url.pathname = "/unavailable";
+  url.search = "";
+  return privateResponse(NextResponse.rewrite(url, { status: 404 }));
+}
 export default async function proxy(
   request: NextRequest,
   event: NextFetchEvent,
@@ -20,6 +26,24 @@ export default async function proxy(
     request.nextUrl.hostname,
     process.env.NEXT_PUBLIC_ADMIN_URL,
   );
+  const localAdmin =
+    process.env.NODE_ENV === "development" &&
+    isLocalHostname(request.nextUrl.hostname);
+  // Clerk handles its auto-proxy endpoint before admin page routing.
+  if (path === "/__clerk" || path.startsWith("/__clerk/")) {
+    if (!adminHost && !localAdmin)
+      return privateResponse(new NextResponse(null, { status: 404 }));
+    if (
+      process.env.CLERK_SECRET_KEY &&
+      process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+    ) {
+      const result = await clerk(request, event);
+      return privateResponse(
+        result instanceof NextResponse ? result : NextResponse.next(),
+      );
+    }
+    return privateResponse(new NextResponse(null, { status: 404 }));
+  }
   const adminPath =
     path === "/admin" ||
     path.startsWith("/admin/") ||
@@ -30,8 +54,10 @@ export default async function proxy(
     });
   if (adminHost && path === "/sitemap.xml")
     return new NextResponse(null, { status: 404 });
-  if (adminPath && !adminHost && !isLocalHostname(request.nextUrl.hostname))
-    return new NextResponse(null, { status: 404 });
+  if (adminPath && !adminHost && !localAdmin)
+    return path.startsWith("/api/")
+      ? privateResponse(new NextResponse(null, { status: 404 }))
+      : missingPage(request);
   if (!adminHost && !adminPath) {
     const response = NextResponse.next();
     return ["/apply/success", "/business-enquiry/success"].includes(path) ||
@@ -47,14 +73,24 @@ export default async function proxy(
     path !== "/icon.png"
   ) {
     if (
-      !["/", "/applications", "/businessLeads", "/jobs", "/sign-in"].some(
-        (prefix) =>
-          prefix === "/"
-            ? path === "/"
-            : path === prefix || path.startsWith(`${prefix}/`),
+      ![
+        "/",
+        "/applications",
+        "/businessLeads",
+        "/jobs",
+        "/sign-in",
+        "/sign-up",
+        "/users",
+        "/accept-invitation",
+      ].some((prefix) =>
+        prefix === "/"
+          ? path === "/"
+          : path === prefix || path.startsWith(`${prefix}/`),
       )
     )
-      return privateResponse(new NextResponse(null, { status: 404 }));
+      return path.startsWith("/api/")
+        ? privateResponse(new NextResponse(null, { status: 404 }))
+        : missingPage(request);
   }
   const rewrite =
     adminHost &&
@@ -84,5 +120,9 @@ export default async function proxy(
   return privateResponse(response);
 }
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|fonts/|logo/).*)"],
+  matcher: [
+    "/((?!_next/static|_next/image|fonts/|logo/).*)",
+    "/(api|trpc)(.*)",
+    "/__clerk/:path*",
+  ],
 };

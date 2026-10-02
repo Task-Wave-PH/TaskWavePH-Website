@@ -9,6 +9,7 @@ import {
   baseFields,
 } from "./validators";
 import { jobFields, jobStatus } from "./jobValidators";
+import { staffRole, invitationStatus } from "./staffValidators";
 export default defineSchema({
   jobs: defineTable({
     ...jobFields,
@@ -57,10 +58,31 @@ export default defineSchema({
     key: v.literal("overview-v1"),
     ready: v.boolean(),
   }).index("by_key", ["key"]),
-  adminUsers: defineTable({ subject: v.string(), active: v.boolean() }).index(
-    "by_subject",
-    ["subject"],
-  ),
+  adminUsers: defineTable({
+    subject: v.string(),
+    active: v.boolean(),
+    role: v.optional(staffRole),
+    email: v.optional(v.string()),
+    name: v.optional(v.string()),
+    updatedAt: v.optional(v.number()),
+  })
+    .index("by_subject", ["subject"])
+    .index("by_active_role", ["active", "role"])
+    .index("by_email", ["email"]),
+  staffInvitations: defineTable({
+    email: v.string(),
+    role: staffRole,
+    status: invitationStatus,
+    createdBy: v.string(),
+    createdAt: v.number(),
+    expiresAt: v.number(),
+    operationToken: v.string(),
+    clerkInvitationId: v.optional(v.string()),
+    attemptedAt: v.number(),
+  })
+    .index("by_token", ["operationToken"])
+    .index("by_email_status", ["email", "status"])
+    .index("by_status", ["status"]),
   adminActivity: defineTable({
     actor: v.string(),
     record: v.string(),

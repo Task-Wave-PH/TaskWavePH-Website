@@ -6,6 +6,12 @@ import {
 import { adminQuery, adminMutation } from "./adminAccess";
 import { applicationData, applicationStatus } from "./validators";
 import { ConvexError } from "convex/values";
+import { limitAdminOperation } from "./adminRateLimits";
+export const begin = adminMutation({
+  args: {},
+  returns: v.object({ allowed: v.boolean(), retryAfterSeconds: v.number() }),
+  handler: async (ctx) => limitAdminOperation(ctx, ctx.actor, "export"),
+});
 const rowValidator = v.object({
   _id: v.id("applications"),
   reference: v.string(),

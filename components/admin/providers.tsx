@@ -1,5 +1,6 @@
 "use client";
 import { ClerkProvider, useAuth } from "@clerk/nextjs";
+import { shadcn } from "@clerk/ui/themes";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { ConvexReactClient } from "convex/react";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -16,7 +17,18 @@ function Backend({ children }: { children: React.ReactNode }) {
 }
 export function AdminProviders({ children }: { children: React.ReactNode }) {
   return (
-    <ClerkProvider signInUrl="/admin/sign-in" afterSignOutUrl="/admin/sign-in">
+    <ClerkProvider
+      signInUrl="/admin/sign-in"
+      signUpUrl="/admin/sign-up"
+      afterSignOutUrl="/admin/sign-in"
+      appearance={{
+        theme: shadcn,
+        variables: {
+          colorPrimary: "#0D6EFD",
+          fontFamily: "var(--font-poppins)",
+        },
+      }}
+    >
       <TooltipProvider>
         <Backend>{children}</Backend>
       </TooltipProvider>

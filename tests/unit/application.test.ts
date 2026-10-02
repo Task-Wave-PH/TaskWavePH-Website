@@ -12,6 +12,87 @@ const valid = {
 };
 
 describe("application boundary validation", () => {
+  it("keeps the legacy serialized payload unchanged when screening fields are blank", () => {
+    const originalPayload = {
+      firstName: "Maria",
+      lastName: "Santos",
+      email: "maria@example.com",
+      phone: "+639171234567",
+      location: "Cebu",
+      position: "Customer Service",
+      employmentStatus: "",
+      availability: "",
+      resume: "",
+      message: "",
+      privacyConsent: true,
+      source: "",
+      campaign: "",
+      utm_source: "",
+      utm_medium: "",
+      utm_campaign: "",
+      landing_page: "/apply",
+    };
+    const { website, ...parsed } = applicationSchema.parse({
+      ...valid,
+      expectedSalary: "  ",
+      previousSalary: "",
+      strengthOne: "",
+      strengthTwo: "",
+      distanceFromDagupan: "",
+      relocationPreference: "",
+      portfolio: "",
+    });
+    expect(website).toBe("");
+    expect(JSON.stringify(parsed)).toBe(JSON.stringify(originalPayload));
+    expect(
+      JSON.stringify(
+        applicationSchema.parse({ ...valid, expectedSalary: "Negotiable" }),
+      ),
+    ).toContain('"expectedSalary":"Negotiable"');
+  });
+  it("accepts optional screening details and bounds sensitive free text", () => {
+    expect(
+      applicationSchema.parse({
+        ...valid,
+        expectedSalary: " PHP 25,000/month ",
+        previousSalary: "Prefer not to share",
+        strengthOne: "Communication",
+        strengthTwo: "Problem solving",
+        distanceFromDagupan: "About 30 minutes",
+        relocationPreference: "Discuss first",
+        portfolio: "https://example.com/work",
+      }),
+    ).toMatchObject({
+      expectedSalary: "PHP 25,000/month",
+      relocationPreference: "Discuss first",
+    });
+    for (const [field, length] of [
+      ["expectedSalary", 101],
+      ["previousSalary", 101],
+      ["strengthOne", 301],
+      ["strengthTwo", 301],
+      ["distanceFromDagupan", 201],
+      ["portfolio", 2001],
+    ] as const)
+      expect(
+        applicationSchema.safeParse({ ...valid, [field]: "x".repeat(length) })
+          .success,
+      ).toBe(false);
+    for (const portfolio of [
+      "javascript:alert(1)",
+      "file:///tmp/cv",
+      "invalid",
+    ])
+      expect(applicationSchema.safeParse({ ...valid, portfolio }).success).toBe(
+        false,
+      );
+    expect(
+      applicationSchema.safeParse({
+        ...valid,
+        relocationPreference: "arbitrary",
+      }).success,
+    ).toBe(false);
+  });
   it("normalizes names, email, phone and absent optional fields", () => {
     const result = applicationSchema.parse({
       ...valid,

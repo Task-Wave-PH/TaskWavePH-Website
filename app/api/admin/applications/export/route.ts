@@ -22,18 +22,36 @@ export async function GET(request: Request) {
   const status = applicationStatuses.find((v) => v === params.get("status"));
   if (!["csv", "xlsx"].includes(format) || (params.has("status") && !status))
     return json("INVALID_EXPORT", 400);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 25000);
+  const signal = AbortSignal.any([request.signal, controller.signal]);
   try {
     const session = await auth();
     if (!session.userId) return json("UNAUTHORIZED", 401);
     const token = await session.getToken({ template: "convex" });
     if (!token) return json("UNAUTHORIZED", 401);
-    const client = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL);
+    const client = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL, {
+      fetch: (input, init) =>
+        fetch(input, { ...init, cache: "no-store", signal }),
+    });
     client.setAuth(token);
+    const budget = await client.mutation(api.exports.begin, {});
+    if (!budget.allowed)
+      return Response.json(
+        { error: "RATE_LIMITED" },
+        {
+          status: 429,
+          headers: {
+            ...headers,
+            "Retry-After": String(budget.retryAfterSeconds),
+          },
+        },
+      );
     const rows: ApplicantView[] = [];
     let cursor: string | null = null;
     const deadline = Date.now() + 25000;
     while (true) {
-      if (Date.now() > deadline || request.signal.aborted)
+      if (Date.now() >= deadline || signal.aborted)
         return json("EXPORT_UNAVAILABLE", 503);
       const result: FunctionReturnType<typeof api.exports.page> =
         await client.query(api.exports.page, {
@@ -46,6 +64,7 @@ export async function GET(request: Request) {
       cursor = result.continueCursor;
     }
     const bytes = await createExport(rows, format as "csv" | "xlsx");
+    if (signal.aborted) return json("EXPORT_UNAVAILABLE", 503);
     await client.mutation(api.exports.audit, {
       format: format as "csv" | "xlsx",
       count: rows.length,
@@ -67,5 +86,7 @@ export async function GET(request: Request) {
     )
       return json("ACCESS_DENIED", 403);
     return json("EXPORT_FAILED", 503);
+  } finally {
+    clearTimeout(timeout);
   }
 }

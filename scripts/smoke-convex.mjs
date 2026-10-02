@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { sampleResumeBytes } from "../features/applications/sample-resume.ts";
 import { requireDevelopmentTarget } from "./development-target.mjs";
 requireDevelopmentTarget();
 const url = process.env.CONVEX_SITE_URL;
@@ -14,7 +15,7 @@ async function submit(kind, fields, token, pdf) {
   if (pdf)
     body.set(
       "resumeFile",
-      new Blob(["%PDF-1.4\n%Synthetic test only\n%%EOF"], {
+      new Blob([sampleResumeBytes()], {
         type: "application/pdf",
       }),
       "test-resume.pdf",

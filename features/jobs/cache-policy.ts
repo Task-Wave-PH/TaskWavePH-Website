@@ -17,7 +17,13 @@ const firstPageRequest = z.object({
 // cookies, credentials, private queries, or arbitrary cursors qualify.
 export function cacheableJobList(init?: RequestInit): boolean {
   if (init?.method !== "POST" || typeof init.body !== "string") return false;
-  if (new Headers(init.headers).has("authorization")) return false;
+  const headers = new Headers(init.headers);
+  if (
+    headers.has("authorization") ||
+    headers.has("cookie") ||
+    init.credentials === "include"
+  )
+    return false;
   try {
     return firstPageRequest.safeParse(JSON.parse(init.body)).success;
   } catch {

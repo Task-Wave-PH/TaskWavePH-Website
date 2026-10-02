@@ -8,8 +8,11 @@ import { leadSchema } from "../features/leads/schema";
 import {
   submissionTokenSchema,
   validateResume,
-  MAX_REQUEST_BYTES,
 } from "../features/submissions/validation";
+import {
+  readSubmissionBody,
+  SubmissionBodyError,
+} from "../features/submissions/request-body";
 const http = httpRouter();
 const json = (data: object, status = 200) =>
   Response.json(data, { status, headers: { "Cache-Control": "no-store" } });
@@ -48,18 +51,24 @@ http.route({
     const secret = process.env.CONVEX_SERVER_SECRET;
     if (!secret || request.headers.get("authorization") !== `Bearer ${secret}`)
       return json({ error: "UNAUTHORIZED" }, 401);
-    const bytes = await request.arrayBuffer();
-    if (bytes.byteLength > MAX_REQUEST_BYTES)
-      return json({ error: "TOO_LARGE" }, 413);
-    const body = await new Request(request.url, {
-      method: "POST",
-      headers: { "Content-Type": request.headers.get("content-type") ?? "" },
-      body: bytes,
-    }).formData();
     let token: string | undefined;
     let storageId: import("./_generated/dataModel").Id<"_storage"> | undefined;
     let reference: string | undefined;
     try {
+      const contentType = request.headers.get("content-type") ?? "";
+      if (!/^multipart\/form-data\s*;/i.test(contentType))
+        return json({ error: "INVALID_SUBMISSION" }, 400);
+      const bytes = await readSubmissionBody(request);
+      let body: FormData;
+      try {
+        body = await new Request(request.url, {
+          method: "POST",
+          headers: { "Content-Type": contentType },
+          body: bytes,
+        }).formData();
+      } catch {
+        throw new SubmissionBodyError("INVALID_SUBMISSION", 400);
+      }
       const kind = body.get("kind");
       if (kind !== "applications" && kind !== "businessLeads")
         return json({ error: "INVALID_SUBMISSION" }, 400);
@@ -134,6 +143,8 @@ http.route({
           .runMutation(internal.intake.release, { token })
           .catch(() => {});
       }
+      if (error instanceof SubmissionBodyError)
+        return json({ error: error.code }, error.status);
       if (error instanceof ConvexError && error.data === "JOB_UNAVAILABLE")
         return json({ error: "JOB_UNAVAILABLE" }, 409);
       if (
@@ -163,7 +174,8 @@ http.route({
         return json({ error: "TOKEN_CONFLICT" }, 409);
       if (
         error instanceof Error &&
-        (error.name === "ZodError" || error.message === "INVALID_RESUME")
+        (["ZodError", "SyntaxError"].includes(error.name) ||
+          error.message === "INVALID_RESUME")
       )
         return json({ error: "INVALID_SUBMISSION" }, 400);
       console.error("Intake failed", {
@@ -177,31 +189,43 @@ http.route({
   path: "/resume",
   method: "GET",
   handler: httpAction(async (ctx, request) => {
+    const headers = {
+      "Cache-Control": "private, no-store",
+      "X-Robots-Tag": "noindex",
+      "X-Content-Type-Options": "nosniff",
+    };
     try {
       const params = new URL(request.url).searchParams;
       const id = params.get("id") ?? "";
       const mode = params.get("mode") ?? "download";
       if (!["view", "download"].includes(mode))
-        return new Response("Invalid mode", { status: 400 });
+        return new Response("Invalid mode", { status: 400, headers });
       const file = await ctx.runQuery(internal.downloads.find, { id });
-      if (!file) return new Response("Not found", { status: 404 });
+      if (!file) return new Response("Not found", { status: 404, headers });
+      const budget = await ctx.runMutation(internal.downloads.permit, {});
+      if (!budget.allowed)
+        return new Response("Too many file requests. Please try again later.", {
+          status: 429,
+          headers: {
+            ...headers,
+            "Retry-After": String(budget.retryAfterSeconds),
+          },
+        });
       const blob = await ctx.storage.get(file.storageId);
-      if (!blob) return new Response("Not found", { status: 404 });
+      if (!blob) return new Response("Not found", { status: 404, headers });
       await ctx.runMutation(internal.downloads.audit, {
         id,
         mode: mode as "view" | "download",
       });
       return new Response(blob, {
         headers: {
+          ...headers,
           "Content-Type": "application/pdf",
           "Content-Disposition": `${mode === "view" ? "inline" : "attachment"}; filename="resume.pdf"`,
-          "Cache-Control": "private, no-store",
-          "X-Content-Type-Options": "nosniff",
-          "X-Robots-Tag": "noindex",
         },
       });
     } catch {
-      return new Response("Access denied", { status: 403 });
+      return new Response("Access denied", { status: 403, headers });
     }
   }),
 });

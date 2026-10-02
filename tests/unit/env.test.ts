@@ -24,6 +24,7 @@ describe("environment validation", () => {
       CONVEX_SITE_URL: "https://development.convex.site",
       CONVEX_SERVER_SECRET: "x".repeat(64),
       TURNSTILE_SECRET_KEY: "synthetic-test-key",
+      NEXT_PUBLIC_TURNSTILE_SITE_KEY: "synthetic-site-key",
     };
     expect(submissionEnvSchema.safeParse(valid).success).toBe(true);
     for (const key of Object.keys(valid))

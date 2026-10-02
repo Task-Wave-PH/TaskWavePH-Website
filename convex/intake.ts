@@ -146,7 +146,7 @@ export const save = internalMutation({
     if (
       !pending ||
       pending.fingerprint !== args.fingerprint ||
-      pending.expiresAt < Date.now()
+      pending.expiresAt <= Date.now()
     )
       throw new Error("Invalid reservation");
     const submittedAt = Date.now();
@@ -200,7 +200,7 @@ export const cleanup = internalMutation({
   handler: async (ctx) => {
     const expired = await ctx.db
       .query("pendingUploads")
-      .withIndex("by_expiresAt", (q) => q.lt("expiresAt", Date.now()))
+      .withIndex("by_expiresAt", (q) => q.lte("expiresAt", Date.now()))
       .take(100);
     for (const row of expired) {
       if (row.storageId) await ctx.storage.delete(row.storageId);

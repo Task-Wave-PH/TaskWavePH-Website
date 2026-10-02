@@ -6,7 +6,7 @@ import {
 import { leadSchema } from "../../features/leads/schema";
 import { isAdminHostname, isLocalHostname } from "../../lib/admin-host";
 vi.mock("server-only", () => ({}));
-import { submissionsEnabled } from "../../lib/submission-env";
+import { submissionsEnabled, getSubmissionEnv } from "../../lib/submission-env";
 import { submitRequest } from "../../features/submissions/service";
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -38,6 +38,7 @@ function configure() {
   vi.stubEnv("CONVEX_SITE_URL", "https://example.convex.site");
   vi.stubEnv("CONVEX_SERVER_SECRET", "x".repeat(64));
   vi.stubEnv("TURNSTILE_SECRET_KEY", "test-secret");
+  vi.stubEnv("NEXT_PUBLIC_TURNSTILE_SITE_KEY", "test-site-key");
   vi.stubEnv("NEXT_PUBLIC_SITE_URL", "http://localhost:3000");
 }
 function stubBackendFetch(backend: typeof fetch) {
@@ -48,6 +49,33 @@ function stubBackendFetch(backend: typeof fetch) {
   );
 }
 describe("submission protections", () => {
+  it.each([
+    "1x0000000000000000000000000000000AA",
+    "2x0000000000000000000000000000000AA",
+    "3x0000000000000000000000000000000AA",
+  ])("rejects dummy secret %s in production", (secret) => {
+    configure();
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("TURNSTILE_SECRET_KEY", secret);
+    expect(() => getSubmissionEnv()).toThrow("test key");
+  });
+  it.each([
+    "1x00000000000000000000AA",
+    "2x00000000000000000000AB",
+    "1x00000000000000000000BB",
+    "2x00000000000000000000BB",
+    "3x00000000000000000000FF",
+  ])("rejects dummy browser key %s in production", (key) => {
+    configure();
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("NEXT_PUBLIC_TURNSTILE_SITE_KEY", key);
+    expect(() => getSubmissionEnv()).toThrow("test key");
+  });
+  it("requires a browser challenge key when submissions are configured", () => {
+    configure();
+    vi.stubEnv("NEXT_PUBLIC_TURNSTILE_SITE_KEY", "");
+    expect(() => getSubmissionEnv()).toThrow("configuration is incomplete");
+  });
   it("enables the development flag only on the development server", () => {
     vi.stubEnv("SUBMISSIONS_ENABLED", "development");
     vi.stubEnv("NODE_ENV", "development");
@@ -198,6 +226,26 @@ describe("submission protections", () => {
 });
 
 describe("early submission limits and error propagation", () => {
+  it.each([
+    { origin: "https://attacker.example" },
+    { origin: "null" },
+    { "sec-fetch-site": "cross-site" },
+  ])(
+    "rejects cross-origin browser submissions before backend work: %j",
+    async (headers) => {
+      configure();
+      const fetch = vi.fn();
+      vi.stubGlobal("fetch", fetch);
+      const input = request();
+      for (const [name, value] of Object.entries(headers))
+        input.headers.set(name, value);
+      const response = await submitRequest(input, "applications");
+      expect(response.status).toBe(403);
+      expect(response.headers.get("cache-control")).toBe("no-store");
+      expect(response.headers.get("set-cookie")).toBeNull();
+      expect(fetch).not.toHaveBeenCalled();
+    },
+  );
   it("rejects unsupported content without contacting the backend", async () => {
     configure();
     const fetch = vi.fn();
@@ -207,6 +255,25 @@ describe("early submission limits and error propagation", () => {
         method: "POST",
         body: "{}",
         headers: { "Content-Type": "application/json" },
+      }),
+      "applications",
+    );
+    expect(response.status).toBe(415);
+    expect(fetch).not.toHaveBeenCalled();
+  });
+  it("permits same-origin browser requests without weakening content validation", async () => {
+    configure();
+    const fetch = vi.fn();
+    vi.stubGlobal("fetch", fetch);
+    const response = await submitRequest(
+      new Request("http://localhost/api/applications", {
+        method: "POST",
+        body: "{}",
+        headers: {
+          Origin: "http://localhost",
+          "Content-Type": "application/json",
+          "Sec-Fetch-Site": "same-origin",
+        },
       }),
       "applications",
     );

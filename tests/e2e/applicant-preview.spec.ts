@@ -1,6 +1,24 @@
 import { test, expect } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import ExcelJS from "exceljs";
+test("malformed CV reports an unreadable file without enabling viewer controls", async ({
+  page,
+}) => {
+  await page.route("**/dev-preview/sample-cv?mode=view", (route) =>
+    route.fulfill({
+      contentType: "application/pdf",
+      body: "%PDF-1.4\n%%EOF",
+    }),
+  );
+  await page.goto("/dev-preview/applications/sample-001");
+  await page.getByRole("tab", { name: "CV", exact: true }).click();
+  await expect(
+    page.getByRole("tabpanel", { name: "CV", exact: true }).getByRole("alert"),
+  ).toContainText("This CV is not a readable PDF");
+  await expect(page.getByRole("button", { name: "Next page" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Zoom in" })).toBeDisabled();
+  await expect(page.getByRole("link", { name: "Download CV" })).toBeVisible();
+});
 test("sample applicant details support review, PDF viewing and confirmed deletion", async ({
   page,
 }) => {
@@ -10,6 +28,12 @@ test("sample applicant details support review, PDF viewing and confirmed deletio
     .click();
   await expect(
     page.getByRole("heading", { name: "Sample Applicant 1" }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Screening information", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Copy missing information request" }),
   ).toBeVisible();
   await expect(
     page.getByText("sample-1@example.invalid", { exact: true }),

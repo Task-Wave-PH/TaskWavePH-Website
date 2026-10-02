@@ -28,6 +28,13 @@ export const exportColumns = [
   "Internal Notes",
   "Job ID",
   "Job Title at Application",
+  "Expected Salary",
+  "Previous Salary",
+  "First Key Strength",
+  "Second Key Strength",
+  "Distance / Travel Time from Dagupan",
+  "Relocation Preference",
+  "Portfolio / Project Link",
 ];
 export function exportValues(record: ApplicantView): (string | number)[] {
   const d = record.data;
@@ -59,6 +66,13 @@ export function exportValues(record: ApplicantView): (string | number)[] {
     record.notes,
     d.jobId ?? "",
     d.jobTitle ?? "",
+    d.expectedSalary ?? "",
+    d.previousSalary ?? "",
+    d.strengthOne ?? "",
+    d.strengthTwo ?? "",
+    d.distanceFromDagupan ?? "",
+    d.relocationPreference ?? "",
+    d.portfolio ?? "",
   ];
 }
 function csvCell(value: string | number) {

@@ -92,6 +92,9 @@ test("draft creation, publishing, role application, editing and closure work in 
   await expect(
     page.getByRole("button", { name: "Close Posting", exact: true }),
   ).toBeEnabled();
+  await expect(
+    page.getByRole("status").filter({ hasText: "Posting saved." }),
+  ).toBeVisible();
   await page
     .getByRole("button", { name: "Close Posting", exact: true })
     .click();

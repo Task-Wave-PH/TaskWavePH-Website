@@ -1,5 +1,33 @@
 # Convex MVP setup
 
+## Local security verification
+
+PDF viewer troubleshooting: `InvalidPDFException` means the parser could not
+read the received file as a document. Earlier smoke fixtures contained only a
+PDF header and EOF marker; they pass signature checks but are not readable PDFs.
+Smoke and live-submission tests now use the valid shared two-page sample.
+Run the smoke script via `npm run convex:smoke` (Node 22 type stripping loads the
+shared TypeScript sample). Already stored malformed files are not repaired by a
+code update: replace confirmed synthetic records through the development workflow,
+or obtain a new PDF from the applicant. Do not overwrite real CVs automatically.
+The viewer keeps downloads available and disables pagination/zoom when loading fails.
+
+See [SECURITY-AUDIT.md](SECURITY-AUDIT.md) for the October 2, 2026 local review,
+adversarial tests, measured latency, cache/TTL checks, and remaining deployment
+verification. This audit does not deploy backend changes or certify production.
+
+Public submission endpoints reject foreign or opaque browser Origins and
+`Sec-Fetch-Site: cross-site` before backend work. Same-origin browser requests and
+non-browser requests without these headers still require all validation,
+Turnstile, honeypot, and persistent throttling checks. Disabled collection remains 503. Rejected origins return the safe `INVALID_ORIGIN` code with 403 and no receipt.
+
+Export backend fetches bypass caching, share a 25-second abort budget, and cancel
+on caller disconnect. Workbook generation is bounded by the existing 5,000-row
+limit; the network abort signal cannot preempt synchronous encoding work.
+Direct Convex CV errors as well as successful downloads are private/no-store.
+Pending uploads expire at the exact one-hour boundary. Cookie-bearing or explicitly
+credentialed job queries never qualify for public first-page caching.
+
 ## What is implemented
 
 Applications and business leads are stored in Convex. Optional PDF resumes are
@@ -66,7 +94,10 @@ and [Turnstile’s privacy notice](https://www.cloudflare.com/turnstile-privacy-
    values. Local state and environment files are ignored by Git.
 4. Create a Clerk development application. Enable email/password and password
    recovery; use restricted sign-up or provision users through the Clerk dashboard.
-   No public sign-up route is included. Set the publishable key, secret key, and
+   Staff sign-up is invitation-only at `/admin/sign-up` (or `/sign-up` on the admin
+   hostname). Set Clerk Restrictions → Sign-up mode to Invite-only / Restricted.
+   Login has no signup link; registration without a ticket shows invitation guidance.
+   Set the publishable key, secret key, and
    issuer domain in `.env.local`. Enable the Clerk Convex integration/JWT template
    with audience `convex`, then rerun `npm run convex:configure` and
    `npm run convex:check`. Never grant staff access from user-editable metadata.
@@ -83,6 +114,10 @@ and [Turnstile’s privacy notice](https://www.cloudflare.com/turnstile-privacy-
    `.env.local` are Cloudflare test keys. Test keys are prohibited in production.
    The browser widget uses action `submission`. Real keys must match the public
    site hostname and the server checks action and hostname.
+   Enabled submissions require both the browser site key and server secret.
+   Production rejects all documented dummy site and secret keys, including
+   failure and duplicate-token test keys. The localhost action/hostname exception
+   applies only to Cloudflare's exact always-pass secret key.
 7. Set `SUBMISSIONS_ENABLED=development` for dev-server-only submissions
    (disabled automatically in production builds). Start `npm run dev`.
    Submit synthetic data through `/apply` and `/business-enquiry`; review records
@@ -96,6 +131,58 @@ If Clerk is not configured, `/admin` displays setup-required messaging and expos
 no records. A local fail-closed issuer placeholder may be used to compile the
 backend before Clerk exists; replace it with the real Clerk issuer before testing
 login. It does not provide working authentication.
+
+## Owners, staff, and invitations
+
+Clerk authenticates users; Convex `adminUsers` remains the permission source.
+Missing roles on older records mean Staff. Only active Owners see Users navigation
+and can list staff/invitations or change access. Staff retain applicant, lead, and
+job access. Every backend operation checks permission; host routing is additional
+isolation, not authorization. Changes reject stale revisions, and transactions
+prevent removing the last active Owner, including trusted CLI provisioning.
+
+Bootstrap the first Owner using trusted access to the intended deployment:
+
+```bash
+npx convex run provision:setStaff '{"subject":"user_REPLACE_ME","active":true,"role":"Owner","email":"owner@example.com"}'
+```
+
+Use the matching Clerk user ID and verified email. Configure production independently;
+development approvals never migrate automatically. For existing registered accounts
+without an invitation, use trusted provisioning; do not create a second account.
+
+Configure these **in Convex**, in addition to the existing issuer and shared secret:
+
+- `CLERK_SECRET_KEY`: the matching Clerk instance's server key, never a public key.
+- `STAFF_INVITATION_REDIRECT_URL`: `http://localhost:3000/admin/sign-up` in local
+  development; `https://admin.taskwaveph.com/sign-up` in production.
+
+`npm run convex:configure` copies these to development without printing keys and
+derives the invitation URL from `NEXT_PUBLIC_ADMIN_URL` when no override is supplied.
+Set Clerk signup mode to **Invite-only / Restricted** for the same instance.
+
+Owners send seven-day email invitations with Owner/Staff roles. Convex stores the
+role and eligibility; Clerk metadata contains only a reference, not authority.
+Registration requires an invitation ticket and redirects to `/admin/accept-invitation`.
+The authenticated acceptance action fetches the user from Clerk's Backend API,
+checks the verified primary email and server-managed invitation reference, and
+activates once only if the local invitation is pending/unexpired and its sponsoring
+Owner remains active. Repeated acceptance is safe; old links cannot reactivate
+disabled staff. Browser-supplied or user-editable metadata never grants access.
+
+Owner invite attempts and authenticated acceptance attempts are limited to 20 per
+hour per identity. Failed/uncertain sends retain the operation token; retry scans
+bounded pending Clerk invitations for the reference before creating another.
+Clerk also rejects duplicate addresses. Cancellation removes local eligibility
+before remote revocation; retry cancellation if Clerk is unavailable. An expired
+invitation requires cancellation and a new invite. Deactivation keeps the Clerk
+account and audit history but immediately removes Convex record permissions.
+No permanent account deletion or employee management is included.
+
+The development Owner was provisioned during this implementation. Production
+invite-only mode, credentials, bootstrap, and invitation emails must be configured
+and verified separately. Test real acceptance using a second email you control;
+CLI identity checks and mocked Clerk responses do not verify browser signup.
 
 ## Files and privacy
 
@@ -129,11 +216,12 @@ Production collection requires `SUBMISSIONS_ENABLED=true`,
 `PRIVACY_RETENTION_NOTICE`. Startup rejects incomplete enabled configuration.
 Default-disabled builds and previews remain usable without submission secrets.
 
-Set public URL to `https://taskwaveph.com` and admin URL to
+Set public URL to `https://www.taskwaveph.com` and admin URL to
 `https://admin.taskwaveph.com`. Both hostnames serve the same Next.js project.
 The admin hostname rewrites its root/navigation to the internal admin route tree;
 public production hosts reject `/admin` and `/api/admin` paths. Localhost keeps
-`/admin` for development. Admin-host public page paths are rejected. Configure
+`/admin` only in development; production builds on localhost and Vercel preview
+hostnames reject admin pages/APIs and Clerk auto-proxy paths. Admin-host public page paths are rejected. Configure
 Clerk's production domain for the admin hostname and test cookies, callbacks,
 recovery, and host routing before enabling collection.
 
@@ -175,6 +263,21 @@ so it does not depend on accounts or save personal data. Set `PLAYWRIGHT_PORT=31
 if your normal development server already occupies port 3000.
 
 ## Local UI preview without Clerk keys
+
+### Clerk CLI setup
+
+The repository is linked to Clerk application `app_3K6WAnlhWMmeeTNkaYJRA5dAR4h`.
+Use `clerk auth login`, then `clerk init --app app_3K6WAnlhWMmeeTNkaYJRA5dAR4h`
+and `clerk doctor`. The CLI pulls development credentials into ignored `.env.local`.
+Its generic scaffold may add public auth routes or a second root provider; keep
+the existing admin-scoped provider and routes instead. Never print environment files.
+Admin Clerk components use `@clerk/ui`'s shadcn theme and Poppins/brand overrides.
+The `/__clerk/:path*` matcher follows the API matcher; auto-proxy requests reach
+Clerk before admin page rewrites. Unconfigured auto-proxy requests fail closed.
+Set the four documented Clerk route variables to `/admin/sign-in`, `/admin/sign-up`,
+and `/admin` fallback destinations. CLI setup configures development only;
+production credentials, domain verification, approved staff, and real browser
+sign-in/sign-out verification remain separate requirements.
 
 With `npm run dev` running, open `/dev-preview/login`,
 `/dev-preview/applications`, or `/dev-preview/businessLeads`. These use the
@@ -227,6 +330,22 @@ Sample details are at `/dev-preview/applications/sample-001`. Real submitted
 records appear only in authenticated `/admin/applications`; synthetic UI previews
 are not an authentication bypass and do not display private database records.
 Actual staff sign-in verification still requires Clerk development credentials.
+
+### Concurrent administrative edits
+
+Applicant and lead review screens send the status/notes snapshot loaded by the
+editor. The update transaction rejects `EDIT_CONFLICT` if either value changed
+since that snapshot. Job edits send their loaded `updatedAt` revision; revisions
+advance even for consecutive writes in one millisecond. Stale job saves are also
+rejected. Conflict messages preserve entries and ask staff to copy changes,
+refresh, and review the latest record. Job reactive updates preserve dirty fields;
+successful saves reset the editor's dirty state. Inputs are disabled during saves.
+These optional mutation arguments retain compatibility with trusted existing CLI
+tools; new staff editing interfaces must supply the expected snapshot/revision.
+
+Both Next.js and the authenticated Convex submission boundary use the bounded
+request-stream reader. Malformed multipart or JSON input receives a safe validation
+error, and oversized/stalled bodies stop before creating upload reservations.
 
 ## Careers and job postings
 
@@ -363,3 +482,22 @@ deletion. It temporarily publishes a clearly synthetic development role, cleans
 its disposable applicant/lead/job records, and revokes its temporary CLI staff
 approval. CLI identity testing is not real Clerk authentication. This command does
 not configure or deploy production services.
+
+## Administrative resource limits
+
+Exports now consume a persistent Convex budget before pagination/workbook creation:
+five requests per staff account and twenty across the deployment per ten minutes.
+Resume viewing and downloads share a separate budget: thirty per staff account and
+120 across the deployment per minute, checked before storage reads. Authorization
+is checked first, and denials return HTTP 429 with `Retry-After` and private/no-store
+headers. Failed or disconnected requests can consume their initial allowance.
+
+The Next.js export transport has a 25-second deadline. Resume transports have a
+15-second deadline and cancel when the requesting browser disconnects. These
+controls protect these expensive HTTP endpoints; ordinary authorized Convex
+queries remain available and are not covered by the export budget.
+
+Deploy the reviewed Convex functions before deploying the matching Next.js routes;
+the new routes require `exports:begin` and the resume handler requires its internal
+permit mutation. This audit has not deployed either service. No environment
+variables or paid infrastructure were added.

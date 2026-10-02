@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@import "@clerk/ui/themes/shadcn.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -135,5 +136,11 @@
   }
   :where(header, main, footer) a {
     transition: none;
+  }
+}
+
+@keyframes access-recovery {
+  to {
+    visibility: visible;
   }
 }

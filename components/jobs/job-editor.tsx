@@ -54,7 +54,7 @@ export function JobEditor({
 }: {
   job?: JobView;
   preview?: boolean;
-  onSave: (data: JobInput) => Promise<void>;
+  onSave: (data: JobInput, expectedUpdatedAt?: number) => Promise<void>;
   onStatus?: (status: JobStatus) => Promise<void>;
   onDelete?: () => Promise<void>;
   deletionAllowed?: boolean;
@@ -64,12 +64,22 @@ export function JobEditor({
     handleSubmit,
     control,
     setValue,
-    formState: { errors, isSubmitting, isDirty },
+    reset,
+    formState: { errors, isSubmitting, isDirty, dirtyFields },
   } = useForm<JobInput>({
     resolver: zodResolver(jobSchema),
     defaultValues: job ?? defaults,
+    values: job ?? defaults,
+    resetOptions: { keepDirtyValues: true, keepDirty: true },
   });
   const values = useWatch({ control });
+  const [editVersion, setEditVersion] = useState(job?.updatedAt);
+  if (
+    !isDirty &&
+    !Object.keys(dirtyFields).length &&
+    editVersion !== job?.updatedAt
+  )
+    setEditVersion(job?.updatedAt);
   const [message, setMessage] = useState("");
   const [confirmation, setConfirmation] = useState<JobStatus>();
   const [busy, setBusy] = useState(false);
@@ -113,81 +123,94 @@ export function JobEditor({
             onSubmit={handleSubmit(async (data) => {
               setMessage("");
               try {
-                await onSave(data);
+                await onSave(data, editVersion);
+                reset(data, { keepDirtyValues: false, keepDirty: false });
                 setMessage("Posting saved.");
-              } catch {
-                setMessage("Unable to save. Check your access and try again.");
+              } catch (error) {
+                setMessage(
+                  error instanceof Error &&
+                    error.message.includes("EDIT_CONFLICT")
+                    ? "This posting changed while you were editing. Copy your changes, refresh, and review the latest posting before saving."
+                    : "Unable to save. Check your access and try again.",
+                );
               }
             })}
           >
-            <div className="grid gap-6 sm:grid-cols-2">
-              {(
-                [
-                  ["title", "Job Title", 200],
-                  ["location", "Location", 200],
-                  ["salary", "Salary (optional)", 200],
-                ] as const
-              ).map(([name, label, max]) => (
-                <div key={name} className="grid min-w-0 content-start gap-2">
-                  <Label htmlFor={name}>{label}</Label>
-                  <Input
-                    id={name}
-                    {...register(name)}
-                    maxLength={max}
-                    aria-invalid={!!errors[name]}
-                    aria-describedby={
-                      errors[name] ? `${name}-error` : undefined
-                    }
-                    className="min-h-11"
-                  />
-                  {errors[name] && (
-                    <p
-                      id={`${name}-error`}
-                      role="alert"
-                      className="text-sm text-destructive"
-                    >
-                      {errors[name]?.message}
-                    </p>
-                  )}
-                </div>
-              ))}
-              {(
-                [
-                  ["serviceArea", "Service Area", serviceAreas],
-                  ["arrangement", "Work Arrangement", workArrangements],
-                  ["employmentType", "Employment Type", employmentTypes],
-                ] as const
-              ).map(([name, label, options]) => (
-                <div key={name} className="grid min-w-0 content-start gap-2">
-                  <Label htmlFor={name}>{label}</Label>
-                  <Select
-                    value={values[name]}
-                    onValueChange={(value) => {
-                      if (value)
-                        setValue(name, value as JobInput[typeof name], {
-                          shouldDirty: true,
-                          shouldValidate: true,
-                        });
-                    }}
-                  >
-                    <SelectTrigger
-                      aria-label={label}
+            <fieldset className="min-w-0 rounded-xl border border-border/70 bg-muted/30 p-4 sm:p-6">
+              <legend className="px-2 text-sm font-semibold text-brand-navy">
+                Role information
+              </legend>
+              <div className="grid gap-6 sm:grid-cols-2">
+                {(
+                  [
+                    ["title", "Job Title", 200],
+                    ["location", "Location", 200],
+                    ["salary", "Salary (optional)", 200],
+                  ] as const
+                ).map(([name, label, max]) => (
+                  <div key={name} className="grid min-w-0 content-start gap-2">
+                    <Label htmlFor={name}>{label}</Label>
+                    <Input
+                      disabled={isSubmitting || busy}
                       id={name}
-                      className="h-11! w-full"
+                      {...register(name)}
+                      maxLength={max}
+                      aria-invalid={!!errors[name]}
+                      aria-describedby={
+                        errors[name] ? `${name}-error` : undefined
+                      }
+                      className="min-h-11"
+                    />
+                    {errors[name] && (
+                      <p
+                        id={`${name}-error`}
+                        role="alert"
+                        className="text-sm text-destructive"
+                      >
+                        {errors[name]?.message}
+                      </p>
+                    )}
+                  </div>
+                ))}
+                {(
+                  [
+                    ["serviceArea", "Service Area", serviceAreas],
+                    ["arrangement", "Work Arrangement", workArrangements],
+                    ["employmentType", "Employment Type", employmentTypes],
+                  ] as const
+                ).map(([name, label, options]) => (
+                  <div key={name} className="grid min-w-0 content-start gap-2">
+                    <Label htmlFor={name}>{label}</Label>
+                    <Select
+                      disabled={isSubmitting || busy}
+                      value={values[name]}
+                      onValueChange={(value) => {
+                        if (value)
+                          setValue(name, value as JobInput[typeof name], {
+                            shouldDirty: true,
+                            shouldValidate: true,
+                          });
+                      }}
                     >
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {options.map((option) => (
-                        <SelectItem key={option} value={option}>
-                          {option}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              ))}
-            </div>
+                      <SelectTrigger
+                        aria-label={label}
+                        id={name}
+                        className="h-11! w-full"
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {options.map((option) => (
+                          <SelectItem key={option} value={option}>
+                            {option}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ))}
+              </div>
+            </fieldset>
             {(
               [
                 ["description", "Description"],
@@ -195,9 +218,13 @@ export function JobEditor({
                 ["requirements", "Requirements"],
               ] as const
             ).map(([name, label]) => (
-              <div key={name} className="space-y-2">
+              <div
+                key={name}
+                className="min-w-0 space-y-3 rounded-xl border border-border/70 bg-muted/30 p-4 sm:p-6"
+              >
                 <Label htmlFor={name}>{label}</Label>
                 <Textarea
+                  disabled={isSubmitting || busy}
                   id={name}
                   {...register(name)}
                   rows={5}

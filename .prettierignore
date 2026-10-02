@@ -13,3 +13,4 @@ next-env.d.ts
 convex/_generated/
 
 .next-verify
+.next-security-audit

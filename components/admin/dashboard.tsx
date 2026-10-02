@@ -1,8 +1,8 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth, UserButton } from "@clerk/nextjs";
+import { useAuth } from "@clerk/nextjs";
 import {
   useConvexAuth,
   useMutation,
@@ -10,7 +10,6 @@ import {
   useQuery,
 } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { buttonVariants } from "@/components/ui/button";
 import { ApplicantDetails } from "./applicant-details";
 import { ExportButtons } from "./export-buttons";
 import type { ApplicantView } from "@/features/applications/admin-types";
@@ -21,6 +20,7 @@ import {
   Handshake,
   LayoutDashboard,
   BriefcaseBusiness,
+  UsersRound,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import {
@@ -33,6 +33,8 @@ import {
 } from "@/components/ui/sidebar";
 import { RecordsView } from "./records-view";
 import { LeadDetails } from "./lead-details";
+import { AccessDenied } from "./access-denied";
+import { AccessLoading } from "./access-loading";
 import type { LeadView } from "@/features/leads/admin-types";
 import type { Id } from "@/convex/_generated/dataModel";
 type Kind = "applications" | "businessLeads";
@@ -40,42 +42,30 @@ const title = (kind: Kind) =>
   kind === "applications" ? "Applications" : "Business Leads";
 export function StaffGate({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useConvexAuth();
-  const { isLoaded } = useAuth();
-  if (!isLoaded || isLoading)
-    return (
-      <p className="p-8" role="status">
-        Checking staff access…
-      </p>
-    );
+  const { isLoaded, isSignedIn } = useAuth();
+  const router = useRouter();
+  useEffect(() => {
+    if (isLoaded && !isSignedIn) router.replace("/admin/sign-in");
+  }, [isLoaded, isSignedIn, router]);
+  if (isLoaded && !isSignedIn)
+    return <AccessLoading message="Opening staff sign-in…" />;
+  if (!isLoaded || isLoading) return <AccessLoading />;
   if (!isAuthenticated)
-    return (
-      <main className="p-8">
-        <h1 className="text-2xl font-semibold">Staff sign-in</h1>
-        <Link
-          href="/admin/sign-in"
-          className={buttonVariants({ className: "mt-5 min-h-11" })}
-        >
-          Sign in
-        </Link>
-      </main>
-    );
+    return <AccessLoading message="Connecting to your staff workspace…" />;
   return <Access>{children}</Access>;
 }
 function Access({ children }: { children: React.ReactNode }) {
   const access = useQuery(api.staffStatus.current);
+  const current = useQuery(
+    api.staffManagement.current,
+    access === true ? {} : "skip",
+  );
   if (access === undefined)
+    return <AccessLoading message="Checking permissions…" />;
+  if (!access) return <AccessDenied />;
+  if (current === undefined)
     return (
-      <p className="p-8" role="status">
-        Checking permissions…
-      </p>
-    );
-  if (!access)
-    return (
-      <main className="p-8">
-        <h1 className="text-2xl font-semibold">Access denied</h1>
-        <p className="mt-4">Your account is not approved for staff access.</p>
-        <UserButton />
-      </main>
+      <AccessLoading message="Checking your role and available features…" />
     );
   return children;
 }
@@ -139,8 +129,33 @@ function Navigation({ preview = false }: { preview?: boolean }) {
             <span>Jobs</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
+        {!preview && <OwnerNavigation />}
       </SidebarMenu>
     </nav>
+  );
+}
+function OwnerNavigation() {
+  const current = useQuery(api.staffManagement.current, {});
+  const pathname = usePathname();
+  const { setOpenMobile } = useSidebar();
+  if (current?.role !== "Owner") return null;
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton
+        render={
+          <Link
+            href="/admin/users"
+            aria-current={pathname.includes("/users") ? "page" : undefined}
+          />
+        }
+        isActive={pathname.includes("/users")}
+        className="min-h-11"
+        onClick={() => setOpenMobile(false)}
+      >
+        <UsersRound />
+        <span>Users</span>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
   );
 }
 export function Dashboard({
@@ -289,8 +304,14 @@ function LiveApplicantEditor({ record }: { record: ApplicantView }) {
       resumeUrl={
         record.resumeFile ? `/api/admin/resumes/${record._id}` : undefined
       }
-      onSave={async (status, notes) => {
-        await update({ kind: "applications", id: record._id, status, notes });
+      onSave={async (status, notes, expected) => {
+        await update({
+          kind: "applications",
+          id: record._id,
+          status,
+          notes,
+          expected,
+        });
       }}
       onDelete={async () => {
         await remove({ kind: "applications", id: record._id });
@@ -308,8 +329,14 @@ function LiveLeadEditor({ record }: { record: LeadView }) {
     <LeadDetails
       record={record}
       backHref="/admin/businessLeads"
-      onSave={async (status, notes) => {
-        await update({ kind: "businessLeads", id: record._id, status, notes });
+      onSave={async (status, notes, expected) => {
+        await update({
+          kind: "businessLeads",
+          id: record._id,
+          status,
+          notes,
+          expected,
+        });
       }}
       onPriority={async (value) => {
         await priority({

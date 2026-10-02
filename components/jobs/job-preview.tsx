@@ -75,7 +75,7 @@ export function PreviewJobAdmin({
       <>
         <PreviewNotice />
         <JobEditor
-          key={`${id}-${job?.updatedAt}`}
+          key={id}
           preview
           job={job}
           deletionAllowed={

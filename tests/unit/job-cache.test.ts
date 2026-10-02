@@ -35,5 +35,14 @@ describe("public job cache boundaries", () => {
       cacheableJobList({ ...request(), headers: { Authorization: "private" } }),
     ).toBe(false);
     expect(cacheableJobList({ method: "POST", body: "bad" })).toBe(false);
+    expect(
+      cacheableJobList({
+        ...request(),
+        headers: { Cookie: "session=fixture" },
+      }),
+    ).toBe(false);
+    expect(cacheableJobList({ ...request(), credentials: "include" })).toBe(
+      false,
+    );
   });
 });

@@ -2,9 +2,15 @@
 
 ## Current state
 
-The application code is on `main` and passed lint, typecheck, formatting, 156
-unit/backend tests, the production build, and 39 browser checks. These checks do
-not establish that production authentication or submissions work.
+The merged first-load release is `78186f1`. Local checks passed lint, typecheck,
+formatting, 170 unit/backend tests, the production build, and 37 browser checks.
+The browser suite uses isolated disabled services; these checks do not establish
+that production authentication or submissions work. The subsequent login layout
+fix and launch-readiness updates are reviewed and delivered separately.
+
+See [LAUNCH-CHECKLIST.md](LAUNCH-CHECKLIST.md) for dated public observations and
+pending owner-performed acceptance, and [RECOVERY.md](RECOVERY.md) for snapshots
+including resumes. Do not mark pending tests passed based on local fixtures.
 
 On October 2, 2026, setup progressed to:
 

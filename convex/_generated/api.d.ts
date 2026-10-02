@@ -11,6 +11,7 @@
 import type * as admin from "../admin.js";
 import type * as adminAccess from "../adminAccess.js";
 import type * as adminMetrics from "../adminMetrics.js";
+import type * as adminRateLimits from "../adminRateLimits.js";
 import type * as crons from "../crons.js";
 import type * as downloads from "../downloads.js";
 import type * as exports from "../exports.js";
@@ -37,6 +38,7 @@ declare const fullApi: ApiFromModules<{
   admin: typeof admin;
   adminAccess: typeof adminAccess;
   adminMetrics: typeof adminMetrics;
+  adminRateLimits: typeof adminRateLimits;
   crons: typeof crons;
   downloads: typeof downloads;
   exports: typeof exports;

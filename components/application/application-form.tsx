@@ -224,6 +224,7 @@ export function ApplicationForm({
       {[
         {
           title: "Contact and role",
+          hint: "Required details so our recruitment team can review and contact you.",
           fields: textFields.filter((field) =>
             [
               "firstName",
@@ -236,17 +237,25 @@ export function ApplicationForm({
           ),
         },
         {
-          title: "Experience and screening",
-          fields: textFields.filter(
-            (field) =>
-              ![
-                "firstName",
-                "lastName",
-                "email",
-                "phone",
-                "location",
-                "position",
-              ].includes(field.name),
+          title: "Experience and availability",
+          hint: "Optional. Tell us about your experience and when you could start.",
+          fields: textFields.filter((field) =>
+            ["experience", "employmentStatus", "availability"].includes(
+              field.name,
+            ),
+          ),
+        },
+        {
+          title: "Additional screening",
+          hint: "All questions here are optional. Share only what you are comfortable providing; follow the role’s advertised work arrangement. Previous salary is not required.",
+          fields: textFields.filter((field) =>
+            [
+              "expectedSalary",
+              "previousSalary",
+              "strengthOne",
+              "strengthTwo",
+              "distanceFromDagupan",
+            ].includes(field.name),
           ),
         },
       ].map((group) => (
@@ -257,10 +266,9 @@ export function ApplicationForm({
           <legend className="px-2 font-semibold text-brand-navy">
             {group.title}
           </legend>
-          {group.title === "Experience and screening" && (
+          {group.hint && (
             <p className="mb-5 text-sm leading-6 text-muted-foreground">
-              These optional details help our recruitment team review your
-              profile. Follow the work arrangement in the job posting.
+              {group.hint}
             </p>
           )}
           <div className="grid gap-6 sm:grid-cols-2">
@@ -306,83 +314,189 @@ export function ApplicationForm({
           </div>
         </fieldset>
       ))}
-      <FormField
-        id="relocationPreference"
-        label="Willingness to Relocate"
-        optional
-        hint="For roles requiring relocation. This does not change the role’s advertised work arrangement."
-        error={errors.relocationPreference?.message}
-      >
-        <Controller
-          name="relocationPreference"
-          control={control}
-          render={({ field }) => (
-            <Select
-              value={field.value || "unspecified"}
-              onValueChange={(value) => {
-                field.onChange(value === "unspecified" ? "" : value);
-                setValidated(false);
-              }}
-            >
-              <SelectTrigger
-                id="relocationPreference"
-                ref={field.ref}
-                onBlur={field.onBlur}
-                className="min-h-12 w-full"
-                aria-invalid={!!errors.relocationPreference}
-                aria-describedby={`relocationPreference-hint${errors.relocationPreference ? " relocationPreference-error" : ""}`}
+      <fieldset className="min-w-0 space-y-6 rounded-xl border bg-secondary/30 p-4 sm:p-6">
+        <legend className="px-2 font-semibold text-brand-navy">
+          CV and work samples
+        </legend>
+        <p className="text-sm leading-6 text-muted-foreground">
+          Optional. Upload a PDF or share a resume link. You can also include
+          public work samples.
+        </p>
+        <div className="grid gap-6 sm:grid-cols-2">
+          {textFields
+            .filter((field) => ["portfolio", "resume"].includes(field.name))
+            .map((field) => (
+              <FormField
+                key={field.name}
+                id={field.name}
+                label={field.label}
+                optional
+                hint={"hint" in field ? field.hint : undefined}
+                error={errors[field.name]?.message}
               >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="unspecified">
-                  Not specified / not applicable
-                </SelectItem>
-                <SelectItem value="Willing">Willing to relocate</SelectItem>
-                <SelectItem value="Not willing">
-                  Not willing to relocate
-                </SelectItem>
-                <SelectItem value="Discuss first">
-                  Would like to discuss first
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          )}
-        />
-      </FormField>
-      <FormField
-        id="referredBy"
-        label="Referred by"
-        optional
-        error={errors.referredBy?.message}
-        hint="Enter the name or code of the person who referred you, if applicable."
-      >
-        <Input
+                <Input
+                  id={field.name}
+                  {...register(field.name)}
+                  type="url"
+                  maxLength={field.maxLength}
+                  className="min-h-12 text-base"
+                  aria-invalid={!!errors[field.name]}
+                  aria-describedby={`${field.name}-hint${errors[field.name] ? ` ${field.name}-error` : ""}`}
+                />
+              </FormField>
+            ))}
+        </div>
+        <FormField
+          id="resumeFile"
+          label="Resume PDF"
+          optional
+          hint="One PDF, up to 2 MB. A resume link can also be provided."
+          error={fileError}
+        >
+          <Input
+            id="resumeFile"
+            type="file"
+            disabled={submission.sending}
+            accept="application/pdf,.pdf"
+            aria-invalid={!!fileError}
+            aria-describedby={
+              fileError ? "resumeFile-hint resumeFile-error" : "resumeFile-hint"
+            }
+            onChange={async (event) => {
+              const selected = event.target.files?.[0];
+              const revision = ++fileRevision.current;
+              setFile(selected);
+              setFileError("");
+              setValidated(false);
+              setValidatingFile(!!selected);
+              if (selected)
+                try {
+                  await validateResume(selected);
+                } catch {
+                  if (revision === fileRevision.current)
+                    setFileError("Choose a valid PDF no larger than 2 MB.");
+                } finally {
+                  if (revision === fileRevision.current)
+                    setValidatingFile(false);
+                }
+            }}
+          />
+        </FormField>
+        {file && !fileError && !submission.sending && (
+          <p
+            role="status"
+            className="break-words text-sm text-muted-foreground"
+          >
+            {validatingFile
+              ? "Checking PDF…"
+              : `${file.name} · ${(file.size / 1024).toFixed(0)} KB · Ready to submit. Not uploaded yet.`}
+          </p>
+        )}
+        {file && submission.sending && (
+          <div
+            role="status"
+            className="space-y-2 rounded-lg border bg-background p-4"
+          >
+            <p className="text-sm font-medium">
+              {submission.processing
+                ? "Upload complete. Checking and saving your application…"
+                : `Uploading your CV… ${submission.uploadProgress}%`}
+            </p>
+            <progress
+              aria-label="CV upload"
+              max={100}
+              value={submission.processing ? 100 : submission.uploadProgress}
+              className="h-2 w-full accent-primary"
+            />
+            <p className="text-xs text-muted-foreground">
+              Keep this page open. Confirmation appears after your application
+              is saved.
+            </p>
+          </div>
+        )}
+      </fieldset>
+      <fieldset className="min-w-0 space-y-6 rounded-xl border p-4 sm:p-6">
+        <legend className="px-2 font-semibold text-brand-navy">
+          Additional information
+        </legend>
+        <FormField
+          id="relocationPreference"
+          label="Willingness to Relocate"
+          optional
+          hint="For roles requiring relocation. This does not change the role’s advertised work arrangement."
+          error={errors.relocationPreference?.message}
+        >
+          <Controller
+            name="relocationPreference"
+            control={control}
+            render={({ field }) => (
+              <Select
+                value={field.value || "unspecified"}
+                onValueChange={(value) => {
+                  field.onChange(value === "unspecified" ? "" : value);
+                  setValidated(false);
+                }}
+              >
+                <SelectTrigger
+                  id="relocationPreference"
+                  ref={field.ref}
+                  onBlur={field.onBlur}
+                  className="min-h-12 w-full"
+                  aria-invalid={!!errors.relocationPreference}
+                  aria-describedby={`relocationPreference-hint${errors.relocationPreference ? " relocationPreference-error" : ""}`}
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="unspecified">
+                    Not specified / not applicable
+                  </SelectItem>
+                  <SelectItem value="Willing">Willing to relocate</SelectItem>
+                  <SelectItem value="Not willing">
+                    Not willing to relocate
+                  </SelectItem>
+                  <SelectItem value="Discuss first">
+                    Would like to discuss first
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          />
+        </FormField>
+        <FormField
           id="referredBy"
-          {...register("referredBy")}
-          maxLength={200}
-          className="min-h-11 text-base"
-          aria-invalid={!!errors.referredBy}
-          aria-describedby={`referredBy-hint${errors.referredBy ? " referredBy-error" : ""}`}
-        />
-      </FormField>
-      <FormField
-        id="message"
-        label="Message / Notes"
-        optional
-        error={errors.message?.message}
-        hint="Up to 2,000 characters."
-      >
-        <Textarea
+          label="Referred by"
+          optional
+          error={errors.referredBy?.message}
+          hint="Enter the name or code of the person who referred you, if applicable."
+        >
+          <Input
+            id="referredBy"
+            {...register("referredBy")}
+            maxLength={200}
+            className="min-h-11 text-base"
+            aria-invalid={!!errors.referredBy}
+            aria-describedby={`referredBy-hint${errors.referredBy ? " referredBy-error" : ""}`}
+          />
+        </FormField>
+        <FormField
           id="message"
-          {...register("message")}
-          maxLength={2000}
-          rows={4}
-          className="min-h-32 text-base"
-          aria-invalid={!!errors.message}
-          aria-describedby={`message-hint${errors.message ? " message-error" : ""}`}
-        />
-      </FormField>
+          label="Message / Notes"
+          optional
+          error={errors.message?.message}
+          hint="Up to 2,000 characters."
+        >
+          <Textarea
+            id="message"
+            {...register("message")}
+            maxLength={2000}
+            rows={4}
+            className="min-h-32 text-base"
+            aria-invalid={!!errors.message}
+            aria-describedby={`message-hint${errors.message ? " message-error" : ""}`}
+          />
+        </FormField>
+      </fieldset>
       <div className="space-y-2">
         <div className="flex items-start gap-3 rounded-lg border p-4">
           <Controller
@@ -430,40 +544,6 @@ export function ApplicationForm({
           </p>
         )}
       </div>
-      <FormField
-        id="resumeFile"
-        label="Resume PDF"
-        optional
-        hint="One PDF, up to 2 MB. A resume link can also be provided."
-        error={fileError}
-      >
-        <Input
-          id="resumeFile"
-          type="file"
-          accept="application/pdf,.pdf"
-          aria-invalid={!!fileError}
-          aria-describedby={
-            fileError ? "resumeFile-hint resumeFile-error" : "resumeFile-hint"
-          }
-          onChange={async (event) => {
-            const selected = event.target.files?.[0];
-            const revision = ++fileRevision.current;
-            setFile(selected);
-            setFileError("");
-            setValidated(false);
-            setValidatingFile(!!selected);
-            if (selected)
-              try {
-                await validateResume(selected);
-              } catch {
-                if (revision === fileRevision.current)
-                  setFileError("Choose a valid PDF no larger than 2 MB.");
-              } finally {
-                if (revision === fileRevision.current) setValidatingFile(false);
-              }
-          }}
-        />
-      </FormField>
       {enabled && (
         <TurnstileChallenge
           key={submission.reset}

@@ -76,7 +76,9 @@ export function PreviewLeadDetails({ id }: { id: string }) {
       key={id}
       record={lead}
       backHref="/dev-preview/businessLeads"
-      onSave={async (status, notes) => updateLead(id, status, notes)}
+      onSave={async (status, notes, _expected, nextFollowUp) =>
+        updateLead(id, status, notes, nextFollowUp)
+      }
       onPriority={async (value) => prioritizeLead(id, value)}
       onDelete={async () => {
         removeLead(id);

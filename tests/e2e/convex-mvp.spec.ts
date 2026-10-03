@@ -13,6 +13,7 @@ test("local UI previews are unavailable in production", async ({ request }) => {
     "careers",
     "careers/sample-job-001",
     "job-apply?jobId=sample-job-001",
+    "settings",
   ]) {
     expect((await request.get(`/dev-preview/${page}`)).status()).toBe(404);
   }

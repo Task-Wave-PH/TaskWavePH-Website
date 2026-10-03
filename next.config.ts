@@ -7,6 +7,13 @@ const nextConfig: NextConfig = {
     turbopackFileSystemCacheForBuild: process.env.NEXT_BUILD_CACHE !== "false",
   },
   turbopack: { root: process.cwd() },
+  outputFileTracingIncludes: {
+    "/api/admin/applications/export": [
+      "./public/logo/taskwaveph-symbol.png",
+      "./public/fonts/poppins/Poppins-Regular.ttf",
+      "./public/fonts/poppins/Poppins-SemiBold.ttf",
+    ],
+  },
   async headers() {
     return [
       {

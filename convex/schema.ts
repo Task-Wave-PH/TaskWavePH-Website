@@ -10,7 +10,15 @@ import {
 } from "./validators";
 import { jobFields, jobStatus } from "./jobValidators";
 import { staffRole, invitationStatus } from "./staffValidators";
+import { qrSettings } from "./settingsValidators";
 export default defineSchema({
+  ownerSettings: defineTable({
+    key: v.literal("qr"),
+    logoStorageId: v.optional(v.id("_storage")),
+    value: qrSettings,
+    revision: v.number(),
+    updatedAt: v.number(),
+  }).index("by_key", ["key"]),
   jobs: defineTable({
     ...jobFields,
     status: jobStatus,
@@ -39,16 +47,28 @@ export default defineSchema({
     ...baseFields,
     status: applicationStatus,
     resumeFile: v.optional(resumeFile),
+    searchText: v.optional(v.string()),
   })
     .index("by_submissionToken", ["submissionToken"])
+    .index("by_email", ["data.email"])
     .index("by_status", ["status"])
     .index("by_jobId", ["data.jobId"])
-    .index("by_resumeStorage", ["resumeFile.storageId"]),
+    .index("by_resumeStorage", ["resumeFile.storageId"])
+    .index("by_campaign_submittedAt", ["data.campaign", "submittedAt"])
+    .index("by_source_submittedAt", ["data.source", "submittedAt"])
+    .index("by_jobId_submittedAt", ["data.jobId", "submittedAt"])
+    .index("by_status_submittedAt", ["status", "submittedAt"])
+    .index("by_submittedAt", ["submittedAt"])
+    .searchIndex("search_applicants", {
+      searchField: "searchText",
+      filterFields: ["status", "data.source", "data.campaign", "data.jobId"],
+    }),
   businessLeads: defineTable({
     data: leadData,
     ...baseFields,
     status: leadStatus,
     priority: v.optional(v.boolean()),
+    nextFollowUp: v.optional(v.string()),
   })
     .index("by_submissionToken", ["submissionToken"])
     .index("by_status", ["status"])
@@ -88,7 +108,9 @@ export default defineSchema({
     record: v.string(),
     action: v.string(),
     timestamp: v.number(),
-  }).index("by_record", ["record"]),
+  })
+    .index("by_record", ["record"])
+    .index("by_timestamp", ["timestamp"]),
   pendingUploads: defineTable({
     submissionToken: v.string(),
     fingerprint: v.string(),

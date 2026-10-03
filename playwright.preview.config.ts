@@ -7,6 +7,7 @@ export default defineConfig({
     "**/applicant-preview.spec.ts",
     "**/jobs-preview.spec.ts",
     "**/admin-access.spec.ts",
+    "**/settings-preview.spec.ts",
   ],
   workers: 1,
   use: { baseURL: "http://localhost:3000", trace: "retain-on-failure" },

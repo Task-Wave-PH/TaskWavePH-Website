@@ -1,3 +1,4 @@
+import { applicantSearchText } from "../features/applications/search";
 import { ConvexError, v } from "convex/values";
 import { RateLimiter, HOUR, MINUTE } from "@convex-dev/rate-limiter";
 import { internalMutation, internalQuery } from "./_generated/server";
@@ -180,6 +181,7 @@ export const save = internalMutation({
       }
       const id = await ctx.db.insert("applications", {
         ...common,
+        searchText: applicantSearchText({ reference, data: normalized }),
         data: { ...normalized, ...(jobTitle ? { jobTitle } : {}) },
         ...(args.resumeFile ? { resumeFile: args.resumeFile } : {}),
       });

@@ -7,6 +7,7 @@ export type LeadView = {
   status: "New" | "Contacted" | "Closed";
   notes: string;
   priority?: boolean;
+  nextFollowUp?: string;
   data: Infer<typeof leadData>;
 };
 export function previewLeads(): LeadView[] {

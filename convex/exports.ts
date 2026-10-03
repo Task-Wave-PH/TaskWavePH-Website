@@ -1,3 +1,4 @@
+import { applicationFilters, filteredApplications } from "./applicationFilters";
 import { v } from "convex/values";
 import {
   paginationOptsValidator,
@@ -25,18 +26,19 @@ const rowValidator = v.object({
 export const page = adminQuery({
   args: {
     status: v.optional(applicationStatus),
+    filters: v.optional(applicationFilters),
     paginationOpts: paginationOptsValidator,
   },
   returns: paginationResultValidator(rowValidator),
   handler: async (ctx, args) => {
     if (args.paginationOpts.numItems > 100)
       throw new ConvexError("INVALID_PAGE_SIZE");
-    const query = args.status
-      ? ctx.db
-          .query("applications")
-          .withIndex("by_status", (q) => q.eq("status", args.status!))
-      : ctx.db.query("applications");
-    const result = await query.order("desc").paginate(args.paginationOpts);
+    const result = await filteredApplications(
+      ctx,
+      args.status,
+      args.filters,
+      args.paginationOpts,
+    );
     return {
       ...result,
       page: result.page.map((row) => ({
@@ -61,7 +63,7 @@ export const page = adminQuery({
 });
 export const audit = adminMutation({
   args: {
-    format: v.union(v.literal("csv"), v.literal("xlsx")),
+    format: v.union(v.literal("csv"), v.literal("xlsx"), v.literal("pdf")),
     count: v.number(),
   },
   returns: v.null(),

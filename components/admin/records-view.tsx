@@ -33,6 +33,9 @@ export type RecordSummary = {
   status: string;
   submittedAt: number;
   priority?: boolean;
+  source?: string;
+  campaign?: string;
+  jobTitle?: string;
 };
 export function RecordsView({
   kind,
@@ -43,6 +46,7 @@ export function RecordsView({
   onPriorityFilter,
   onPriority,
   actions,
+  filters,
   loading,
   more,
   loadingMore,
@@ -57,6 +61,7 @@ export function RecordsView({
   onPriorityFilter?: (value: boolean) => void;
   onPriority?: (row: RecordSummary) => void;
   actions?: React.ReactNode;
+  filters?: React.ReactNode;
   loading?: boolean;
   more?: () => void;
   loadingMore?: boolean;
@@ -78,48 +83,52 @@ export function RecordsView({
             : "Review applicant profiles, view CVs, and track recruitment progress."}
         </p>
       </div>
-      <Card className="py-0">
-        <CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:p-5">
-          <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
-            <div className="grid gap-2">
-              <Label htmlFor="status-filter">Filter by status</Label>
-              <Select
-                value={status || "all"}
-                onValueChange={(v) => onStatus(v === "all" ? "" : String(v))}
-              >
-                <SelectTrigger
-                  id="status-filter"
-                  className="h-11! w-full sm:w-48"
+      {filters ?? (
+        <Card className="py-0">
+          <CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:p-5">
+            <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
+              <div className="grid gap-2">
+                <Label htmlFor="status-filter">Filter by status</Label>
+                <Select
+                  value={status || "all"}
+                  onValueChange={(v) => onStatus(v === "all" ? "" : String(v))}
                 >
-                  <SelectValue>{status || "All statuses"}</SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All statuses</SelectItem>
-                  {(leads ? leadStatuses : applicationStatuses).map((value) => (
-                    <SelectItem value={value} key={value}>
-                      {value}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                  <SelectTrigger
+                    id="status-filter"
+                    className="h-11! w-full sm:w-48"
+                  >
+                    <SelectValue>{status || "All statuses"}</SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All statuses</SelectItem>
+                    {(leads ? leadStatuses : applicationStatuses).map(
+                      (value) => (
+                        <SelectItem value={value} key={value}>
+                          {value}
+                        </SelectItem>
+                      ),
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+              {leads && onPriorityFilter && (
+                <Button
+                  className="min-h-11 px-4"
+                  variant={priorityOnly ? "secondary" : "outline"}
+                  aria-pressed={priorityOnly}
+                  onClick={() => onPriorityFilter(!priorityOnly)}
+                >
+                  <Star
+                    className={priorityOnly ? "fill-primary text-primary" : ""}
+                  />
+                  Priority only
+                </Button>
+              )}
             </div>
-            {leads && onPriorityFilter && (
-              <Button
-                className="min-h-11 px-4"
-                variant={priorityOnly ? "secondary" : "outline"}
-                aria-pressed={priorityOnly}
-                onClick={() => onPriorityFilter(!priorityOnly)}
-              >
-                <Star
-                  className={priorityOnly ? "fill-primary text-primary" : ""}
-                />
-                Priority only
-              </Button>
-            )}
-          </div>
-          {actions}
-        </CardContent>
-      </Card>
+            {actions}
+          </CardContent>
+        </Card>
+      )}
       {loading ? (
         <p
           role="status"
@@ -151,6 +160,12 @@ export function RecordsView({
                 )}
                 <TableHead>{leads ? "Company" : "Applicant"}</TableHead>
                 <TableHead>Email</TableHead>
+                {!leads && (
+                  <>
+                    <TableHead>Role</TableHead>
+                    <TableHead>Source / campaign</TableHead>
+                  </>
+                )}
                 <TableHead>Submitted</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>
@@ -199,6 +214,21 @@ export function RecordsView({
                     </Link>
                   </TableCell>
                   <TableCell>{row.email}</TableCell>
+                  {!leads && (
+                    <>
+                      <TableCell className="max-w-48 whitespace-normal">
+                        {row.jobTitle || "General application"}
+                      </TableCell>
+                      <TableCell className="max-w-56 whitespace-normal break-words">
+                        <span className="block">
+                          {row.source || "Unattributed"}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {row.campaign || "No campaign"}
+                        </span>
+                      </TableCell>
+                    </>
+                  )}
                   <TableCell>{formatAdminDate(row.submittedAt)}</TableCell>
                   <TableCell>
                     <Badge variant="outline" className="px-2.5 py-1">

@@ -187,7 +187,13 @@ export function PreviewCareers({ query = {} }: { query?: TrackingQuery }) {
     </div>
   );
 }
-export function PreviewJobDetail({ id }: { id: string }) {
+export function PreviewJobDetail({
+  id,
+  query = {},
+}: {
+  id: string;
+  query?: TrackingQuery;
+}) {
   const { jobs } = usePreviewJobs();
   const job = jobs.find((row) => row._id === id && row.status === "Published");
   return (
@@ -196,7 +202,7 @@ export function PreviewJobDetail({ id }: { id: string }) {
       {job ? (
         <>
           <h2 className="text-3xl font-semibold">{job.title}</h2>
-          <JobDetails job={job} query={{}} preview />
+          <JobDetails job={job} query={query} preview />
         </>
       ) : (
         <p role="status">This sample role is no longer published.</p>
@@ -204,7 +210,13 @@ export function PreviewJobDetail({ id }: { id: string }) {
     </div>
   );
 }
-export function PreviewJobApplication({ id }: { id?: string }) {
+export function PreviewJobApplication({
+  id,
+  query = {},
+}: {
+  id?: string;
+  query?: TrackingQuery;
+}) {
   const { jobs } = usePreviewJobs();
   const job = jobs.find((row) => row._id === id && row.status === "Published");
   return (
@@ -215,7 +227,7 @@ export function PreviewJobApplication({ id }: { id?: string }) {
         <ApplicationForm
           key={job._id}
           job={{ id: job._id, title: job.title }}
-          tracking={getTracking({}, "/apply")}
+          tracking={getTracking(query, "/apply")}
           enabled={false}
         />
       ) : (

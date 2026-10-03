@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { LogoutConfirmation } from "./logout-confirmation";
 import { useClerk, useUser, UserButton } from "@clerk/nextjs";
 import { LogOut } from "lucide-react";
 import { StatusPage } from "@/components/layout/status-page";
@@ -9,8 +10,8 @@ import { Button } from "@/components/ui/button";
 export function AccessDenied() {
   const { user } = useUser();
   const { signOut } = useClerk();
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
+  const [confirm, setConfirm] = useState(false);
+  const trigger = useRef<HTMLButtonElement>(null);
   return (
     <StatusPage
       kind="access"
@@ -34,28 +35,20 @@ export function AccessDenied() {
         business records.
       </p>
       <Button
+        ref={trigger}
         className="min-h-11 w-full gap-2 px-5 sm:w-fit"
         variant="outline"
-        disabled={busy}
-        onClick={async () => {
-          setBusy(true);
-          setError("");
-          try {
-            await signOut({ redirectUrl: "/admin/sign-in" });
-          } catch {
-            setError("Unable to sign out. Please try again.");
-            setBusy(false);
-          }
-        }}
+        onClick={() => setConfirm(true)}
       >
         <LogOut aria-hidden="true" className="size-4" />
-        {busy ? "Signing out…" : "Sign out"}
+        Sign out
       </Button>
-      {error && (
-        <p role="alert" className="text-sm text-destructive">
-          {error}
-        </p>
-      )}
+      <LogoutConfirmation
+        open={confirm}
+        onOpenChange={setConfirm}
+        finalFocus={trigger}
+        onLogout={() => signOut({ redirectUrl: "/admin/sign-in" })}
+      />
     </StatusPage>
   );
 }

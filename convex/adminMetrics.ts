@@ -1,3 +1,4 @@
+import { followUpTimestamp } from "../features/leads/follow-up";
 import { DirectAggregate } from "@convex-dev/aggregate";
 import { components } from "./_generated/api";
 import type { Doc } from "./_generated/dataModel";
@@ -50,6 +51,28 @@ export async function syncMetrics(
       id: newDoc._id,
     });
   if (kind === "businessLeads") {
+    if (
+      oldDoc &&
+      "nextFollowUp" in oldDoc &&
+      oldDoc.nextFollowUp &&
+      oldDoc.status !== "Closed"
+    )
+      await byTime.deleteIfExists(ctx, {
+        namespace: "leadFollowUp",
+        key: followUpTimestamp(oldDoc.nextFollowUp),
+        id: oldDoc._id,
+      });
+    if (
+      newDoc &&
+      "nextFollowUp" in newDoc &&
+      newDoc.nextFollowUp &&
+      newDoc.status !== "Closed"
+    )
+      await byTime.insertIfDoesNotExist(ctx, {
+        namespace: "leadFollowUp",
+        key: followUpTimestamp(newDoc.nextFollowUp),
+        id: newDoc._id,
+      });
     if (oldDoc && "priority" in oldDoc && oldDoc.priority)
       await byStatus.deleteIfExists(ctx, {
         namespace: "priorityLeads",

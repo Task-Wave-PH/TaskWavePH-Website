@@ -1,3 +1,6 @@
+import type { ExportAssets } from "./export-assets";
+import type { ApplicationFilters } from "./campaigns";
+import { formatAdminDate } from "../admin/metrics";
 import type { ApplicantView } from "./admin-types";
 export const MAX_EXPORT_ROWS = 5000;
 export const exportColumns = [
@@ -92,49 +95,118 @@ export function toCsv(records: ApplicantView[]) {
     "\r\n"
   );
 }
+export type ExportOptions = {
+  assets?: ExportAssets;
+  filters?: ApplicationFilters;
+  status?: string;
+  preview?: boolean;
+  generatedAt?: number;
+};
+export const EXPORT_HEADER_ROW = 6;
+export function exportFilterSummary(options: ExportOptions) {
+  const filters = options.filters ?? {};
+  const details = [
+    options.status ? `Status: ${options.status}` : "All statuses",
+    ...Object.entries(filters)
+      .filter(([, value]) => !!value)
+      .map(
+        ([key, value]) =>
+          `${({ search: "Search", source: "Source", campaign: "Campaign", jobId: "Job ID", from: "From", to: "To" } as Record<string, string>)[key]}: ${value}`,
+      ),
+  ];
+  return details.join(" | ");
+}
 export async function createExport(
   records: ApplicantView[],
-  format: "csv" | "xlsx",
+  format: "csv" | "xlsx" | "pdf",
+  options: ExportOptions = {},
 ) {
   if (records.length > MAX_EXPORT_ROWS) throw new Error("EXPORT_TOO_LARGE");
   if (format === "csv") return new TextEncoder().encode(toCsv(records));
+  if (!options.assets?.logoDataUrl) throw new Error("BRAND_ASSET_UNAVAILABLE");
+  if (format === "pdf") {
+    const { createApplicantPdf } = await import("./export-pdf");
+    return createApplicantPdf(records, options);
+  }
   const { default: ExcelJS } = await import("exceljs");
   const workbook = new ExcelJS.Workbook();
   workbook.creator = "TaskWavePH";
+  workbook.created = new Date(options.generatedAt ?? Date.now());
   const sheet = workbook.addWorksheet("Applicants", {
-    views: [{ state: "frozen", ySplit: 1 }],
+    views: [{ state: "frozen", ySplit: EXPORT_HEADER_ROW }],
   });
   sheet.columns = exportColumns.map((header) => ({
-    header,
     width: /Message|Notes|Link/.test(header)
       ? 45
       : /Email|Submitted/.test(header)
         ? 30
         : 22,
   }));
-  sheet.autoFilter = {
-    from: { row: 1, column: 1 },
-    to: { row: 1, column: exportColumns.length },
+  const logo = workbook.addImage({
+    base64: options.assets.logoDataUrl,
+    extension: "png",
+  });
+  sheet.addImage(logo, {
+    tl: { col: 0.15, row: 0.15 },
+    ext: { width: 90, height: 90 },
+  });
+  for (let i = 1; i <= 4; i++) {
+    sheet.mergeCells(i, 2, i, 8);
+    sheet.getRow(i).height = i === 4 ? 36 : 24;
+  }
+  sheet.getCell("B1").value = "TaskWavePH";
+  sheet.getCell("B1").font = {
+    name: "Poppins",
+    size: 20,
+    bold: true,
+    color: { argb: "FF0A1D3B" },
   };
-  sheet.getRow(1).height = 30;
-  sheet.getRow(1).eachCell((cell) => {
-    cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+  sheet.getCell("B2").value = "Outsource. Optimize. Grow.";
+  sheet.getCell("B2").font = {
+    name: "Poppins",
+    size: 11,
+    color: { argb: "FF0D6EFD" },
+  };
+  sheet.getCell("B3").value =
+    `${options.preview ? "Sample " : ""}Applicant Report · ${records.length} applications · ${formatAdminDate(options.generatedAt ?? Date.now())}`;
+  sheet.getCell("B4").value = exportFilterSummary(options);
+  sheet.getRow(4).height = Math.max(
+    36,
+    Math.ceil(exportFilterSummary(options).length / 140) * 15,
+  );
+  sheet.getCell("B4").alignment = { wrapText: true, vertical: "top" };
+  for (const ref of ["B3", "B4"])
+    sheet.getCell(ref).font = {
+      name: "Poppins",
+      size: 10,
+      color: { argb: "FF111827" },
+    };
+  const header = sheet.getRow(EXPORT_HEADER_ROW);
+  header.values = exportColumns;
+  header.height = 34;
+  sheet.autoFilter = {
+    from: { row: EXPORT_HEADER_ROW, column: 1 },
+    to: { row: EXPORT_HEADER_ROW, column: exportColumns.length },
+  };
+  header.eachCell((cell) => {
+    cell.font = { name: "Poppins", bold: true, color: { argb: "FFFFFFFF" } };
     cell.fill = {
       type: "pattern",
       pattern: "solid",
-      fgColor: { argb: "FF071B3B" },
+      fgColor: { argb: "FF0A1D3B" },
     };
     cell.alignment = { vertical: "middle", wrapText: true };
   });
   for (const record of records) {
     const row = sheet.addRow(exportValues(record));
     row.eachCell((cell) => {
+      cell.font = { name: "Poppins", size: 10, color: { argb: "FF111827" } };
       cell.alignment = { vertical: "top", wrapText: true };
       if (row.number % 2 === 0)
         cell.fill = {
           type: "pattern",
           pattern: "solid",
-          fgColor: { argb: "FFEFF4FF" },
+          fgColor: { argb: "FFF2F4F7" },
         };
     });
     row.getCell(6).numFmt = "@";

@@ -557,3 +557,185 @@ Deploy the reviewed Convex functions before deploying the matching Next.js route
 the new routes require `exports:begin` and the resume handler requires its internal
 permit mutation. This audit has not deployed either service. No environment
 variables or paid infrastructure were added.
+
+## Recruitment campaign links and QR codes
+
+On **Admin → Jobs**, open a **Published** posting. Open **Campaign link & QR**. In the modal, choose the source (for example `linkedin` or `facebook`), placement (`social`,
+`paid-social`, `qr`, or `referral`), and a lowercase campaign code such as
+`customer-support-october-2026`. Create the link, copy it for your post, or download
+the 1024px PNG QR with the original TaskWavePH symbol centered on white backing.
+It uses high error correction and retains the outer quiet zone. Scan the QR and test the role's application button
+before sharing it. Do not include applicant information or referrer names in URLs.
+
+The link opens the public role detail page and carries `source`, `campaign`,
+`utm_source`, `utm_medium`, and `utm_campaign` through Apply. Its public origin
+comes from `NEXT_PUBLIC_SITE_URL`; configure this as the public marketing domain,
+never the admin domain. Keep the same campaign code across channels when comparing
+results. Use QR placement for printed materials. Existing application eligibility
+checks still reject new submissions after a role is withdrawn. Previously shared
+links are not an assurance that a role remains open.
+
+Under **Admin → Applications**, use the single filter card for status, submission
+month, and source. **Advanced filters** reveals campaign, optional job selection
+by title, and custom dates. Choosing a month sets its inclusive
+Philippine calendar dates; editing a custom date clears the month. **Apply filters**
+updates the table and exports together; **Clear filters** resets everything.
+Source and campaign match exact case-sensitive codes. Manual Referred By remains
+a separate private applicant field; this feature does not manage referrer accounts.
+
+The **Export** dropdown offers a branded **PDF report** or **Excel workbook** using
+all matching records, including unloaded pages. PDF is a landscape applicant list
+with contact, role, status, attribution, applied filters, Poppins, the supplied
+TaskWavePH symbol, and page numbers. Excel retains all exportable fields, an embedded
+logo/title/filter banner, frozen headers, and alternating rows. Raw text remains
+string cells, never formulas. CSV remains supported for existing API integrations
+but is not offered in this dropdown. The campaign-results panel is no longer shown.
+
+Reads first narrow by campaign, job ID, source, status, or submission time using
+indexes; dynamic combinations filter bounded pages without losing cursors. Sparse
+matches can return an empty page with a Load more button. Exports stop at 5,000
+matching records, 100 underlying pages, or 25 seconds, returning an error instead
+of a partial file. Narrow filters if a limit is reached. The persistent export
+budget is five requests per staff account per ten minutes and twenty globally.
+Every page requires an active approved staff identity; responses remain
+private/no-store. Deploy the matching backend before releasing the frontend,
+including PDF audit support. No new environment variables are needed.
+
+The server export route explicitly traces its public logo and Poppins font files
+into the deployment bundle. Preview exports fetch only these fixed public brand
+assets and use synthetic records. Local campaign links open explicitly synthetic
+URLs under `/dev-preview/careers`; preview forms remain disabled for collection.
+
+## Applicant lookup, lead follow-ups, and Owner activity
+
+Applications has one **Search applicants** input for an application reference,
+name, or email. Click **Apply filters**; search composes with status, job, source,
+campaign, and Philippine date filters. Exact email lookup uses `by_email` (case
+insensitive after normalization). Name/reference words use Convex full-text search,
+with the last word matched as a prefix, and additional exact words checked on the
+bounded result page. There is no typo correction or arbitrary substring search.
+Non-email queries accept up to 16 words, each at most 32 characters. Empty searches
+retain normal chronological pagination. Sparse search/date combinations can return
+empty pages with Load more. Search queries are subject to Convex's search limits;
+failed/oversized exports never return a partial file as a complete export.
+
+Job filters select a posting title and status and retain its ID internally. All
+statuses are available to staff; load more job options when needed. Source and
+campaign inputs suggest existing exact codes and still accept custom codes.
+Suggestions are bounded to the first 50 distinct nonempty codes per dimension,
+read by jumping between indexed values. Standard campaign channels are also
+suggested. These controls do not introduce a campaign registry.
+
+The UI sends export filters in a bounded JSON POST body, including applicant search
+terms; names and emails never enter navigation or export URLs. Legacy GET exports
+remain available for non-search filters only. Both methods require staff approval,
+consume the same persistent budget, and return private/no-store responses.
+
+After deploying the backend, backfill historical optional search fields before
+releasing the corresponding frontend:
+
+```bash
+npx convex run admin:backfillSearch '{"cursor":null}'
+```
+
+The trusted internal migration processes 100 rows per batch and schedules remaining
+pages. Re-running is safe. Use the explicitly intended deployment; production
+migration/deployment requires separate owner authorization. New intake and seed
+records populate the index field at creation. The search field duplicates existing
+private profile data and is never exported or exposed through public job reads.
+
+Business Lead details has an optional **Next follow-up** calendar date. Empty means
+no reminder. Dates are validated (2000–2100), saved with the loaded status/notes/date
+snapshot, and reject stale edits transactionally. Overdue means an open enquiry's
+date is before today in the Philippines; today and Closed enquiries are excluded.
+The dashboard count uses the existing full-table aggregate, updated on date,
+status, and deletion changes. No email reminders are sent. Existing records have
+no date, so they add no overdue entries; normal aggregate backfill remains safe.
+
+**Activity** is visible only to Owners. Its paginated database query independently
+requires an active Owner; Staff and unapproved sessions cannot obtain history.
+Records contain existing action/record/time/actor metadata only. Staff labels are
+resolved from staff approval records; historical actors without a label show their
+identifier. No applicant profiles or internal notes are joined. Recent dashboard
+activity is also Owner-only. The admin hostname serves `/activity`; public and
+preview production hosts retain their existing private-route blocks/noindex.
+
+The public application form separates required contact/role fields, optional
+experience/availability, optional screening, CV/work samples, and additional
+information. Previous salary stays optional. PDF selection shows checking/ready
+states; it does not claim an upload has occurred. Real upload progress measures
+request bytes, then separately waits for server validation/save. A 100% upload
+never implies a successful save; confirmation still requires the confirmed save
+and signed receipt. Upload retries retain the existing idempotency token and
+90-second abort behavior. No browser persistence is added.
+
+Development verification on October 3, 2026: deployed to `exuberant-lapwing-339`,
+backfilled historical search fields, and verified real synthetic saves, indexed
+search/matching exports, follow-up updates/clearing, overdue totals, stale-save
+rejection, and Staff/anonymous activity denial. Disposable records were removed
+and temporary CLI approval revoked; metadata-only audit history remains. Owner
+query acceptance is verified in backend tests. Real Clerk browser authentication
+and production acceptance remain unverified.
+
+Repeat the guarded development workflow with:
+
+```bash
+node scripts/smoke-admin-productivity.mjs
+```
+
+### Submission and export response safeguards
+
+Private export JSON requests are limited to 8,192 bytes and retain field-level
+validation, allowing valid multibyte source and campaign codes. CV upload transport
+settles safely for bodyless HTTP responses and malformed response headers; these
+responses cannot leave the form locked or produce a false success confirmation.
+The ready-to-submit CV message is hidden while submission is in progress.
+
+### Owner QR and campaign settings
+
+`/admin/settings` (or `/settings` on the configured admin hostname) is Owner-only.
+`settings.read` requires active staff approval; `settings.save` additionally
+requires Owner role. `ownerSettings` holds one indexed QR settings document.
+Updates check the editor revision transactionally, throttle to ten saves per
+Owner per minute, and record metadata-only `qr_settings_updated` activity.
+Concurrent changes never overwrite unsaved edits; discard reloads current values.
+
+Settings include solid/diagonal-gradient dark colors, supplied symbol/wordmark/no
+logo, bounded logo sizes, and campaign channel/placement defaults. The backend
+validates allowed values and at least 4.5:1 contrast against fixed white. This
+protects contrast, not universal scan reliability; test downloaded codes before
+printing. Original logo proportions, four-module quiet zones, and H error
+correction remain fixed. Rounded module patterns are not implemented. Defaults initialize newly loaded campaign forms; QR designs apply to new downloads.
+Already shared PNG files and URLs remain unchanged. Staff cannot save settings.
+
+Settings preview URLs reflect the selected channel and placement using a sample
+campaign code. They never include applicant data. Existing campaign drafts retain
+their selected channel and placement when another owner changes defaults.
+
+`/dev-preview/settings` is a synthetic localhost-only Owner UI preview. It cannot
+read or write private settings and resets on reload. Owner management links reuse
+Users and Activity. Privacy wording, secrets, hosts, and service configuration
+remain deployment configuration, not browser-editable settings.
+
+### Owner PNG uploads for QR logos
+
+Owners select **Upload QR logo** in Settings, preview locally, then save. Static
+PNG only, up to 1 MB, dimensions up to 2048 × 2048. Client image decoding and
+server signature/chunk/CRC/dimension checks reject malformed structures and
+animated PNGs; these checks are not malware scanning. Original file proportions
+are preserved in QR generation. The website logo is unaffected.
+
+`qrLogos.save` is a Clerk-authenticated action. It checks active Owner approval,
+persistently throttles attempts before validation/storage, and rechecks Owner
+approval and the settings revision inside the save mutation. Only a storage ID
+is persisted in the optional `ownerSettings.logoStorageId`; no arbitrary URLs.
+Failure cleanup checks whether the file was committed before deleting it.
+Unlinked files have a scheduled one-hour cleanup; replacement or switching to an
+official/no-logo option deletes the previous custom image transactionally.
+
+Approved Staff read the saved PNG through `/api/admin/qr-logo`, which forwards a
+Clerk Convex token to the private `/qr-logo` HTTP action. Both responses use
+private/no-store and nosniff. File reads share the existing private file-read
+budget. No public storage URL is returned. Temporary preview selections stay in
+memory and never upload or call private endpoints on `/dev-preview/settings`.
+Deploy the development backend before opening the updated live Settings page.

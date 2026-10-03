@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { uploadRequest } from "@/features/submissions/upload-request";
 import { z } from "zod";
 const responseSchema = z.object({
   success: z.boolean(),
@@ -13,6 +14,8 @@ export function useSubmission(endpoint: string, successPath: string) {
   const activeRequest = useRef<AbortController>(undefined);
   const [challenge, setChallenge] = useState("");
   const [reset, setReset] = useState(0);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [processing, setProcessing] = useState(false);
   const [sending, setSending] = useState(false);
   const [cooldown, setCooldown] = useState(0);
   const [jobUnavailable, setJobUnavailable] = useState(false);
@@ -40,6 +43,8 @@ export function useSubmission(endpoint: string, successPath: string) {
         return;
       }
       setSending(true);
+      setUploadProgress(0);
+      setProcessing(false);
       const identity =
         JSON.stringify(data) +
         (file ? `${file.name}:${file.size}:${file.lastModified}` : "");
@@ -55,11 +60,19 @@ export function useSubmission(endpoint: string, successPath: string) {
       const controller = new AbortController();
       activeRequest.current = controller;
       timeout = setTimeout(() => controller.abort(), 90000);
-      const response = await fetch(endpoint, {
-        method: "POST",
-        body,
-        signal: controller.signal,
-      });
+      const response = file
+        ? await uploadRequest(
+            endpoint,
+            body,
+            controller.signal,
+            setUploadProgress,
+            () => setProcessing(true),
+          )
+        : await fetch(endpoint, {
+            method: "POST",
+            body,
+            signal: controller.signal,
+          });
       const result = responseSchema.parse(await response.json());
       if (response.ok && result.success) {
         window.location.assign(successPath);
@@ -116,6 +129,8 @@ export function useSubmission(endpoint: string, successPath: string) {
     error,
     jobUnavailable,
     sending,
+    uploadProgress,
+    processing,
     cooldown,
     disabled: sending || coolingDown || !challenge,
   };

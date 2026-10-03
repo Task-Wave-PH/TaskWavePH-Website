@@ -1,4 +1,6 @@
 "use client";
+import { followUpDateSchema } from "@/features/leads/follow-up";
+import { Input } from "@/components/ui/input";
 import { adminOperation } from "@/features/admin/operation-feedback";
 import { useState } from "react";
 import Link from "next/link";
@@ -31,12 +33,14 @@ export function LeadDetails({
   onSave: (
     status: LeadView["status"],
     notes: string,
-    expected: Pick<LeadView, "status" | "notes">,
+    expected: Pick<LeadView, "status" | "notes" | "nextFollowUp">,
+    nextFollowUp: string | null,
   ) => Promise<void>;
   onPriority: (priority: boolean) => Promise<void>;
   onDelete: () => Promise<void>;
 }) {
   const [status, setStatus] = useState(record.status),
+    [nextFollowUp, setNextFollowUp] = useState(record.nextFollowUp ?? ""),
     [notes, setNotes] = useState(record.notes),
     [busy, setBusy] = useState(false),
     [message, setMessage] = useState("");
@@ -44,6 +48,7 @@ export function LeadDetails({
   const [baseline, setBaseline] = useState({
     status: record.status,
     notes: record.notes,
+    nextFollowUp: record.nextFollowUp,
   });
   async function perform(action: () => Promise<void>) {
     setBusy(true);
@@ -58,9 +63,11 @@ export function LeadDetails({
       setMessage("Changes saved.");
     } catch (error) {
       setMessage(
-        error instanceof Error && error.message.includes("EDIT_CONFLICT")
-          ? "This enquiry changed while you were editing. Copy your changes, refresh, and review the latest record before saving."
-          : "Unable to save. Check your access and try again.",
+        error instanceof Error && error.message.includes("INVALID_FOLLOW_UP")
+          ? "Choose a valid follow-up date between 2000 and 2100."
+          : error instanceof Error && error.message.includes("EDIT_CONFLICT")
+            ? "This enquiry changed while you were editing. Copy your changes, refresh, and review the latest record before saving."
+            : "Unable to save. Check your access and try again.",
       );
     } finally {
       setBusy(false);
@@ -205,6 +212,27 @@ export function LeadDetails({
               </Select>
             </div>
             <div className="space-y-2">
+              <Label htmlFor="lead-follow-up">Next follow-up (optional)</Label>
+              <Input
+                id="lead-follow-up"
+                type="date"
+                min="2000-01-01"
+                max="2100-12-31"
+                value={nextFollowUp}
+                disabled={busy}
+                className="min-h-11"
+                onChange={(e) => setNextFollowUp(e.target.value)}
+                aria-describedby="lead-follow-up-help"
+              />
+              <p
+                id="lead-follow-up-help"
+                className="text-xs leading-relaxed text-muted-foreground"
+              >
+                Philippine date. Clear to remove. Closed enquiries are excluded
+                from overdue totals.
+              </p>
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="lead-notes">Internal notes</Label>
               <Textarea
                 disabled={busy}
@@ -223,8 +251,17 @@ export function LeadDetails({
               disabled={busy}
               onClick={() =>
                 perform(async () => {
-                  await onSave(status, notes, baseline);
-                  setBaseline({ status, notes: notes.trim() });
+                  if (
+                    nextFollowUp &&
+                    !followUpDateSchema.safeParse(nextFollowUp).success
+                  )
+                    throw new Error("INVALID_FOLLOW_UP");
+                  await onSave(status, notes, baseline, nextFollowUp || null);
+                  setBaseline({
+                    status,
+                    notes: notes.trim(),
+                    nextFollowUp: nextFollowUp || undefined,
+                  });
                   setNotes(notes.trim());
                 })
               }

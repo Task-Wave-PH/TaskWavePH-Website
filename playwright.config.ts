@@ -11,6 +11,7 @@ export default defineConfig({
     "**/submissions-live.spec.ts",
     "**/applicant-preview.spec.ts",
     "**/jobs-preview.spec.ts",
+    "**/settings-preview.spec.ts",
   ],
   fullyParallel: true,
   forbidOnly: !!process.env.CI,

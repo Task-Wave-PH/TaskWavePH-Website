@@ -91,6 +91,8 @@ test("privacy has expected content and direct confirmation access returns to the
 
 for (const width of [360, 390, 430, 768, 1024, 1440]) {
   test(`pages fit a ${width}px viewport`, async ({ page }) => {
+    // Layout/asset checks use stable positions; motion has separate coverage.
+    await page.emulateMedia({ reducedMotion: "reduce" });
     await page.setViewportSize({ width, height: 850 });
     for (const route of [
       "/",
@@ -136,7 +138,11 @@ for (const width of [360, 390, 430, 768, 1024, 1440]) {
       ) {
         if (route === "/" || route === "/areas-of-work") {
           for (const image of await page.locator("main img").all()) {
-            await image.scrollIntoViewIfNeeded();
+            // Explicit instant scrolling gives native lazy loading a viewport
+            // change even when Playwright considers the image already visible.
+            await image.evaluate((node) =>
+              node.scrollIntoView({ block: "center", behavior: "instant" }),
+            );
             // Cold CI image optimization can outlast the usual UI assertion
             // deadline. This checks asset readiness, not loading performance.
             try {

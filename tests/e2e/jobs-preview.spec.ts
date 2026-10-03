@@ -1,3 +1,5 @@
+import jsQR from "jsqr";
+import { createCanvas, loadImage } from "@napi-rs/canvas";
 import { test, expect } from "@playwright/test";
 async function fillJob(page: import("@playwright/test").Page, title: string) {
   await page.getByLabel("Job Title", { exact: true }).fill(title);
@@ -277,4 +279,138 @@ test("localhost Careers reflects sample admin publication and closure", async ({
   await expect(
     page.getByRole("heading", { name: "Local Careers Test Role", exact: true }),
   ).toHaveCount(0);
+});
+
+for (const width of [360, 390, 430, 768, 1024, 1440]) {
+  test(`campaign links and QR downloads preserve attribution at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/dev-preview/jobs/sample-job-001");
+    await page
+      .getByRole("button", { name: "Campaign link & QR", exact: true })
+      .click();
+    await expect(
+      page.getByRole("dialog", {
+        name: "Recruitment campaign link",
+        exact: true,
+      }),
+    ).toBeVisible();
+    await page
+      .getByLabel("Campaign name", { exact: true })
+      .fill("linkedin-october-2026");
+    await page
+      .getByRole("button", { name: "Create campaign link", exact: true })
+      .click();
+    const link = await page
+      .getByLabel("Shareable URL", { exact: true })
+      .inputValue();
+    const url = new URL(link);
+    expect(url.pathname).toBe("/dev-preview/careers/sample-job-001");
+    expect(url.searchParams.get("source")).toBe("linkedin");
+    expect(url.searchParams.get("campaign")).toBe("linkedin-october-2026");
+    const download = page.waitForEvent("download");
+    await page
+      .getByRole("button", { name: "Download QR", exact: true })
+      .click();
+    const qr = await download;
+    expect(qr.suggestedFilename()).toBe(
+      "taskwaveph-linkedin-linkedin-october-2026-qr.png",
+    );
+    const image = await loadImage((await qr.path())!);
+    for (const size of [1024, 320]) {
+      const canvas = createCanvas(size, size);
+      const context = canvas.getContext("2d");
+      context.drawImage(image, 0, 0, size, size);
+      const pixels = context.getImageData(0, 0, size, size);
+      expect(jsQR(new Uint8ClampedArray(pixels.data), size, size)?.data).toBe(
+        link,
+      );
+      const center = context.getImageData(
+        size / 2 - size * 0.05,
+        size / 2 - size * 0.05,
+        size * 0.1,
+        size * 0.1,
+      ).data;
+      expect(
+        Array.from(
+          { length: center.length / 4 },
+          (_, i) => center[i * 4 + 2] > center[i * 4] + 30,
+        ).some(Boolean),
+      ).toBe(true);
+    }
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+    ).toBe(true);
+    const modal = page.getByRole("dialog", {
+      name: "Recruitment campaign link",
+      exact: true,
+    });
+    const bounds = await modal.boundingBox();
+    expect(bounds).not.toBeNull();
+    expect(bounds!.x).toBeGreaterThanOrEqual(0);
+    expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(width);
+    expect(await modal.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(
+      true,
+    );
+    await page.keyboard.press("Escape");
+    await expect(modal).not.toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Campaign link & QR", exact: true }),
+    ).toBeFocused();
+    await page.goto(link);
+    const apply = page.getByRole("link", {
+      name: "Apply for This Role",
+      exact: true,
+    });
+    await expect(apply).toHaveAttribute(
+      "href",
+      /source=linkedin.*campaign=linkedin-october-2026/,
+    );
+    await apply.click();
+    await expect(
+      page.getByLabel("Position Interested In", { exact: true }),
+    ).toHaveValue("Sample Customer Support Role 1");
+    await expect(page.locator('input[name="source"]')).toHaveValue("linkedin");
+    await expect(page.locator('input[name="campaign"]')).toHaveValue(
+      "linkedin-october-2026",
+    );
+  });
+}
+test("draft jobs have no campaign builder", async ({ page }) => {
+  await page.goto("/dev-preview/jobs/sample-job-015");
+  await expect(
+    page.getByRole("button", { name: "Campaign link & QR", exact: true }),
+  ).toHaveCount(0);
+});
+
+test("logo QR with a maximum-length campaign remains scannable", async ({
+  page,
+}) => {
+  await page.goto("/dev-preview/jobs/sample-job-001");
+  await page
+    .getByRole("button", { name: "Campaign link & QR", exact: true })
+    .click();
+  await page.getByLabel("Campaign name", { exact: true }).fill("a".repeat(100));
+  await page
+    .getByRole("button", { name: "Create campaign link", exact: true })
+    .click();
+  const link = await page
+    .getByLabel("Shareable URL", { exact: true })
+    .inputValue();
+  const download = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Download QR", exact: true }).click();
+  const image = await loadImage((await (await download).path())!);
+  const canvas = createCanvas(320, 320);
+  const context = canvas.getContext("2d");
+  context.drawImage(image, 0, 0, 320, 320);
+  expect(
+    jsQR(
+      new Uint8ClampedArray(context.getImageData(0, 0, 320, 320).data),
+      320,
+      320,
+    )?.data,
+  ).toBe(link);
 });

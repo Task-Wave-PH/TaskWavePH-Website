@@ -1,4 +1,6 @@
 "use client";
+import { ApplicationFilterControls } from "./application-filters";
+import type { ApplicationFilters } from "@/features/applications/campaigns";
 import { adminOperation } from "@/features/admin/operation-feedback";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -22,6 +24,8 @@ import {
   LayoutDashboard,
   BriefcaseBusiness,
   UsersRound,
+  History,
+  Settings,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import {
@@ -141,22 +145,56 @@ function OwnerNavigation() {
   const { setOpenMobile } = useSidebar();
   if (current?.role !== "Owner") return null;
   return (
-    <SidebarMenuItem>
-      <SidebarMenuButton
-        render={
-          <Link
-            href="/admin/users"
-            aria-current={pathname.includes("/users") ? "page" : undefined}
-          />
-        }
-        isActive={pathname.includes("/users")}
-        className="min-h-11"
-        onClick={() => setOpenMobile(false)}
-      >
-        <UsersRound />
-        <span>Users</span>
-      </SidebarMenuButton>
-    </SidebarMenuItem>
+    <>
+      <SidebarMenuItem>
+        <SidebarMenuButton
+          render={
+            <Link
+              href="/admin/settings"
+              aria-current={pathname.includes("/settings") ? "page" : undefined}
+            />
+          }
+          isActive={pathname.includes("/settings")}
+          className="min-h-11"
+          onClick={() => setOpenMobile(false)}
+        >
+          <Settings />
+          <span>Settings</span>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+      <SidebarMenuItem>
+        <SidebarMenuButton
+          render={
+            <Link
+              href="/admin/users"
+              aria-current={pathname.includes("/users") ? "page" : undefined}
+            />
+          }
+          isActive={pathname.includes("/users")}
+          className="min-h-11"
+          onClick={() => setOpenMobile(false)}
+        >
+          <UsersRound />
+          <span>Users</span>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+      <SidebarMenuItem>
+        <SidebarMenuButton
+          render={
+            <Link
+              href="/admin/activity"
+              aria-current={pathname.includes("/activity") ? "page" : undefined}
+            />
+          }
+          isActive={pathname.includes("/activity")}
+          className="min-h-11"
+          onClick={() => setOpenMobile(false)}
+        >
+          <History />
+          <span>Activity</span>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    </>
   );
 }
 export function Dashboard({
@@ -214,7 +252,33 @@ export function DashboardShell({
   );
 }
 
+function LiveApplicationFilters(
+  props: React.ComponentProps<typeof ApplicationFilterControls>,
+) {
+  const options = useQuery(api.admin.attributionOptions, {});
+  const {
+    results: jobs,
+    status,
+    loadMore,
+  } = usePaginatedQuery(api.jobs.staffList, {}, { initialNumItems: 50 });
+  return (
+    <ApplicationFilterControls
+      {...props}
+      jobs={jobs}
+      sources={options?.sources}
+      campaigns={options?.campaigns}
+      moreJobs={
+        status === "CanLoadMore" || status === "LoadingMore"
+          ? () => loadMore(50)
+          : undefined
+      }
+      loadingJobs={status === "LoadingMore"}
+    />
+  );
+}
+
 function Records({ kind }: { kind: Kind }) {
+  const [filters, setFilters] = useState<ApplicationFilters>({});
   const [status, setStatus] = useState("");
   const [priorityOnly, setPriorityOnly] = useState(false);
   const [message, setMessage] = useState("");
@@ -228,6 +292,7 @@ function Records({ kind }: { kind: Kind }) {
     api.admin.list,
     {
       kind,
+      ...(kind === "applications" ? { filters } : {}),
       ...(status ? { status } : {}),
       ...(priorityOnly ? { priorityOnly: true } : {}),
     },
@@ -236,6 +301,18 @@ function Records({ kind }: { kind: Kind }) {
   return (
     <>
       <RecordsView
+        filters={
+          kind === "applications" ? (
+            <LiveApplicationFilters
+              status={status}
+              onChange={(value, nextStatus) => {
+                setFilters(value);
+                setStatus(nextStatus);
+              }}
+              actions={<ExportButtons status={status} filters={filters} />}
+            />
+          ) : undefined
+        }
         kind={kind}
         rows={results}
         status={status}
@@ -273,11 +350,6 @@ function Records({ kind }: { kind: Kind }) {
                 }
               }
             : undefined
-        }
-        actions={
-          kind === "applications" ? (
-            <ExportButtons status={status} />
-          ) : undefined
         }
         loading={pagination === "LoadingFirstPage"}
         loadingMore={pagination === "LoadingMore"}
@@ -341,9 +413,10 @@ function LiveLeadEditor({ record }: { record: LeadView }) {
     <LeadDetails
       record={record}
       backHref="/admin/businessLeads"
-      onSave={async (status, notes, expected) => {
+      onSave={async (status, notes, expected, nextFollowUp) => {
         await update({
           kind: "businessLeads",
+          nextFollowUp,
           id: record._id,
           status,
           notes,

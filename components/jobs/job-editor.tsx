@@ -1,4 +1,5 @@
 "use client";
+import { CampaignBuilder } from "./campaign-builder";
 import { adminOperation } from "@/features/admin/operation-feedback";
 import { useState } from "react";
 import Link from "next/link";
@@ -121,6 +122,9 @@ export function JobEditor({
         Use approved role information. New postings remain drafts until
         explicitly published. Salary is optional; all other fields are required.
       </p>
+      {job?.status === "Published" && (
+        <CampaignBuilder job={job} preview={preview} />
+      )}
       <Card className="py-0">
         <CardContent className="p-5 sm:p-8">
           <form

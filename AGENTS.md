@@ -23,7 +23,7 @@ on October 1, 2026. This supersedes the original Sheets-only MVP constraints.
 - Public forms POST through Next.js services to the authenticated Convex HTTP
   adapter. Keep the shared secret server-side. Backend functions validate again.
 - Tables: applications, businessLeads, jobs, adminUsers, staffInvitations, adminActivity, pendingUploads,
-  dashboardState (internal metric readiness).
+  dashboardState (internal metric readiness), ownerSettings (QR and campaign defaults).
   Convex rate-limiter supplies persistent throttling; aggregate components supply
   exact private dashboard counts. Synchronize all write paths, including seeds.
 - Administrative functions require verified Clerk identity AND active adminUsers
@@ -60,14 +60,28 @@ vacancies; only approved staff-published job postings are vacancies. Do not inve
 
 Prefer existing shadcn primitives styled with official brand tokens. Preserve
 original logos, Poppins, navy/blue/cyan/white identity, and mobile-first layouts.
+The October 2026 V1 Team Branding Guide is the current artwork/usage authority;
+see DESIGN.md for source links. Use supplied bright logos on dark surfaces and
+supplied dark-T logos on light surfaces. Preserve logo geometry, colors and white
+seam; do not redraw, recolor or add effects. Clear space is 15% of icon height.
+Working minimums are 96px for icons and 550px for tagged lockups; review compact
+web/QR placements separately without sacrificing scan reliability or readability.
+Supplied SVG icons embed bitmap artwork and must not be treated as true vectors.
+Use one coordinated wave treatment per composition and clear, capable, helpful
+copy. New guide assets require an explicit implementation review before replacing
+existing runtime originals.
+
 Use server components except for needed interactivity. Check 360, 390, 430, 768,
 1024, and 1440 pixel layouts, keyboard access, contrast, and reduced motion.
 
 Admin uses a branded shadcn Sidebar, paginated records, filters, detail editing,
-protected CV viewing/downloads, CSV/styled XLSX exports, and confirmed deletion.
+protected CV viewing/downloads, branded PDF/styled XLSX exports, and confirmed deletion.
 Use an admin-only shadcn Sonner toaster. Database actions show pending feedback,
 success only after confirmation, and safe errors while retaining inline messages.
 Preview notifications explicitly identify sample changes.
+The staff account menu and access-denied sign-out button require a shared
+confirmation dialog. Cancel preserves the session and restores focus; pending
+sign-out prevents repeat actions, and failures remain visible for retry.
 No public marketing sign-up or dashboard links.
 Staff account creation requires an Owner invitation and Clerk invite-only mode.
 The registration route accepts invitation tickets; ordinary login has no signup
@@ -198,3 +212,49 @@ add noindex, and send private/no-store responses. Host routing is not authorizat
   caching. Only sitemap generation may cache a bounded first job page for 60
   seconds in production. Keep private data, arbitrary cursors, tracking, and
   eligibility checks uncached; saves always check current job status.
+
+## Recruitment campaigns
+
+- Published jobs offer a client-side campaign URL/QR builder using the configured
+  public site origin and allowlisted attribution only. No personal data in links.
+- Application filters and exports share exact source/campaign,
+  job ID, status, and Philippine date criteria. Use bounded indexed pagination;
+  preserve cursors on sparse pages. Never return partial exports as complete.
+- Use one filter card with basic status/month/source and an advanced toggle for
+  campaign/job/custom dates. Apply and clear update table and exports together.
+- The Export dropdown offers branded PDF summaries and full XLSX workbooks. Keep
+  exports approval-protected, private/no-store, bounded to 5,000 matching records/
+  100 pages/25 seconds, and throttled with the existing export budget.
+
+## Staff workflow extensions
+
+- Applicant lookup uses one database-backed search input for reference/name/email.
+  Exact normalized email uses an index; name/reference use a private full-text
+  search field populated on intake/seeding and by bounded historical backfill.
+  Preserve all existing filters and use the same search for exports. Search terms
+  stay in request bodies and local component state, never URLs, logs, or storage.
+- Job filters show titles/statuses with paginated options. Source/campaign inputs
+  offer bounded known codes while accepting custom exact codes.
+- Leads have optional nextFollowUp calendar dates. Compare Philippine dates;
+  overdue counts exclude today and Closed leads. Update existing transactional
+  aggregates on all writes/deletes. Follow-up edits include the loaded date
+  alongside status/notes for conflict detection. No automatic email reminders.
+- Staff activity history and recent dashboard audit events are Owner-only on both
+  UI and backend. Paginate metadata; resolve staff labels without joining applicant
+  profiles or copying notes. Keep admin host/noindex/private-response protections.
+- Public form groups explain optional screening. CV byte upload progress is
+  separate from confirmed database saving; preserve receipts and idempotent retries.
+
+## Owner settings
+
+- Only active Owners change QR branding and campaign defaults; approved Staff can
+  read defaults for campaign generation. Validate colors and options on the backend,
+  check loaded revisions, throttle saves, and audit metadata only.
+- Keep white QR backgrounds, quiet zones, high error correction, bounded logo sizes,
+  and original official artwork. Do not accept arbitrary logo URLs or public settings
+  reads. Existing downloaded QR images cannot change retroactively.
+
+- Owner QR PNG uploads use Convex storage, bounded static PNG validation, local
+  previews, revision/approval checks at commit, and protected private image reads.
+  Delete replaced files and clean unlinked uploads after one hour. Keep file IDs
+  server-side and keep the website logo separate from the campaign QR logo.

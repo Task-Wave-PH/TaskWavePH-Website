@@ -83,11 +83,13 @@ function OverviewContent({
   days,
   onRange,
   preview = false,
+  owner = false,
 }: {
   data?: OverviewData;
   days: 7 | 30 | 90;
   onRange: (days: 7 | 30 | 90) => void;
   preview?: boolean;
+  owner?: boolean;
 }) {
   const root = preview ? "/dev-preview" : "/admin";
   return (
@@ -125,6 +127,29 @@ function OverviewContent({
         </p>
       )}
       <SectionCards data={data} preview={preview} />
+      <Card>
+        <CardHeader>
+          <CardTitle>Overdue enquiries</CardTitle>
+          <CardDescription>
+            Open enquiries with a follow-up date before today in the
+            Philippines.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-wrap items-center justify-between gap-4">
+          <p className="text-3xl font-semibold text-brand-navy tabular-nums">
+            {data?.ready ? data.overdueLeads.toLocaleString() : "—"}
+          </p>
+          <Link
+            className={buttonVariants({
+              variant: "outline",
+              className: "min-h-11",
+            })}
+            href={`${root}/businessLeads`}
+          >
+            Review enquiries
+          </Link>
+        </CardContent>
+      </Card>
       <ChartAreaInteractive
         activity={data?.activity ?? []}
         days={days}
@@ -149,50 +174,60 @@ function OverviewContent({
           loading={!data?.ready}
         />
       </div>
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent team activity</CardTitle>
-          <CardDescription>
-            {preview
-              ? "Preview changes are temporary; no audit records are saved."
-              : "Administrative actions · no applicant details or internal notes"}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {!data?.ready ? (
-            <p role="status" className="text-sm text-muted-foreground">
-              Loading activity…
-            </p>
-          ) : data.recent.length ? (
-            <ul className="divide-y">
-              {data.recent.map((row) => (
-                <li
-                  key={row.id}
-                  className="flex flex-wrap justify-between gap-3 py-4 text-sm"
-                >
-                  <span className="capitalize">
-                    {row.action.replaceAll("_", " ")}
-                  </span>
-                  <span className="text-muted-foreground">
-                    {formatAdminDate(row.timestamp)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              No saved administrative activity to display.
-            </p>
-          )}
-        </CardContent>
-      </Card>
+      {owner && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent team activity</CardTitle>
+            <CardDescription>
+              {preview
+                ? "Preview changes are temporary; no audit records are saved."
+                : "Administrative actions · no applicant details or internal notes"}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {!data?.ready ? (
+              <p role="status" className="text-sm text-muted-foreground">
+                Loading activity…
+              </p>
+            ) : data.recent.length ? (
+              <ul className="divide-y">
+                {data.recent.map((row) => (
+                  <li
+                    key={row.id}
+                    className="flex flex-wrap justify-between gap-3 py-4 text-sm"
+                  >
+                    <span className="capitalize">
+                      {row.action.replaceAll("_", " ")}
+                    </span>
+                    <span className="text-muted-foreground">
+                      {formatAdminDate(row.timestamp)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                No saved administrative activity to display.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </>
   );
 }
 function LiveOverview() {
   const { days, day, setDays } = useOverviewPeriod();
+  const current = useQuery(api.staffManagement.current, {});
   const data = useQuery(api.overview.summary, { days, day });
-  return <OverviewContent data={data} days={days} onRange={setDays} />;
+  return (
+    <OverviewContent
+      data={data}
+      days={days}
+      onRange={setDays}
+      owner={current?.role === "Owner"}
+    />
+  );
 }
 export function AdminOverview() {
   return (

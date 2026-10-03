@@ -18,6 +18,7 @@ export const summary = adminQuery({
     leads: v.array(statusCount),
     jobs: v.array(statusCount),
     priorityLeads: v.number(),
+    overdueLeads: v.number(),
     activity: v.array(
       v.object({
         date: v.string(),
@@ -44,9 +45,14 @@ export const summary = adminQuery({
         leads: [],
         jobs: [],
         priorityLeads: 0,
+        overdueLeads: 0,
         activity: [],
         recent: [],
       };
+    const staff = await ctx.db
+      .query("adminUsers")
+      .withIndex("by_subject", (q) => q.eq("subject", ctx.actor))
+      .unique();
     const counts = async (namespace: string, statuses: string[]) => {
       const values = await byStatus.countBatch(
         ctx,
@@ -81,6 +87,7 @@ export const summary = adminQuery({
       appDays,
       leadDays,
       priorityLeads,
+      overdueLeads,
       recent,
     ] = await Promise.all([
       counts("applications", ["New", "Reviewed", "Shortlisted", "Closed"]),
@@ -89,7 +96,17 @@ export const summary = adminQuery({
       buckets("applications"),
       buckets("businessLeads"),
       byStatus.count(ctx, { namespace: "priorityLeads" }),
-      ctx.db.query("adminActivity").order("desc").take(8),
+      byTime.count(ctx, {
+        namespace: "leadFollowUp",
+        bounds: { upper: { key: dayStart(today), inclusive: false } },
+      }),
+      staff?.role === "Owner"
+        ? ctx.db
+            .query("adminActivity")
+            .withIndex("by_timestamp")
+            .order("desc")
+            .take(8)
+        : Promise.resolve([]),
     ]);
     return {
       ready: true,
@@ -97,6 +114,7 @@ export const summary = adminQuery({
       leads,
       jobs,
       priorityLeads,
+      overdueLeads,
       activity: appDays.map((count, i) => ({
         date: dateKey(today - days + i + 1),
         applications: count,

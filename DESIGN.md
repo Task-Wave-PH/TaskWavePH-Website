@@ -6,8 +6,25 @@ kit into a text reference for people and AI agents.
 
 ## 1. Sources and authority
 
-Reviewed on **October 1, 2026**, from the owner-supplied
-[Drive folder](https://drive.google.com/drive/folders/1qozxVyUSoB2CC_QRBPyVHmjvo4i8ya-H).
+Updated on **October 3, 2026**, after reviewing the owner-supplied
+[Final Logo & branding assets-V1 folder](https://drive.google.com/drive/folders/1A4HMA6p3RrgPaAM5YZJmVklhq910uAD5)
+and its **TaskWavePH Team Branding Guide, Version 1.0 (October 2026)**.
+The original media kit was reviewed on October 1, 2026 and remains a reference.
+
+### Current approved sources
+
+- [Team Branding Guide PDF](https://drive.google.com/file/d/1KSBFEICm8s_AtB-N3uC5M1i6Kr_cnmGa/view): current logo usage, typography, spacing, composition, and production guidance.
+- [Approved logo assets](https://drive.google.com/drive/folders/1rHlvNjLbLCfKhiEIyw8lK12rtPau7dj6): bright and dark variants, each with horizontal, stacked, and icon PNG/SVG files.
+- [Exact bright master PNG](https://drive.google.com/file/d/17pWDvpPmapCXMKHws3u5-rkt1Bzqlmf_/view) and [editable SVG](https://drive.google.com/file/d/1lT09KQuVyf1SrM0h9gzDdowYR2aV0MSx/view): supplied source artwork.
+- [Technical sources](https://drive.google.com/file/d/16YpwfclTL4skyP10lHP_JXc2PU33fO5G/view): production references checked by the guide author on October 2, 2026.
+
+The V1 guide supersedes earlier missing or inferred logo-usage rules. The company
+story, service categories, primary tagline, and core palette remain consistent.
+Its working size thresholds are newly defined team standards, not facts from the
+original media kit or guarantees from a print vendor. Source files remain in
+Drive; updating this reference does not replace the website's runtime assets.
+
+### Earlier sources retained for provenance
 
 | Source                                                                                                 | Local original                                                                              | Role                                                                                                   |
 | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
@@ -16,9 +33,10 @@ Reviewed on **October 1, 2026**, from the owner-supplied
 | [Latest sticker sheet](https://drive.google.com/file/d/1IHw-FbRzCqhUP1RA9rIIeSNDgsZzH-lm/view)         | [TWPH-stickers-set-2026-09-30.png](docs/brand/TWPH-stickers-set-2026-09-30.png)             | Supplementary team culture, wave motifs, and illustration examples; source modified September 30, 2026 |
 | [Merchandise production brief](https://drive.google.com/file/d/1mh3nXPveJU3L5ZDUugGWfGCdqGoZ2f49/view) | [TaskWavePH_Merch_Production_Brief.docx](docs/brand/TaskWavePH_Merch_Production_Brief.docx) | Supporting constraints for faithful colors, proportions, alignment, and production quality             |
 
-The media kit specifies the brand. The production brief adds usage constraints;
-sticker artwork supplies cultural messaging. When sources conflict, document the
-conflict and seek clarification before changing the brand specification.
+Use the current V1 guide for approved artwork and usage rules. The original media
+kit supplies earlier brand facts; the production brief adds merchandise constraints
+and sticker artwork supplies cultural messaging. Record unresolved conflicts
+within current approved sources before changing the brand specification.
 [AGENTS.md](AGENTS.md) governs product scope and engineering requirements.
 
 Sections labeled **media-kit specification** or **source copy** reproduce details
@@ -90,9 +108,11 @@ capitalization and lettering intact.
 Keep wording and order intact. Do not replace the primary tagline with a sticker
 slogan. Preserve text already embedded in logo files.
 
-### Inferred voice — Website guidance
+### V1 guide — Voice and website guidance
 
-The materials suggest a clear, confident, professional, and people-focused voice.
+The guide specifies a **clear, capable, helpful** voice. Lead with team capabilities,
+a useful business benefit, and a next action. Use one primary CTA per marketing asset.
+Verify service availability, vacancies, and contacts before publishing.
 Write direct sentences about support, reliable work, efficient processes, and
 growth. Use plain language for applicants and factual descriptions for clients.
 
@@ -146,6 +166,15 @@ or compressed previews.
 White backgrounds and white reverse lettering also appear in the kit. White is
 a supporting surface/text treatment, not a sixth labeled palette swatch.
 
+### V1 guide — Supporting accent targets
+
+Bright cyan `#24D5FF` and azure `#1685FF` are supporting accent targets for the
+bright artwork. They are not exact sampled gradient stops or replacements for
+core colors. Preserve the supplied logo colors. Navy/off-white are the main
+fields; royal blue supplies emphasis and cyan supports decorative lines/waves.
+Use navy or charcoal text on light surfaces and white/off-white on navy; cyan
+should not be small text on light backgrounds.
+
 ### Website guidance
 
 - Use navy and readable neutrals to anchor content; use blue and cyan deliberately.
@@ -174,42 +203,74 @@ Keep applicant text readable on small screens. The kit does not specify a UI typ
 scale, line-height system, spacing tokens, or font files; establish those as
 implementation choices rather than attributing them to the kit.
 
+The V1 wordmark uses **Poppins Bold**: TASK and PH are navy on light surfaces
+and white on dark surfaces; WAVE is blue on light and bright cyan on dark.
+The tagline uses **Poppins Regular** with generous tracking. Preserve
+**OUTSOURCE. OPTIMIZE. GROW.**, including order and periods. Use Bold for key
+headlines, Semibold/Medium for subheads and labels, and Regular for body text.
+Keep body copy left aligned and use sentence case outside the logo.
+
 Do not recreate the wordmark by typing Poppins text when a supplied logo fits.
 Do not assume decorative sticker script is a licensed or specified brand font.
 
 ## 6. Logos, icons, and visual language
 
-### Observed logo treatments
+### V1 guide — Approved logo system
 
-The logo combines a **T** with a flowing **W / wave** motif. Full-color artwork
-uses navy, blue, and cyan, including white detailing in the wave. The kit shows
-horizontal and stacked arrangements, white reverse treatments, and a standalone
-monogram. Use the supplied artwork rather than redrawing its geometry.
+The T and flowing W/wave retain their supplied geometry and white seam.
 
-The kit's white monogram and monochrome lockups are visible in the reference board
-but are not supplied as separate production files in this folder. Do not claim a
-standalone white/vector asset exists or recolor a PNG to create an official variant.
+| Supplied version        | Intended surfaces                                          | Placement                                   |
+| ----------------------- | ---------------------------------------------------------- | ------------------------------------------- |
+| Bright / primary        | Navy, charcoal, black, dark social layouts and merchandise | Bright horizontal, stacked, or icon artwork |
+| Dark T / light surfaces | White, off-white, documents and light layouts              | Dark horizontal, stacked, or icon artwork   |
 
-### Website guidance — Logo use
+Use horizontal lockups for headers/wide layouts, stacked lockups for centered
+placements, and icons for avatars or small placements. Center the bright icon
+on navy for a social profile, keeping the full symbol inside the circular crop.
+Do not mix color versions within one layout or recolor icons manually. The guide
+notes minor differences between the two source icons; they are approved supplied
+artwork, not proof of identical outlines. A future unified outline requires a
+faithful trace of the bright master and review of both versions.
 
-- Preserve aspect ratio, colors, embedded tagline, alignment, and source transparency.
-- Use the transparent navy/blue horizontal logo on light backgrounds. Use the
-  supplied white/blue lockup on its existing black background when appropriate.
-- Inspect the standalone monogram against its intended surface: its dark T needs
-  enough contrast. Use actual artwork for brand identity; Lucide Waves is a
-  foundation placeholder, not the official logo.
-- The horizontal PNGs include generous canvas padding. Size for the visible mark,
-  not just the file dimensions. Never stretch or crop meaningful artwork.
-- Avoid blurry enlargement, distortion, color substitutions, extra effects, or
-  rearranging the logo's parts. Obtain a suitable approved source for small or
-  specialized placements when the supplied raster artwork is insufficient.
-- No official minimum size or measured clear-space rule is supplied. Leave ample
-  surrounding space and verify legibility at the actual display size; label any
-  numeric size/spacing choices as implementation guidance.
+### V1 guide — Clear space and working minimums
+
+- Clear space on every side is **x = 15% of the icon height**. For a lockup,
+  calculate x using its icon height. Keep text, trim, and patterns outside it.
+- Icon starting minimum: **96 px wide on screen / 20 mm in print**.
+- Tagged lockup starting minimum: **550 px wide / 90 mm in print**.
+- Inspect at final size; increase size if the seam or tagline breaks up. Use an
+  icon and omit the tagline for tiny placements.
+
+These are team working thresholds. Existing compact headers, favicons, and QR
+centers require a separate adoption review: do not enlarge a QR logo beyond
+scan-safe bounds merely to meet the screen threshold. Test legibility and scans
+at the intended output size and document constrained placements as implementation
+choices, rather than claiming full compliance with the working minimums.
+
+### Source integrity and website use
+
+Preserve proportions, source transparency, lettering, alignment, and white seam.
+Never stretch, rotate, crop meaningful artwork, separate ribbon pieces, add glow,
+shadows, outlines or new logo gradients. On busy photographs, give the logo a
+plain navy or off-white area. Dark-T artwork must not sit on a dark surface.
+UI icons are not substitutes for brand artwork.
+
+The supplied SVG icons contain **embedded raster artwork**, not editable vector
+curves or gradient stops. Lockup text/layout are editable with Poppins installed.
+A larger SVG or resampled horizontal PNG does not add icon detail. The exact
+bright PNG has a native width of about 1,179 pixels, per the guide. For cutting,
+large print or embroidery, obtain reviewed production artwork; do not trace or
+regenerate it during routine website work. Do not extract logos from screenshots,
+photographs, mockups, or guide pages. Earlier reconstructed vectors are outside
+this approved source set.
 
 ### Website guidance — Imagery and icons
 
-Use blue/cyan wave motifs to suggest momentum and connection. Keep decorative
+Use one coordinated blue/cyan wave treatment per composition to suggest momentum
+and connection. Keep a shared grid, generous space, and one focal point. Use
+consistent outline icon weights. Photography should show credible working people,
+service delivery, or useful business contexts, with natural lighting, clean spaces,
+and approved usage permissions. Keep decorative
 waves away from form labels, errors, and important controls. Motion, if introduced
 later, should respect reduced-motion preferences.
 
@@ -239,8 +300,11 @@ file has an alpha channel; the two RGB horizontal originals have baked backgroun
 
 Logo sources and the media kit were last modified September 29, 2026; the copied
 sticker sheet was last modified September 30, 2026. Dates are from Drive metadata.
-No SVG logos, font files, standalone service icons, or separate tagline image were
-found. The tagline is present in the media kit and horizontal logo images.
+At the original October 1 review, no SVG logos, font files, standalone service
+icons, or separate tagline image were found in that source folder. The new V1
+folder supplies the PNG/SVG logo system described above; this local inventory
+still lists the earlier downloaded artwork. The tagline appears in the media
+kit and horizontal logo images.
 
 Store reference boards and production documents under `docs/brand/`. Files under
 `public/logo/` are eligible for public serving. Future derived web assets should
@@ -266,6 +330,19 @@ They remain in Drive rather than adding every production image to the repository
 | Mug                                 | [TWPH-mug.png](https://drive.google.com/file/d/119FkaPfrej8RHaoRjqD-t47ipAQMd2zx/view)                      |
 | Navy polo                           | [TWPH-Dry-fit-polo-shirt-navy.png](https://drive.google.com/file/d/1KT2dCUIEmmCq3qVem4fV96lpN-yvd5Qu/view)  |
 | Black polo                          | [TWPH-Dry-fit-polo-shirt-black.png](https://drive.google.com/file/d/1ckW7n_yRC_s1ZrOqjaizy8MuhyU4aYu-/view) |
+
+### V1 guide — Production and approval
+
+Use RGB artwork for screens and PNG for transparent graphics. Print vendors must
+convert for their press and material; the guide does not define a universal CMYK
+recipe. Agree on a physical color sample, inspect final-size proofs, and review
+any one-color adaptation separately. Embroidery needs simplified approved artwork,
+a digitized stitch file, and a sewn sample. Mockups illustrate placement and are
+not production-ready artwork or photographs of finished merchandise.
+
+Keep a dated approved source set under one brand custodian. A future true-vector
+replacement must match the bright master, derive both colorways consistently,
+and replace the source set together after approval.
 
 ### Supporting constraints — Production brief
 
@@ -365,7 +442,7 @@ and unsupported template navigation are omitted.
 Applicant detail screens retain the dashboard-01 shell, with shadcn Cards and
 Tabs for profile, CV, and submission metadata. The review card edits status and
 notes; a shadcn Sheet confirms deletion. CVs use page/zoom controls and a separate
-download action. CSV/Excel export buttons sit beside the list status controls.
+download action. The Export dropdown sits inside the single application filter card.
 Synthetic preview screens reuse the same applicant detail presentation.
 
 ## Services page illustrations
@@ -487,6 +564,11 @@ and disabled buttons. Keep notifications within mobile screen bounds, allow
 dismissal, and respect reduced motion. Mount only in admin and local preview
 layouts so messages survive navigation; preview messages identify sample changes.
 
+Logout uses a compact branded shadcn AlertDialog with Cancel focused first,
+an explicit confirmation, and an unsaved-changes notice. Keep both actions at
+least 44px tall. Preserve focus on cancellation and show safe errors inside the
+dialog; disable actions while signing out. Preview wording says Exit preview.
+
 Access-denied and 404 screens use the original logo, Poppins, a white shadcn Card,
 and a navy illustration panel with quiet blue/cyan circular motifs. Stack panels
 on phones; keep actions at least 44px tall. Denied staff see the current account,
@@ -585,3 +667,59 @@ Header logos load eagerly with high fetch priority; footer logos stay lazy.
 Initially visible reveal containers skip animation when the client initializes;
 sections entering from below still receive one-time Motion reveals. Keep content
 visible while assets download; do not introduce an all-assets loading gate.
+
+## Recruitment campaign tools
+
+Use a Campaign link & QR button inside Published job editors to open a shadcn
+Dialog containing source, placement, campaign code, links, and downloads. Keep
+the modal scrollable on small screens and restore trigger focus on dismissal.
+Use 20px outer padding on mobile and 24px on desktop, with bordered campaign
+details and sharing groups. Separate headers and action rows with light borders. Stack controls on mobile and use 44px targets. QR downloads use
+navy modules on solid white with a four-module quiet zone. The owner approved a
+centered original TaskWavePH symbol: use high (H) error correction, a 25% logo
+inside a 28% white backing, and preserve finder patterns. Keep the artwork’s
+proportions and colors intact. Never make the QR background transparent or add
+decorative gradients. Verify the exact URL still decodes after composition and
+resize; scan a printed sample before distributing it. Keep
+application attribution in private administration. Sample tools clearly identify
+their synthetic links and data.
+
+Applications use one shadcn filter card: status, month, and source at first glance;
+a lightweight Advanced filters toggle reveals campaign, job selection, and custom dates.
+Keep Apply/Clear together and one Export dropdown on the opposite side on desktop,
+stacked on mobile. Omit the campaign-results panel and technical quota copy. PDF
+reports use Poppins, the original symbol, navy table headers, light gray alternating
+rows, white margins, and page numbers. XLSX exports use the same logo and colors,
+a title/filter banner, frozen headers, and all exportable applicant fields.
+
+## Applicant lookup and follow-up tools
+
+Keep one Search applicants input above the existing basic filters. Job choices show
+posting titles and statuses, not copied IDs. Suggested source/campaign codes retain
+custom entry. Keep search/filter drafts local until Apply; Clear resets everything.
+Use the existing shadcn controls, mobile stacking, and 44px touch targets.
+
+Lead detail editing groups the optional follow-up date with status and internal
+notes. Overdue dashboard totals use a simple branded Card with an enquiry link;
+avoid alarm colors or invented urgency claims. Activity history uses a paginated
+shadcn Table and stays Owner-only, including sidebar navigation.
+
+Public applications use smaller labeled fieldsets for contact/role, experience,
+optional screening, CV/work samples, and additional information. Explain optional
+questions before their fields. CV feedback distinguishes checking, ready locally,
+uploading, and server processing. Keep progress accessible and never show success
+until the saved application is confirmed.
+
+## Owner QR settings
+
+Owner Settings uses compact shadcn cards for QR controls, a square preview, and
+campaign defaults. Use the supplied symbol or wordmark without recoloring or
+stretching. Solid and diagonal gradient modules may use dark brand colors; retain
+white backgrounds, quiet zones, high error correction, and bounded logo sizes
+(15%, 20%, or 25%). Settings are Owner-editable, with Staff-readable defaults for
+campaign generation. Do not expose staff tools in public navigation.
+
+Owner-approved custom PNGs can be selected in QR Settings. Preview before saving,
+preserve the uploaded image proportions, and retain the scan-safe size bounds.
+The upload control uses a simple grouped container and shows pending local state;
+it does not change public website branding.

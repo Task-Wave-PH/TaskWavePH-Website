@@ -1,18 +1,31 @@
 "use client";
+import {
+  filterParams,
+  type ApplicationFilters,
+} from "@/features/applications/campaigns";
 import { toast } from "sonner";
 import { useState } from "react";
+import { ChevronDown, Download, FileText, FileSpreadsheet } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import type { ApplicantView } from "@/features/applications/admin-types";
 export function ExportButtons({
   status = "",
+  filters = {},
   previewRows,
 }: {
   status?: string;
+  filters?: ApplicationFilters;
   previewRows?: ApplicantView[];
 }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  async function exportFile(format: "csv" | "xlsx") {
+  async function exportFile(format: "pdf" | "xlsx") {
     setBusy(true);
     setError("");
     const toastId = toast.loading("Preparing export…");
@@ -22,21 +35,32 @@ export function ExportButtons({
       let blob: Blob;
       if (previewRows) {
         const { createExport } = await import("@/features/applications/export");
-        const bytes = await createExport(previewRows, format);
+        const { loadPreviewExportAssets } =
+          await import("@/features/applications/export-assets");
+        const assets = await loadPreviewExportAssets(format);
+        const bytes = await createExport(previewRows, format, {
+          assets,
+          filters,
+          status,
+          preview: true,
+        });
         blob = new Blob([new Uint8Array(bytes).buffer]);
       } else {
-        const params = new URLSearchParams({
+        const payload = {
           format,
+          ...filterParams(filters),
           ...(status ? { status } : {}),
+        };
+        const response = await fetch("/api/admin/applications/export", {
+          method: "POST",
+          cache: "no-store",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
         });
-        const response = await fetch(
-          `/api/admin/applications/export?${params}`,
-          { cache: "no-store" },
-        );
         if (!response.ok) {
           failureMessage =
             response.status === 413
-              ? "More than 5,000 records match. Narrow the status filter before exporting."
+              ? "Too many records to export. Narrow the filters before exporting."
               : response.status === 429
                 ? "Export limit reached. Please wait a few minutes before trying again."
                 : failureMessage;
@@ -64,24 +88,40 @@ export function ExportButtons({
   }
   return (
     <div>
-      <div className="flex flex-wrap gap-2">
-        <Button
-          className="min-h-11 px-4"
-          variant="outline"
-          disabled={busy}
-          onClick={() => exportFile("csv")}
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              type="button"
+              className="min-h-11 px-4"
+              variant="outline"
+              disabled={busy}
+            />
+          }
         >
-          Export CSV
-        </Button>
-        <Button
-          className="min-h-11 px-4"
-          variant="outline"
-          disabled={busy}
-          onClick={() => exportFile("xlsx")}
-        >
-          Export Excel
-        </Button>
-      </div>
+          <Download />
+          {busy ? "Exporting…" : "Export"}
+          <ChevronDown />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="min-w-48">
+          <DropdownMenuItem
+            className="min-h-11"
+            disabled={busy}
+            onClick={() => exportFile("pdf")}
+          >
+            <FileText />
+            PDF report
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            className="min-h-11"
+            disabled={busy}
+            onClick={() => exportFile("xlsx")}
+          >
+            <FileSpreadsheet />
+            Excel workbook
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
       {error && (
         <p role="alert" className="mt-2 text-sm text-destructive">
           {error}

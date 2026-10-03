@@ -81,6 +81,8 @@ export default async function proxy(
         "/sign-in",
         "/sign-up",
         "/users",
+        "/activity",
+        "/settings",
         "/accept-invitation",
       ].some((prefix) =>
         prefix === "/"

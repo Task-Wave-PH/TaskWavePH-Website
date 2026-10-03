@@ -111,3 +111,14 @@ describe("admin domain isolation", () => {
     );
   });
 });
+
+it("isolates the Owner activity route on the admin hostname", async () => {
+  expect((await call("https://www.taskwaveph.com/admin/activity")).status).toBe(
+    404,
+  );
+  const response = await call("https://admin.taskwaveph.com/activity");
+  expect(response.headers.get("x-middleware-rewrite")).toBe(
+    "https://admin.taskwaveph.com/admin/activity",
+  );
+  expect(response.headers.get("cache-control")).toBe("private, no-store");
+});

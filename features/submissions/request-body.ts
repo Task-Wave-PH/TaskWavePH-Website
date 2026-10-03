@@ -10,7 +10,11 @@ export class SubmissionBodyError extends Error {
   }
 }
 
-export async function readSubmissionBody(request: Request, timeoutMs = 30000) {
+export async function readSubmissionBody(
+  request: Request,
+  timeoutMs = 30000,
+  maxBytes = MAX_REQUEST_BYTES,
+) {
   const reader = request.body?.getReader();
   if (!reader) throw new SubmissionBodyError("INVALID_SUBMISSION", 400);
   let aborted = false;
@@ -34,8 +38,7 @@ export async function readSubmissionBody(request: Request, timeoutMs = 30000) {
       if (aborted) throw new SubmissionBodyError("REQUEST_TIMEOUT", 408);
       if (done) break;
       total += value.byteLength;
-      if (total > MAX_REQUEST_BYTES)
-        throw new SubmissionBodyError("TOO_LARGE", 413);
+      if (total > maxBytes) throw new SubmissionBodyError("TOO_LARGE", 413);
       chunks.push(value);
     }
     const bytes = new Uint8Array(total);

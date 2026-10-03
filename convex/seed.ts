@@ -1,3 +1,4 @@
+import { applicantSearchText } from "../features/applications/search";
 import { v, ConvexError } from "convex/values";
 import {
   internalAction,
@@ -61,6 +62,10 @@ export const insert = internalMutation({
     void _website;
     const id = await ctx.db.insert("applications", {
       data,
+      searchText: applicantSearchText({
+        reference: `TW-SEED-${String(args.index + 1).padStart(3, "0")}`,
+        data,
+      }),
       reference: `TW-SEED-${String(args.index + 1).padStart(3, "0")}`,
       submittedAt: Date.now() - args.index * 86400000,
       consentVersion: "development-sample",

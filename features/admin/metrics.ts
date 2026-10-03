@@ -1,3 +1,4 @@
+import { isLeadOverdue } from "../leads/follow-up";
 export const DAY = 86_400_000;
 const MANILA_OFFSET = 8 * 3_600_000;
 export const manilaDay = (timestamp: number) =>
@@ -17,6 +18,7 @@ export type OverviewData = {
   leads: StatusCount[];
   jobs: StatusCount[];
   priorityLeads: number;
+  overdueLeads: number;
   activity: { date: string; applications: number; leads: number }[];
   recent: { id: string; action: string; timestamp: number }[];
 };
@@ -26,7 +28,12 @@ export const countStatus = (counts: StatusCount[], status: string) =>
   counts.find((row) => row.status === status)?.count ?? 0;
 export function previewOverview(
   applications: { status: string; submittedAt: number }[],
-  leads: { status: string; submittedAt: number; priority?: boolean }[],
+  leads: {
+    status: string;
+    submittedAt: number;
+    priority?: boolean;
+    nextFollowUp?: string;
+  }[],
   jobs: { status: string }[],
   days: 7 | 30 | 90,
   today: number,
@@ -57,6 +64,7 @@ export function previewOverview(
     leads: counts(leads, ["New", "Contacted", "Closed"]),
     jobs: counts(jobs, ["Draft", "Published", "Closed", "Archived"]),
     priorityLeads: leads.filter((r) => r.priority).length,
+    overdueLeads: leads.filter((r) => isLeadOverdue(r, dateKey(today))).length,
     activity: Array.from({ length: days }, (_, i) => {
       const day = today - days + i + 1;
       return {

@@ -292,3 +292,91 @@ test("blocked challenge scripts show retry without losing business entries", asy
     "Synthetic retained company",
   );
 });
+
+test("CV upload feedback waits for save and preserves the PDF and retry token on failure", async ({
+  page,
+}) => {
+  await challenge(page);
+  await page.goto("/apply");
+  await application(page);
+  await expect(
+    page.getByRole("group", {
+      name: "Experience and availability",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("group", { name: "Additional screening", exact: true }),
+  ).toContainText("All questions here are optional");
+  await page.getByLabel(/Resume PDF/).setInputFiles({
+    name: "synthetic-progress.pdf",
+    mimeType: "application/pdf",
+    buffer: Buffer.from(sampleResumeBytes()),
+  });
+  await expect(
+    page
+      .getByRole("status")
+      .filter({ hasText: "Ready to submit. Not uploaded yet." }),
+  ).toBeVisible();
+  const tokens: string[] = [];
+  let held: import("@playwright/test").Route | undefined;
+  await page.route("**/api/applications", async (route) => {
+    const request = route.request();
+    const form = await new Request("http://fixture", {
+      method: "POST",
+      headers: { "Content-Type": request.headers()["content-type"] },
+      body: new Uint8Array(request.postDataBuffer()!),
+    }).formData();
+    expect((form.get("resumeFile") as File).name).toBe(
+      "synthetic-progress.pdf",
+    );
+    tokens.push(String(form.get("submissionToken")));
+    if (tokens.length === 1) held = route;
+    else
+      await route.fulfill({
+        status: 503,
+        contentType: "application/json",
+        body: JSON.stringify({ success: false, error: "SUBMISSION_FAILED" }),
+      });
+  });
+  await page
+    .getByRole("button", { name: "Submit Application", exact: true })
+    .click();
+  await expect.poll(() => tokens.length).toBe(1);
+  await expect(
+    page.getByRole("progressbar", { name: "CV upload", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Submitting…", exact: true }),
+  ).toBeDisabled();
+  await expect(
+    page
+      .getByRole("status")
+      .filter({ hasText: "Ready to submit. Not uploaded yet." }),
+  ).toHaveCount(0);
+  await expect(page).toHaveURL(/\/apply$/);
+  await held!.fulfill({
+    status: 503,
+    contentType: "application/json",
+    body: JSON.stringify({ success: false, error: "SUBMISSION_FAILED" }),
+  });
+  await expect(
+    page.getByRole("alert").filter({ hasText: "couldn't submit" }),
+  ).toBeVisible();
+  await expect(page.getByLabel("First Name", { exact: true })).toHaveValue(
+    "Development",
+  );
+  expect(
+    await page
+      .getByLabel(/Resume PDF/)
+      .evaluate((input: HTMLInputElement) => input.files?.[0]?.name),
+  ).toBe("synthetic-progress.pdf");
+  await expect(
+    page.getByRole("button", { name: "Submit Application", exact: true }),
+  ).toBeEnabled({ timeout: 10000 });
+  await page
+    .getByRole("button", { name: "Submit Application", exact: true })
+    .click();
+  await expect.poll(() => tokens.length).toBe(2);
+  expect(tokens[0]).toBe(tokens[1]);
+});

@@ -14,6 +14,41 @@ import {
   SubmissionBodyError,
 } from "../features/submissions/request-body";
 const http = httpRouter();
+http.route({
+  path: "/qr-logo",
+  method: "GET",
+  handler: httpAction(async (ctx) => {
+    const headers = {
+      "Cache-Control": "private, no-store",
+      "X-Robots-Tag": "noindex",
+      "X-Content-Type-Options": "nosniff",
+    };
+    try {
+      const storageId = await ctx.runQuery(internal.qrLogos.find, {});
+      if (!storageId)
+        return new Response("Not found", { status: 404, headers });
+      const budget = await ctx.runMutation(internal.downloads.permit, {});
+      if (!budget.allowed)
+        return new Response("Too many requests", { status: 429, headers });
+      const blob = await ctx.storage.get(storageId);
+      if (!blob) return new Response("Not found", { status: 404, headers });
+      return new Response(blob, {
+        headers: {
+          ...headers,
+          "Content-Type": "image/png",
+          "Content-Disposition": "inline; filename=qr-logo.png",
+        },
+      });
+    } catch (error) {
+      const code = error instanceof ConvexError ? error.data : "UNAVAILABLE";
+      return new Response("Access denied or unavailable", {
+        status:
+          code === "UNAUTHORIZED" ? 401 : code === "FORBIDDEN" ? 403 : 503,
+        headers,
+      });
+    }
+  }),
+});
 const json = (data: object, status = 200) =>
   Response.json(data, { status, headers: { "Cache-Control": "no-store" } });
 http.route({

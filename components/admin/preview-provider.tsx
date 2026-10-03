@@ -6,7 +6,12 @@ import { previewLeads, type LeadView } from "@/features/leads/admin-types";
 type PreviewState = {
   records: ApplicantView[];
   leads: LeadView[];
-  updateLead: (id: string, status: LeadView["status"], notes: string) => void;
+  updateLead: (
+    id: string,
+    status: LeadView["status"],
+    notes: string,
+    nextFollowUp?: string | null,
+  ) => void;
   prioritizeLead: (id: string, priority: boolean) => void;
   removeLead: (id: string) => void;
   update: (id: string, status: ApplicantView["status"], notes: string) => void;
@@ -21,11 +26,18 @@ export function PreviewProvider({ children }: { children: React.ReactNode }) {
       value={{
         records,
         leads,
-        updateLead: (id, status, notes) =>
+        updateLead: (id, status, notes, nextFollowUp) =>
           setLeads((rows) =>
             rows.map((row) =>
               row._id === id
-                ? { ...row, status, notes: notes.trim().slice(0, 2000) }
+                ? {
+                    ...row,
+                    status,
+                    notes: notes.trim().slice(0, 2000),
+                    ...(nextFollowUp !== undefined
+                      ? { nextFollowUp: nextFollowUp || undefined }
+                      : {}),
+                  }
                 : row,
             ),
           ),

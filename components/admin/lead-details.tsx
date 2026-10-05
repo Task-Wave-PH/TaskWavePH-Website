@@ -1,4 +1,5 @@
 "use client";
+import { useUnsavedChanges } from "@/components/admin/use-unsaved-changes";
 import { followUpDateSchema } from "@/features/leads/follow-up";
 import { Input } from "@/components/ui/input";
 import { adminOperation } from "@/features/admin/operation-feedback";
@@ -50,6 +51,11 @@ export function LeadDetails({
     notes: record.notes,
     nextFollowUp: record.nextFollowUp,
   });
+  const unsavedWarning = useUnsavedChanges(
+    status !== baseline.status ||
+      notes !== baseline.notes ||
+      nextFollowUp !== (baseline.nextFollowUp ?? ""),
+  );
   async function perform(action: () => Promise<void>) {
     setBusy(true);
     setMessage("");
@@ -90,6 +96,7 @@ export function LeadDetails({
   );
   return (
     <>
+      {unsavedWarning}
       <Link
         href={backHref}
         className="inline-flex min-h-11 items-center gap-2 self-start text-sm font-medium text-primary"

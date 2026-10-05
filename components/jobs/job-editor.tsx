@@ -1,4 +1,5 @@
 "use client";
+import { useUnsavedChanges } from "@/components/admin/use-unsaved-changes";
 import { CampaignBuilder } from "./campaign-builder";
 import { adminOperation } from "@/features/admin/operation-feedback";
 import { useState } from "react";
@@ -74,6 +75,7 @@ export function JobEditor({
     values: job ?? defaults,
     resetOptions: { keepDirtyValues: true, keepDirty: true },
   });
+  const unsavedWarning = useUnsavedChanges(isDirty);
   const values = useWatch({ control });
   const [editVersion, setEditVersion] = useState(job?.updatedAt);
   if (
@@ -106,6 +108,7 @@ export function JobEditor({
   }
   return (
     <>
+      {unsavedWarning}
       <Link
         href={preview ? "/dev-preview/jobs" : "/admin/jobs"}
         className="inline-flex min-h-11 items-center self-start text-primary underline underline-offset-4"

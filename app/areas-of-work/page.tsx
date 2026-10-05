@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { ServiceImage } from "@/components/layout/service-image";
 import Link from "next/link";
 import { ArrowUpRight, Check } from "lucide-react";
 import { MotionReveal } from "@/components/layout/motion-reveal";
@@ -66,14 +66,7 @@ export default async function Page({
                     aria-hidden="true"
                     className="absolute -right-16 -top-16 -z-10 size-64 rounded-full border-[24px] border-brand-cyan/10"
                   />
-                  <Image
-                    src={`/images/services/${image}.webp`}
-                    alt=""
-                    width={1254}
-                    height={1254}
-                    sizes="(max-width: 639px) calc(100vw - 40px), (max-width: 1023px) calc(100vw - 64px), 558px"
-                    className="h-full w-full object-contain sm:h-auto"
-                  />
+                  <ServiceImage src={`/images/services/${image}.webp`} />
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-primary">{title}</p>

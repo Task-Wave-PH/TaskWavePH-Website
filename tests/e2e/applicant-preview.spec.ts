@@ -389,3 +389,42 @@ test("lead follow-up saves, contributes to overdue dashboard totals, and clears"
   await page.getByRole("button", { name: "Save changes", exact: true }).click();
   await expect(page.getByText("Changes saved.", { exact: true })).toBeVisible();
 });
+
+for (const [route, label, back] of [
+  [
+    "/dev-preview/applications/sample-001",
+    "Internal notes",
+    "Back to applications",
+  ],
+  [
+    "/dev-preview/businessLeads/sample-lead-001",
+    "Internal notes",
+    "Back to Business Leads",
+  ],
+  ["/dev-preview/jobs/sample-job-001", "Job Title", "Back to jobs"],
+]) {
+  test(`unsaved editor protects ${route}`, async ({ page }) => {
+    await page.goto(route);
+    await expect(async () => {
+      await page.getByLabel(label, { exact: true }).fill("Unsaved test edit");
+      await expect(page.getByLabel(label, { exact: true })).toHaveValue(
+        "Unsaved test edit",
+      );
+    }).toPass();
+    const link = page.locator("main a").filter({ hasText: back });
+    // Sidebar navigation uses the same guard as editor back links.
+    await page.getByRole("link", { name: "Dashboard", exact: true }).click();
+    const dialog = page.getByRole("alertdialog", {
+      name: "You have unsaved changes.",
+    });
+    await expect(dialog).toBeVisible();
+    await dialog.getByRole("button", { name: "Keep editing" }).click();
+    await expect(page.getByLabel(label, { exact: true })).toHaveValue(
+      "Unsaved test edit",
+    );
+    await expect(
+      page.getByRole("link", { name: "Dashboard", exact: true }),
+    ).toBeFocused();
+    await expect(link).toHaveCount(1);
+  });
+}

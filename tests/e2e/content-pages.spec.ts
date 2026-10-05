@@ -168,3 +168,31 @@ test("service details have working anchors, illustrations, and tracked enquiry l
     }),
   ).toHaveCount(1);
 });
+
+test("visible service illustrations recover when native lazy loading stalls", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    // Simulate a browser leaving native lazy source selection deferred.
+    const descriptor = Object.getOwnPropertyDescriptor(
+      HTMLImageElement.prototype,
+      "complete",
+    )!;
+    Object.defineProperty(HTMLImageElement.prototype, "complete", {
+      ...descriptor,
+      get() {
+        return this.loading === "eager" && descriptor.get!.call(this);
+      },
+    });
+  });
+  await page.goto("/areas-of-work");
+  const image = page.locator('img[src*="lead-generation-sales"]');
+  await image.evaluate((node) =>
+    node.scrollIntoView({ block: "center", behavior: "instant" }),
+  );
+  await expect(image).toHaveAttribute("loading", "eager");
+  await expect(image).toHaveJSProperty("complete", true, { timeout: 15000 });
+  expect(
+    await image.evaluate((node) => (node as HTMLImageElement).naturalWidth),
+  ).toBeGreaterThan(0);
+});

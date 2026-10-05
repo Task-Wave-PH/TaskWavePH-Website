@@ -261,3 +261,13 @@ add noindex, and send private/no-store responses. Host routing is not authorizat
   previews, revision/approval checks at commit, and protected private image reads.
   Delete replaced files and clean unlinked uploads after one hour. Keep file IDs
   server-side and keep the website logo separate from the campaign QR logo.
+
+## Unsaved admin edits
+
+Application review, lead, job, and Owner settings editors protect dirty drafts
+when following same-tab links with a branded Keep editing / Discard changes dialog.
+Refresh and tab closing use the browser's standard beforeunload warning, subject
+to browser support and prior user interaction. Successful saves clear protection;
+failed saves preserve it. Downloads, new-tab links, and same-page anchors are
+unaffected. Browser Back/Forward and programmatic redirects are not intercepted;
+do not patch Next.js router internals or insert synthetic history entries.

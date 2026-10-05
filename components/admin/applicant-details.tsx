@@ -1,4 +1,5 @@
 "use client";
+import { useUnsavedChanges } from "@/components/admin/use-unsaved-changes";
 import { adminOperation } from "@/features/admin/operation-feedback";
 import dynamic from "next/dynamic";
 import Link from "next/link";
@@ -61,6 +62,9 @@ export function ApplicantDetails({
   const [message, setMessage] = useState("");
   const [confirm, setConfirm] = useState(false);
   const [copyMessage, setCopyMessage] = useState("");
+  const unsavedWarning = useUnsavedChanges(
+    status !== baseline.status || notes !== baseline.notes,
+  );
   const d = record.data;
   const missing = missingScreeningInformation(record);
   async function save() {
@@ -120,6 +124,7 @@ export function ApplicantDetails({
   );
   return (
     <>
+      {unsavedWarning}
       <Link
         href={backHref}
         className="inline-flex min-h-11 items-center self-start text-primary underline underline-offset-4"

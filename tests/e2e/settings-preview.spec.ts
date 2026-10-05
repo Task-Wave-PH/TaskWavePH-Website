@@ -180,3 +180,119 @@ test("event campaign QR opens a general sample application with attribution", as
   ).toHaveCount(0);
   await expect(page.getByLabel("First Name", { exact: true })).toBeVisible();
 });
+
+test("unsaved settings protect navigation and refresh, then clear after saving", async ({
+  page,
+}) => {
+  await page.goto("/dev-preview/settings");
+  await page.getByLabel("Primary color", { exact: true }).fill("#111827");
+  const link = page.getByRole("link", { name: "Dashboard", exact: true });
+  await link.click();
+  const dialog = page.getByRole("alertdialog", {
+    name: "You have unsaved changes.",
+  });
+  await expect(dialog).toBeVisible();
+  await expect(
+    dialog.getByRole("button", { name: "Keep editing" }),
+  ).toBeFocused();
+  await dialog.getByRole("button", { name: "Keep editing" }).click();
+  await expect(page.getByLabel("Primary color", { exact: true })).toHaveValue(
+    "#111827",
+  );
+  await expect(link).toBeFocused();
+  expect(
+    await page.evaluate(() => {
+      const event = new Event("beforeunload", { cancelable: true });
+      window.dispatchEvent(event);
+      return event.defaultPrevented;
+    }),
+  ).toBe(true);
+  await page
+    .getByRole("button", { name: "Save settings", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Save settings", exact: true }),
+  ).toBeDisabled();
+  expect(
+    await page.evaluate(() => {
+      const event = new Event("beforeunload", { cancelable: true });
+      window.dispatchEvent(event);
+      return event.defaultPrevented;
+    }),
+  ).toBe(false);
+  await page.getByLabel("Primary color", { exact: true }).fill("#0A1D3B");
+  await link.click();
+  await dialog
+    .getByRole("button", { name: "Discard changes", exact: true })
+    .click();
+  await expect(page).toHaveURL(/\/dev-preview$/);
+});
+
+test("reverting settings clears protection and restored pages remain protected", async ({
+  page,
+}) => {
+  await page.goto("/dev-preview/settings");
+  const input = page.getByLabel("Primary color", { exact: true });
+  await input.fill("#111827");
+  await expect(
+    page.getByRole("button", { name: "Save settings", exact: true }),
+  ).toBeEnabled();
+  await input.fill("#0A1D3B");
+  await expect(
+    page.getByRole("button", { name: "Save settings", exact: true }),
+  ).toBeDisabled();
+  expect(
+    await page.evaluate(() => {
+      const event = new Event("beforeunload", { cancelable: true });
+      window.dispatchEvent(event);
+      return event.defaultPrevented;
+    }),
+  ).toBe(false);
+  await input.fill("#111827");
+  await page.evaluate(() => {
+    const link = document.createElement("a");
+    link.href = "/dev-preview/settings?test=unsaved";
+    link.textContent = "Test same-editor navigation";
+    document.querySelector("main")!.append(link);
+  });
+  await page.getByRole("link", { name: "Test same-editor navigation" }).click();
+  await page
+    .getByRole("alertdialog")
+    .getByRole("button", { name: "Discard changes", exact: true })
+    .click();
+  await expect(page).toHaveURL(/test=unsaved/);
+  await input.fill("#111827");
+  expect(
+    await page.evaluate(() => {
+      const event = new Event("beforeunload", { cancelable: true });
+      window.dispatchEvent(event);
+      return event.defaultPrevented;
+    }),
+  ).toBe(true);
+  await page
+    .locator("main")
+    .getByRole("button", { name: "Discard changes", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Save settings", exact: true }),
+  ).toBeDisabled();
+});
+
+test("closing a dirty editor asks for browser confirmation", async ({
+  page,
+}) => {
+  await page.goto("/dev-preview/settings");
+  await page.getByLabel("Primary color", { exact: true }).fill("#111827");
+  await expect(
+    page.getByRole("button", { name: "Save settings", exact: true }),
+  ).toBeEnabled();
+  const pending = page.waitForEvent("dialog");
+  await page.close({ runBeforeUnload: true });
+  const dialog = await pending;
+  expect(dialog.type()).toBe("beforeunload");
+  await dialog.dismiss();
+  expect(page.isClosed()).toBe(false);
+  await expect(page.getByLabel("Primary color", { exact: true })).toHaveValue(
+    "#111827",
+  );
+});

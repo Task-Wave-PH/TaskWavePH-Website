@@ -730,3 +730,13 @@ Owner Settings includes an Event campaigns card for general application links
 and QR downloads, independent of job postings. It reuses saved QR branding and
 existing campaign attribution. Staff review event submissions through the exact
 campaign filter and protected exports; no scan or click counts are claimed.
+
+## Unsaved admin edits
+
+Application review, lead, job, and Owner settings editors protect dirty drafts
+when following same-tab links with a branded Keep editing / Discard changes dialog.
+Refresh and tab closing use the browser's standard beforeunload warning, subject
+to browser support and prior user interaction. Successful saves clear protection;
+failed saves preserve it. Downloads, new-tab links, and same-page anchors are
+unaffected. Browser Back/Forward and programmatic redirects are not intercepted;
+do not patch Next.js router internals or insert synthetic history entries.

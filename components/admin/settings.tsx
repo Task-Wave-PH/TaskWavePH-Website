@@ -1,4 +1,5 @@
 "use client";
+import { useUnsavedChanges } from "@/components/admin/use-unsaved-changes";
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -142,7 +143,7 @@ function SettingsEditor({
 }) {
   const [value, setValue] = useState(saved.value);
   const [revision, setRevision] = useState(saved.revision);
-  const [dirty, setDirty] = useState(false);
+  const [baselineValue, setBaselineValue] = useState(saved.value);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [image, setImage] = useState("");
@@ -152,6 +153,12 @@ function SettingsEditor({
     url: string;
   } | null>(null);
   const [savedPreviewLogo, setSavedPreviewLogo] = useState<string | null>(null);
+  const dirty =
+    Object.entries(baselineValue).some(
+      ([key, original]) => value[key as keyof QrSettings] !== original,
+    ) ||
+    (value.logo === "custom" && draftLogo !== null);
+  const unsavedWarning = useUnsavedChanges(dirty);
   async function chooseLogo(file: File | undefined) {
     if (!file) return;
     setError("");
@@ -183,7 +190,6 @@ function SettingsEditor({
   }
   function change<K extends keyof QrSettings>(key: K, next: QrSettings[K]) {
     setValue((v) => ({ ...v, [key]: next }));
-    setDirty(true);
     setImage("");
     setError("");
   }
@@ -252,7 +258,7 @@ function SettingsEditor({
       if (preview && draftLogo && value.logo === "custom")
         setSavedPreviewLogo(draftLogo.url);
       setDraftLogo(null);
-      setDirty(false);
+      setBaselineValue(value);
     } catch {
       setError(
         "Unable to save. Your edits are preserved. If another owner changed settings, discard your edits to load the latest version before trying again.",
@@ -263,6 +269,7 @@ function SettingsEditor({
   }
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6">
+      {unsavedWarning}
       <div className="space-y-2">
         <h1 className="text-2xl font-semibold text-brand-navy sm:text-3xl">
           Settings
@@ -481,7 +488,7 @@ function SettingsEditor({
                   setValue(saved.value);
                   setDraftLogo(null);
                   setRevision(saved.revision);
-                  setDirty(false);
+                  setBaselineValue(saved.value);
                   setImage("");
                   setError("");
                 }}
@@ -495,7 +502,6 @@ function SettingsEditor({
                 onClick={() => {
                   setValue(defaultQrSettings);
                   setDraftLogo(null);
-                  setDirty(true);
                   setImage("");
                   setError("");
                 }}

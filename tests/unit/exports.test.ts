@@ -92,7 +92,7 @@ describe("applicant exports", () => {
   });
 });
 
-it("creates a branded multipage PDF with embedded fonts and a readable empty state", async () => {
+it("creates a branded multipage PDF with embedded fonts", async () => {
   const bytes = await createExport(previewApplicants(), "pdf", {
     assets,
     filters: { from: "2026-09-01", to: "2026-09-30" },
@@ -118,6 +118,10 @@ it("creates a branded multipage PDF with embedded fonts and a readable empty sta
       .join(" "),
   ).toContain("Sample Applicant 50");
   await loading.destroy();
+});
+
+it("creates a branded empty PDF with a readable empty state", async () => {
+  const { getDocument } = await import("pdfjs-dist/legacy/build/pdf.mjs");
   const emptyLoading = getDocument({
     data: await createExport([], "pdf", { assets }),
   });

@@ -223,10 +223,10 @@ export function PreviewJobApplication({
     <div className="space-y-8">
       <PreviewNotice />
       <h2 className="text-3xl font-semibold">Sample Application</h2>
-      {job ? (
+      {job || !id ? (
         <ApplicationForm
-          key={job._id}
-          job={{ id: job._id, title: job.title }}
+          key={job?._id ?? "general"}
+          job={job ? { id: job._id, title: job.title } : undefined}
           tracking={getTracking(query, "/apply")}
           enabled={false}
         />

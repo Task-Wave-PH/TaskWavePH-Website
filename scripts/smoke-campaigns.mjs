@@ -3,6 +3,7 @@ import { spawnSync } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
 import { requireDevelopmentTarget } from "./development-target.mjs";
 requireDevelopmentTarget();
+const general = process.argv.includes("--general");
 const subject = `user_campaign_test_${randomUUID()}`;
 const campaign = `synthetic-${randomUUID()}`;
 const identity = JSON.stringify({
@@ -40,25 +41,27 @@ try {
     false,
     "UNAUTHORIZED",
   );
-  jobId = run(
-    "jobs:save",
-    {
-      data: {
-        title: "Synthetic campaign check — not a vacancy",
-        serviceArea: "Customer Support",
-        location: "Synthetic location",
-        arrangement: "Remote",
-        employmentType: "Contract",
-        description:
-          "Synthetic development campaign workflow. This is not a real vacancy and is deleted after verification.",
-        responsibilities: "Synthetic testing only.",
-        requirements: "Synthetic testing only.",
-        salary: "",
+  if (!general) {
+    jobId = run(
+      "jobs:save",
+      {
+        data: {
+          title: "Synthetic campaign check — not a vacancy",
+          serviceArea: "Customer Support",
+          location: "Synthetic location",
+          arrangement: "Remote",
+          employmentType: "Contract",
+          description:
+            "Synthetic development campaign workflow. This is not a real vacancy and is deleted after verification.",
+          responsibilities: "Synthetic testing only.",
+          requirements: "Synthetic testing only.",
+          salary: "",
+        },
       },
-    },
-    true,
-  );
-  run("jobs:setStatus", { id: jobId, status: "Published" }, true);
+      true,
+    );
+    run("jobs:setStatus", { id: jobId, status: "Published" }, true);
+  }
   for (const source of ["linkedin", "facebook"]) {
     const token = randomUUID();
     const body = new FormData();
@@ -73,12 +76,12 @@ try {
         phone: "09170000000",
         location: "Synthetic",
         position: "Synthetic",
-        jobId,
+        ...(jobId ? { jobId } : {}),
         privacyConsent: true,
         source,
         campaign,
         utm_source: source,
-        utm_medium: "social",
+        utm_medium: general ? "qr" : "social",
         utm_campaign: campaign,
       }),
     );
@@ -106,7 +109,7 @@ try {
     assert.equal(row.source, source);
     assert.equal(row.campaign, campaign);
   }
-  const filters = { campaign, jobId, source: "linkedin" };
+  const filters = { campaign, ...(jobId ? { jobId } : {}), source: "linkedin" };
   const listed = run(
     "admin:list",
     {
@@ -125,6 +128,9 @@ try {
   assert.equal(exported.page.length, 1);
   assert.equal(exported.page[0]._id, listed.page[0].id);
   assert.equal(exported.page[0].data.utm_source, "linkedin");
+  assert.equal(exported.page[0].data.utm_campaign, campaign);
+  assert.equal(exported.page[0].data.utm_medium, general ? "qr" : "social");
+  if (general) assert.equal(exported.page[0].data.jobId, undefined);
   run(
     "admin:update",
     {
@@ -162,7 +168,7 @@ try {
   );
   run("exports:audit", { format: "pdf", count: exported.page.length }, true);
   console.log(
-    "Development campaign workflow verified: real saves, channel/campaign/job filtering, matching protected export, current status filtering, and denied anonymous access.",
+    `Development ${general ? "general event" : "job"} campaign workflow verified: real saves, channel/campaign filtering, matching protected export, current status filtering, and denied anonymous access.`,
   );
 } finally {
   try {

@@ -26,7 +26,7 @@ export const campaignSchema = z.object({
 });
 export function campaignLink(
   origin: string,
-  jobId: string,
+  jobId: string | undefined,
   values: z.infer<typeof campaignSchema>,
   preview = false,
 ) {
@@ -34,10 +34,15 @@ export function campaignLink(
   const base = new URL(origin);
   if (!/^https?:$/.test(base.protocol) || base.username || base.password)
     throw new Error("INVALID_SITE_URL");
-  if (!/^[a-zA-Z0-9_-]{1,100}$/.test(jobId)) throw new Error("INVALID_JOB_ID");
+  if (jobId !== undefined && !/^[a-zA-Z0-9_-]{1,100}$/.test(jobId))
+    throw new Error("INVALID_JOB_ID");
   return new URL(
     getTrackedHref(
-      `${preview ? "/dev-preview" : ""}/careers/${encodeURIComponent(jobId)}`,
+      jobId !== undefined
+        ? `${preview ? "/dev-preview" : ""}/careers/${encodeURIComponent(jobId)}`
+        : preview
+          ? "/dev-preview/job-apply"
+          : "/apply",
       {
         source: parsed.source,
         campaign: parsed.campaign,

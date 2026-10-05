@@ -51,12 +51,14 @@ function LiveCampaignControls({ job }: { job: JobView }) {
     );
   return <CampaignControls job={job} settings={saved.value} />;
 }
-function CampaignControls({
+export function CampaignControls({
   job,
   preview = false,
   settings,
+  customLogoUrl,
 }: {
-  job: JobView;
+  job?: JobView;
+  customLogoUrl?: string;
   preview?: boolean;
   settings: QrSettings;
 }) {
@@ -86,7 +88,7 @@ function CampaignControls({
           preview
             ? window.location.origin
             : process.env.NEXT_PUBLIC_SITE_URL || "",
-          job._id,
+          job?._id,
           values.data,
           preview,
         ),
@@ -103,7 +105,7 @@ function CampaignControls({
     try {
       const { createCampaignQr } =
         await import("@/features/applications/campaign-qr");
-      const url = await createCampaignQr(link, settings);
+      const url = await createCampaignQr(link, settings, customLogoUrl);
       const a = document.createElement("a");
       a.href = url;
       a.download = `taskwaveph-${source}-${campaign.trim()}-qr.png`;
@@ -132,21 +134,21 @@ function CampaignControls({
           />
         }
       >
-        Campaign link &amp; QR
+        {job ? "Campaign link & QR" : "Create event campaign & QR"}
       </DialogTrigger>
       <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-2xl">
         <DialogHeader className="border-b pb-5 pr-10">
           <DialogTitle>Recruitment campaign link</DialogTitle>
           <DialogDescription>
-            Share this published role on social media or print a QR code.
-            Applications retain the source and campaign. Links stop accepting
-            applications if the role closes.
+            {job
+              ? "Share this published role on social media or print a QR code. Applications retain the source and campaign. Links stop accepting applications if the role closes."
+              : "Create a link to the general application form for an event or recruitment campaign. Submitted applications retain your campaign code."}
           </DialogDescription>
         </DialogHeader>
         <div className="min-w-0 space-y-5">
           {preview && (
             <p className="text-sm text-muted-foreground">
-              Preview only: links open sample roles and never create real
+              Preview only: links open sample applications and never create real
               applications.
             </p>
           )}
@@ -206,7 +208,9 @@ function CampaignControls({
                   className="min-h-11"
                   value={campaign}
                   maxLength={100}
-                  placeholder="customer-support-october-2026"
+                  placeholder={
+                    job ? "customer-support-october-2026" : "com-sayahan-2026"
+                  }
                   onChange={(e) => {
                     setCampaign(e.target.value);
                     resetLink();
@@ -280,8 +284,15 @@ function CampaignControls({
                 </Button>
               </div>
               <p className="text-sm leading-relaxed text-muted-foreground">
-                Test the URL and scan the downloaded QR before sharing. Job ID:{" "}
-                <span className="break-all">{job._id}</span>
+                Test the URL and scan the downloaded QR before sharing.
+                {job ? (
+                  <>
+                    {" "}
+                    Job ID: <span className="break-all">{job._id}</span>
+                  </>
+                ) : (
+                  " In Applications, open Advanced filters and enter this campaign code to review and export its submissions. This does not count scans or clicks."
+                )}
               </p>
             </section>
           )}

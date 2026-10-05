@@ -14,7 +14,11 @@ export default async function Page({
       showCta={false}
       query={query}
       eyebrow="Sample application"
-      title="Try a role-specific application."
+      title={
+        jobId
+          ? "Try a role-specific application."
+          : "Try a general application."
+      }
       description="This preview validates your entries without sending or saving them."
     >
       <PreviewJobApplication query={query} id={jobId} />

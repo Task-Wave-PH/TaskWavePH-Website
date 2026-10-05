@@ -723,3 +723,10 @@ Owner-approved custom PNGs can be selected in QR Settings. Preview before saving
 preserve the uploaded image proportions, and retain the scan-safe size bounds.
 The upload control uses a simple grouped container and shows pending local state;
 it does not change public website branding.
+
+### Event campaign creation
+
+Owner Settings includes an Event campaigns card for general application links
+and QR downloads, independent of job postings. It reuses saved QR branding and
+existing campaign attribution. Staff review event submissions through the exact
+campaign filter and protected exports; no scan or click counts are claimed.

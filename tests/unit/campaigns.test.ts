@@ -136,3 +136,28 @@ it("preserves the actual calendar year for early leap years", () => {
     to: "0000-02-29",
   });
 });
+
+it("builds event campaign links without a job and preserves intake attribution", () => {
+  const values = {
+    source: "job-fair" as const,
+    campaign: "com-sayahan-2026",
+    medium: "qr" as const,
+  };
+  const url = new URL(
+    campaignLink("https://www.taskwaveph.com", undefined, values),
+  );
+  expect(url.pathname).toBe("/apply");
+  expect(url.searchParams.has("jobId")).toBe(false);
+  expect(
+    getTracking(Object.fromEntries(url.searchParams), "/apply"),
+  ).toMatchObject({
+    source: "job-fair",
+    campaign: values.campaign,
+    utm_medium: "qr",
+    landing_page: "/apply",
+  });
+  expect(
+    new URL(campaignLink("http://localhost:3000", undefined, values, true))
+      .pathname,
+  ).toBe("/dev-preview/job-apply");
+});

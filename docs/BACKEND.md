@@ -739,3 +739,29 @@ private/no-store and nosniff. File reads share the existing private file-read
 budget. No public storage URL is returned. Temporary preview selections stay in
 memory and never upload or call private endpoints on `/dev-preview/settings`.
 Deploy the development backend before opening the updated live Settings page.
+
+### Event campaigns without a job
+
+Owners can open **Settings → Event campaigns → Create event campaign & QR**,
+enter a code such as `com-sayahan-2026`, choose the channel and placement (`qr`
+for print), and create a link or download its QR. The link opens `/apply`
+without a job ID and uses the configured public site origin. QR downloads use
+saved branding; save branding changes first. These codes do not need a database
+campaign record. Use the same code consistently for the event.
+
+Confirmed applications retain the code. In **Applications → Advanced filters**,
+enter the exact campaign code and apply filters to review matching submissions
+and export their results. This measures submitted applications, not scans,
+clicks, or conversion rates. Preview links open a disabled synthetic general
+application and never collect records.
+
+Run `node scripts/smoke-campaigns.mjs --general` for guarded development-only
+verification of general application saves, matching campaign filters/exports,
+and anonymous access denial. It deletes disposable applications and revokes its
+temporary CLI staff approval; it does not verify real Clerk browser login.
+
+Development verification on October 5, 2026: the general event campaign smoke
+passed real saves without job IDs, exact channel/campaign filters, matching
+protected exports with QR attribution, current-status filtering, and anonymous
+access denial. Disposable records were removed and temporary CLI staff approval
+revoked. Real Clerk browser authentication remains unverified.

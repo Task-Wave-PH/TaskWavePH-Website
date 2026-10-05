@@ -29,6 +29,7 @@ import {
   qrSettingsSchema,
   type QrSettings,
 } from "@/features/settings/qr";
+import { CampaignControls } from "@/components/jobs/campaign-builder";
 import { campaignChannels } from "@/features/applications/campaigns";
 import { adminOperation } from "@/features/admin/operation-feedback";
 function Choice({
@@ -273,6 +274,23 @@ function SettingsEditor({
             : " Changes apply to new QR downloads, not images already shared."}
         </p>
       </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Event campaigns</CardTitle>
+          <CardDescription>
+            Create a general application link and QR for an event such as
+            com-sayahan-2026. Review submitted applications using the campaign
+            filter in Applications. QR downloads use your saved branding.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <CampaignControls
+            preview={preview}
+            settings={saved.value}
+            customLogoUrl={preview ? (savedPreviewLogo ?? "") : undefined}
+          />
+        </CardContent>
+      </Card>
       <div className="grid items-start gap-6 lg:grid-cols-[1fr_20rem]">
         <Card className="min-w-0">
           <CardHeader>

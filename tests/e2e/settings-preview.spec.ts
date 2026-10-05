@@ -144,3 +144,39 @@ test("PNG logo selection previews before saving and never calls private services
   ).toBeVisible();
   expect(privateRequests).toBe(0);
 });
+
+test("event campaign QR opens a general sample application with attribution", async ({
+  page,
+}) => {
+  await page.goto("/dev-preview/settings");
+  await page
+    .getByRole("button", { name: "Create event campaign & QR" })
+    .click();
+  await page
+    .getByLabel("Campaign name", { exact: true })
+    .fill("com-sayahan-2026");
+  await page
+    .getByRole("button", { name: "Create campaign link", exact: true })
+    .click();
+  const link = await page.getByLabel("Shareable URL").inputValue();
+  expect(new URL(link).pathname).toBe("/dev-preview/job-apply");
+  expect(new URL(link).searchParams.get("campaign")).toBe("com-sayahan-2026");
+  const download = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Download QR", exact: true }).click();
+  const image = await loadImage((await (await download).path())!);
+  const canvas = createCanvas(320, 320);
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(image, 0, 0, 320, 320);
+  expect(
+    jsQR(new Uint8ClampedArray(ctx.getImageData(0, 0, 320, 320).data), 320, 320)
+      ?.data,
+  ).toBe(link);
+  await page.goto(link);
+  await expect(
+    page.getByRole("heading", { name: "Try a general application." }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Sample role unavailable.", { exact: false }),
+  ).toHaveCount(0);
+  await expect(page.getByLabel("First Name", { exact: true })).toBeVisible();
+});

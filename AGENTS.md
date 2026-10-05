@@ -215,6 +215,9 @@ add noindex, and send private/no-store responses. Host routing is not authorizat
 
 ## Recruitment campaigns
 
+- Owner Settings also offers event campaign URL/QR generation for the general
+  application form, using saved branding and existing attribution/filter/export paths.
+  Campaign codes do not require stored campaign records; scan/click analytics are not added.
 - Published jobs offer a client-side campaign URL/QR builder using the configured
   public site origin and allowlisted attribution only. No personal data in links.
 - Application filters and exports share exact source/campaign,

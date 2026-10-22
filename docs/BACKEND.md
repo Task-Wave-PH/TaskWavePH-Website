@@ -563,7 +563,7 @@ variables or paid infrastructure were added.
 On **Admin → Jobs**, open a **Published** posting. Open **Campaign link & QR**. In the modal, choose the source (for example `linkedin` or `facebook`), placement (`social`,
 `paid-social`, `qr`, or `referral`), and a lowercase campaign code such as
 `customer-support-october-2026`. Create the link, copy it for your post, or download
-the 1024px PNG QR with the original TaskWavePH symbol centered on white backing.
+the approximately 1024px PNG QR with the original TaskWavePH symbol centered on white backing.
 It uses high error correction and retains the outer quiet zone. Scan the QR and test the role's application button
 before sharing it. Do not include applicant information or referrer names in URLs.
 
@@ -765,3 +765,59 @@ passed real saves without job IDs, exact channel/campaign filters, matching
 protected exports with QR attribution, current-status filtering, and anonymous
 access denial. Disposable records were removed and temporary CLI staff approval
 revoked. Real Clerk browser authentication remains unverified.
+
+## Readable job URLs
+
+New postings receive a stable title/date/sequence URL on first publication, such as
+`/careers/customer-support-2026-10-22-01` and `/apply/customer-support-2026-10-22-01`.
+The date is the Philippine publication date; sequences start at 01 and increase
+transactionally per normalized title/date. The indexed `jobSlugCounters` table
+retains allocations after job deletion, preventing old links from changing meaning.
+Editing titles or republishing never changes an existing slug. Admin routes,
+filters and application associations keep internal IDs. No new application environment values
+are needed. Staff see the URL read-only in the posting editor after publication.
+
+Deploy the additive schema/functions before the frontend. Then run this against
+the explicitly intended deployment (production requires separate authorization):
+
+```bash
+npx convex run jobSlugs:backfill '{"cursor":null}'
+```
+
+This internal migration scans 50 jobs per transaction and schedules the next page.
+It is repeatable and preserves job revisions and metrics. It only migrates
+currently Published jobs or jobs with a recorded publishedAt. Never-published
+Draft, Closed, and Archived postings keep no slug until first publication.
+Historical jobs use their stored publishedAt; currently Published legacy jobs
+without it use creation time.
+Older releases overwrote publishedAt on republication, so an earlier original
+publication date cannot be recovered from those records. The migration does not
+invent it. Legacy ID URLs remain a fallback until each record has its slug.
+
+Only Published records resolve publicly. Old `/careers/{id}` and
+`/apply?jobId={id}` links redirect permanently to readable URLs with source/campaign
+and UTM values only. Unknown/unpublished role application paths cannot fall back to
+a general submission. Role-specific form metadata is noindex; sitemaps contain
+only published detail URLs. Previously generated QR codes retain their legacy
+URLs and continue through these redirects. Closed jobs still reject new saves
+inside the intake transaction, including forms opened before closure.
+
+For an isolated preview server on a different local port, set
+`PLAYWRIGHT_PREVIEW_PORT=3001 npm run test:preview`. This does not change deployment
+URLs or any application environment settings.
+
+Development verification on October 22, 2026: the additive functions/schema were
+deployed to `exuberant-lapwing-339`; the bounded backfill completed for two existing
+jobs. Disposable job writes verified indexed slug resolution, unique title/date
+sequences, stable renamed/reopened URLs, closed-role denial, and non-reuse after
+deletion. Test jobs were deleted and the temporary CLI staff identity deactivated;
+synthetic sequence/audit metadata remains. This does not verify a real signed-in
+Clerk browser session or constitute a production deployment.
+
+Review follow-up: the historical backfill now requires publication evidence, so
+never-published Closed/Archived drafts receive their date only when first published.
+For dense codes (101+ modules per side), the QR renderer rounds its approximately
+1024px output to integer pixels per module, including quiet zones. Smaller codes
+retain their existing 1024px rendering. This avoids resampling artifacts for dense readable
+URLs at 320px without changing the saved logo size or the attribution link. No
+additional backend migration is required.

@@ -1,4 +1,6 @@
-import { notFound } from "next/navigation";
+import { jobPath } from "@/features/jobs/urls";
+import { getTrackedHref } from "@/features/applications/tracking";
+import { permanentRedirect, notFound } from "next/navigation";
 import { getPublishedJob } from "@/features/jobs/server";
 import { ContentPage } from "@/components/layout/content-page";
 import { JobDetails } from "@/components/jobs/job-details";
@@ -20,7 +22,7 @@ export async function generateMetadata({
   return pageMetadata(
     result.job.title,
     `Explore the ${result.job.title} role with TaskWavePH in ${result.job.location}.`,
-    `/careers/${jobId}`,
+    jobPath(result.job),
   );
 }
 export default async function Page({
@@ -34,6 +36,8 @@ export default async function Page({
   const query = await searchParams;
   const result = await getPublishedJob(jobId);
   if (result.state === "ready" && !result.job) notFound();
+  if (result.job?.slug && result.job.slug !== jobId)
+    permanentRedirect(getTrackedHref(jobPath(result.job), query));
   return (
     <ContentPage
       audience="applicant"

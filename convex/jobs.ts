@@ -1,3 +1,4 @@
+import { allocateJobSlug } from "./jobSlugs";
 import { ConvexError, v } from "convex/values";
 import {
   paginationOptsValidator,
@@ -15,6 +16,7 @@ import type { Doc } from "./_generated/dataModel";
 import { syncMetrics } from "./adminMetrics";
 const project = (row: Doc<"jobs">) => ({
   _id: row._id,
+  ...(row.slug ? { slug: row.slug } : {}),
   title: row.title,
   serviceArea: row.serviceArea,
   location: row.location,
@@ -84,8 +86,13 @@ export const detail = query({
   returns: v.union(jobView, v.null()),
   handler: async (ctx, { id }) => {
     const normalized = ctx.db.normalizeId("jobs", id);
-    if (!normalized) return null;
-    const job = await ctx.db.get(normalized);
+    if (id.length > 160) return null;
+    const job = normalized
+      ? await ctx.db.get(normalized)
+      : await ctx.db
+          .query("jobs")
+          .withIndex("by_slug", (q) => q.eq("slug", id))
+          .unique();
     return job?.status === "Published" ? project(job) : null;
   },
 });
@@ -171,7 +178,13 @@ export const setStatus = adminMutation({
       ),
     );
     const timestamp = Math.max(Date.now(), job.updatedAt + 1);
+    const slug =
+      job.slug ??
+      (status === "Published"
+        ? await allocateJobSlug(ctx, job.title, job.publishedAt ?? timestamp)
+        : undefined);
     await ctx.db.patch(id, {
+      ...(slug ? { slug } : {}),
       status,
       updatedAt: timestamp,
       ...(status === "Published" && job.status !== "Published"

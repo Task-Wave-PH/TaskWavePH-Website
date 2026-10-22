@@ -12,9 +12,17 @@ export async function createCampaignQr(
 ): Promise<string> {
   const values = qrSettingsSchema.parse(settings);
   const QRCode = await import("qrcode");
+  const modules = QRCode.create(link, { errorCorrectionLevel: "H" }).modules
+    .size;
+  // At 320px, dense codes have fewer than three pixels per module. Avoid
+  // a first resampling pass at export for these codes, including quiet zones.
+  const width =
+    modules >= 101
+      ? (modules + 8) * Math.max(1, Math.floor(1024 / (modules + 8)))
+      : 1024;
   const canvas = document.createElement("canvas");
   await QRCode.toCanvas(canvas, link, {
-    width: 1024,
+    width,
     margin: 4,
     errorCorrectionLevel: "H",
     color: { dark: "#000000", light: "#FFFFFF00" },

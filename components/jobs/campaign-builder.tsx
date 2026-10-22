@@ -1,4 +1,5 @@
 "use client";
+import { jobKey } from "@/features/jobs/urls";
 import { useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -88,7 +89,7 @@ export function CampaignControls({
           preview
             ? window.location.origin
             : process.env.NEXT_PUBLIC_SITE_URL || "",
-          job?._id,
+          job ? jobKey(job) : undefined,
           values.data,
           preview,
         ),

@@ -34,6 +34,7 @@ export const jobFields = {
 };
 export const jobInput = v.object(jobFields);
 export const jobView = v.object({
+  slug: v.optional(v.string()),
   ...jobFields,
   _id: v.id("jobs"),
   status: jobStatus,

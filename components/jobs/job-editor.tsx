@@ -1,4 +1,5 @@
 "use client";
+import { jobPath } from "@/features/jobs/urls";
 import { useUnsavedChanges } from "@/components/admin/use-unsaved-changes";
 import { CampaignBuilder } from "./campaign-builder";
 import { adminOperation } from "@/features/admin/operation-feedback";
@@ -109,6 +110,18 @@ export function JobEditor({
   return (
     <>
       {unsavedWarning}
+      {job?.slug && (
+        <Card>
+          <CardContent className="space-y-2 p-5">
+            <Label>Public job URL</Label>
+            <p className="break-all text-sm">{jobPath(job, preview)}</p>
+            <p className="text-sm text-muted-foreground">
+              Assigned on first publication. Editing the title does not change
+              this URL. Only published roles are publicly available.
+            </p>
+          </CardContent>
+        </Card>
+      )}
       <Link
         href={preview ? "/dev-preview/jobs" : "/admin/jobs"}
         className="inline-flex min-h-11 items-center self-start text-primary underline underline-offset-4"

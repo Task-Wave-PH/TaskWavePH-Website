@@ -23,7 +23,8 @@ on October 1, 2026. This supersedes the original Sheets-only MVP constraints.
 - Public forms POST through Next.js services to the authenticated Convex HTTP
   adapter. Keep the shared secret server-side. Backend functions validate again.
 - Tables: applications, businessLeads, jobs, adminUsers, staffInvitations, adminActivity, pendingUploads,
-  dashboardState (internal metric readiness), ownerSettings (QR and campaign defaults).
+  dashboardState (internal metric readiness), ownerSettings (QR and campaign defaults),
+  jobSlugCounters (transactional publication URL sequence allocation).
   Convex rate-limiter supplies persistent throttling; aggregate components supply
   exact private dashboard counts. Synchronize all write paths, including seeds.
 - Administrative functions require verified Clerk identity AND active adminUsers
@@ -271,3 +272,13 @@ to browser support and prior user interaction. Successful saves clear protection
 failed saves preserve it. Downloads, new-tab links, and same-page anchors are
 unaffected. Browser Back/Forward and programmatic redirects are not intercepted;
 do not patch Next.js router internals or insert synthetic history entries.
+
+## Readable job URLs
+
+Assign immutable title/date/sequence slugs on first publication, using Philippine
+calendar dates. Keep indexed slug lookup Published-only; admin routes and application
+associations retain internal IDs. Preserve counters after deletion so URLs cannot
+be reused. Public links use /careers/{slug} and /apply/{slug}; legacy ID links redirect
+only for available jobs and preserve allowlisted attribution. Backfill historical
+roles in bounded internal batches before frontend rollout. Application pages are
+noindex and do not appear in the sitemap. Slugs are server-managed, not form input.

@@ -35,6 +35,7 @@ export type JobInput = z.infer<typeof jobSchema>;
 export type JobStatus = (typeof jobStatuses)[number];
 export type JobView = JobInput & {
   _id: string;
+  slug?: string;
   status: JobStatus;
   publishedAt?: number;
   updatedAt: number;

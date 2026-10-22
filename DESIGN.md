@@ -740,3 +740,18 @@ to browser support and prior user interaction. Successful saves clear protection
 failed saves preserve it. Downloads, new-tab links, and same-page anchors are
 unaffected. Browser Back/Forward and programmatic redirects are not intercepted;
 do not patch Next.js router internals or insert synthetic history entries.
+
+## Readable recruitment URLs
+
+Job URLs use stable lowercase title/date/sequence slugs, assigned on first
+publication. Show the public path read-only in the admin posting editor using
+existing shadcn Card styling. It remains stable after title edits. Campaign
+builders and applicant CTAs use the readable paths without exposing additional
+private data; internal IDs remain in protected management workflows.
+
+Dense campaign QR downloads (101+ modules per side) target approximately 1024px,
+rounded to a whole number of pixels per module including the four-module quiet
+zone. Smaller codes retain the existing 1024px output. This avoids fractional
+module rendering that can become unreadable when resized to 320px. Keep the
+saved logo proportions/size and test maximum-length readable slugs and campaign
+codes together; do not assume full-size decoding proves small-size readability.

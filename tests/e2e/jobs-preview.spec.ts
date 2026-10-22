@@ -306,7 +306,9 @@ for (const width of [360, 390, 430, 768, 1024, 1440]) {
       .getByLabel("Shareable URL", { exact: true })
       .inputValue();
     const url = new URL(link);
-    expect(url.pathname).toBe("/dev-preview/careers/sample-job-001");
+    expect(url.pathname).toBe(
+      "/dev-preview/careers/sample-customer-support-role-1-2026-09-30-01",
+    );
     expect(url.searchParams.get("source")).toBe("linkedin");
     expect(url.searchParams.get("campaign")).toBe("linkedin-october-2026");
     const download = page.waitForEvent("download");
@@ -386,10 +388,20 @@ test("draft jobs have no campaign builder", async ({ page }) => {
   ).toHaveCount(0);
 });
 
-test("logo QR with a maximum-length campaign remains scannable", async ({
+test("logo QR with maximum-length campaign and job slug remains scannable", async ({
   page,
 }) => {
-  await page.goto("/dev-preview/jobs/sample-job-001");
+  await page.goto("/dev-preview/jobs/new");
+  await fillJob(page, "z".repeat(200));
+  await page.getByRole("button", { name: "Save Posting", exact: true }).click();
+  await expect(page).toHaveURL(/\/dev-preview\/jobs\/sample-job-/);
+  await page
+    .getByRole("button", { name: "Publish Posting", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Confirm", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Campaign link & QR", exact: true }),
+  ).toBeVisible();
   await page
     .getByRole("button", { name: "Campaign link & QR", exact: true })
     .click();
@@ -413,4 +425,34 @@ test("logo QR with a maximum-length campaign remains scannable", async ({
       320,
     )?.data,
   ).toBe(link);
+});
+
+test("sample readable URLs identify roles and preserve campaign attribution through Apply", async ({
+  page,
+}) => {
+  const slug = "sample-customer-support-role-1-2026-09-30-01";
+  await page.goto(
+    `/dev-preview/careers/${slug}?source=linkedin&campaign=slug-test&email=private@example.invalid`,
+  );
+  await expect(
+    page.getByRole("heading", {
+      name: "Sample Customer Support Role 1",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await page
+    .getByRole("link", { name: "Apply for This Role", exact: true })
+    .click();
+  await expect(page).toHaveURL(
+    new RegExp(
+      `/dev-preview/job-apply/${slug}\\?source=linkedin&campaign=slug-test$`,
+    ),
+  );
+  await expect(
+    page.getByLabel("Position Interested In", { exact: true }),
+  ).toHaveValue("Sample Customer Support Role 1");
+  await expect(page.locator('input[name="jobId"]')).toHaveValue(
+    "sample-job-001",
+  );
+  await expect(page.locator('input[name="source"]')).toHaveValue("linkedin");
 });

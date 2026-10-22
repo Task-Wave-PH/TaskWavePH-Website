@@ -1,0 +1,72 @@
+import { submissionsEnabled } from "@/lib/submission-env";
+import Link from "next/link";
+import { getPublishedJob } from "@/features/jobs/server";
+
+import { Header } from "@/components/layout/header";
+import { Footer } from "@/components/layout/footer";
+import { ApplicationForm } from "@/components/application/application-form";
+import { Card, CardContent } from "@/components/ui/card";
+import { getTracking, getApplyHref } from "@/features/applications/tracking";
+
+export async function ApplicationPage({
+  query,
+  identifier,
+  pathname = "/apply",
+}: {
+  query: Record<string, string | string[] | undefined>;
+  identifier?: string;
+  pathname?: string;
+}) {
+  const result = identifier ? await getPublishedJob(identifier) : null;
+  const jobId = identifier;
+  const job = result?.job;
+  return (
+    <>
+      <Header query={query} audience="applicant" />
+      <main
+        id="main-content"
+        className="mx-auto w-full max-w-3xl px-5 py-12 sm:px-8"
+      >
+        <p className="text-sm font-semibold text-primary">YOUR NEXT STEP</p>
+        <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
+          Apply to TaskWavePH
+        </h1>
+        <p className="mt-4 leading-relaxed text-muted-foreground">
+          Tell us a little about yourself. Fields marked optional can be left
+          blank.
+        </p>
+        <div className="my-6 rounded-lg border border-primary/20 bg-primary/5 p-4 text-sm leading-relaxed">
+          {submissionsEnabled()
+            ? "Submit your details for review. Contact depends on matching an available opportunity."
+            : "Applications are not open yet. You can check your entries here, but your information will not be sent or saved."}
+        </div>
+        {jobId && !job ? (
+          <div role="status" className="rounded-lg border p-6">
+            <p>
+              {result?.state === "unavailable"
+                ? "We couldn’t load this role right now. Please try again later."
+                : "This role is no longer accepting applications."}
+            </p>
+            <Link
+              href={getApplyHref(query)}
+              className="mt-4 inline-flex min-h-11 items-center text-primary underline"
+            >
+              Continue with a general application
+            </Link>
+          </div>
+        ) : (
+          <Card className="py-0">
+            <CardContent className="p-5 sm:p-8">
+              <ApplicationForm
+                tracking={getTracking(query, pathname)}
+                job={job ? { id: job._id, title: job.title } : undefined}
+                enabled={submissionsEnabled()}
+              />
+            </CardContent>
+          </Card>
+        )}
+      </main>
+      <Footer query={query} />
+    </>
+  );
+}

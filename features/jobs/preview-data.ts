@@ -1,3 +1,4 @@
+import { jobSlugBase, numberedJobSlug } from "./urls";
 import {
   serviceAreas,
   workArrangements,
@@ -8,6 +9,17 @@ export function previewJobs(): JobView[] {
   return Array.from({ length: 16 }, (_, i) => ({
     _id: `sample-job-${String(i + 1).padStart(3, "0")}`,
     title: `Sample ${serviceAreas[i % serviceAreas.length]} Role ${i + 1}`,
+    ...(i < 14
+      ? {
+          slug: numberedJobSlug(
+            jobSlugBase(
+              `Sample ${serviceAreas[i % serviceAreas.length]} Role ${i + 1}`,
+              Date.UTC(2026, 8, 30, 0, i),
+            ),
+            1,
+          ),
+        }
+      : {}),
     serviceArea: serviceAreas[i % serviceAreas.length],
     location: "Sample location, Philippines",
     arrangement: workArrangements[i % workArrangements.length],

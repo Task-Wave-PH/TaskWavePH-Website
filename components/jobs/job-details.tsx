@@ -1,3 +1,4 @@
+import { jobApplyHref } from "@/features/jobs/urls";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
@@ -15,11 +16,6 @@ export function JobDetails({
   query: TrackingQuery;
   preview?: boolean;
 }) {
-  const apply = new URL(
-    getTrackedHref(preview ? "/dev-preview/job-apply" : "/apply", query),
-    "https://taskwaveph.com",
-  );
-  apply.searchParams.set("jobId", job._id);
   return (
     <div className="flex flex-col items-start gap-8">
       <Link
@@ -68,7 +64,7 @@ export function JobDetails({
         </section>
       ))}
       <Link
-        href={apply.pathname + apply.search}
+        href={jobApplyHref(job, query, preview)}
         className={buttonVariants({
           size: "lg",
           className: "min-h-12 w-full px-6 sm:w-auto",

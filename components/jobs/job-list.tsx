@@ -1,4 +1,5 @@
 "use client";
+import { jobPath } from "@/features/jobs/urls";
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -181,10 +182,7 @@ export function JobList({
                 </div>
                 {job.salary && <p className="text-sm">{job.salary}</p>}
                 <Link
-                  href={getTrackedHref(
-                    `${preview ? "/dev-preview/careers" : "/careers"}/${job._id}`,
-                    query,
-                  )}
+                  href={getTrackedHref(jobPath(job, preview), query)}
                   className={buttonVariants({
                     variant: "outline",
                     className: "mt-auto min-h-11 px-5",

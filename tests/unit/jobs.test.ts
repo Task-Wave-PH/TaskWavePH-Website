@@ -1,3 +1,8 @@
+import {
+  jobSlugBase,
+  numberedJobSlug,
+  jobApplyHref,
+} from "../../features/jobs/urls";
 /// <reference types="vite/client" />
 import { convexTest } from "convex-test";
 import aggregate from "@convex-dev/aggregate/test";
@@ -292,4 +297,179 @@ describe("Jobs", () => {
     expect(csv).toContain('"\'=malicious"');
     expect(csv).toContain('"sample-job"');
   });
+});
+
+describe("Readable job URLs", () => {
+  it("normalizes titles and uses the Philippine publication date", () => {
+    expect(
+      jobSlugBase(
+        "  Sénior Support / Sales!  ",
+        Date.parse("2026-10-21T16:00:00Z"),
+      ),
+    ).toBe("senior-support-sales-2026-10-22");
+    expect(jobSlugBase("!!!", 0)).toBe("role-1970-01-01");
+    expect(jobSlugBase("x".repeat(200), 0)).toBe(
+      `${"x".repeat(100)}-1970-01-01`,
+    );
+    expect(numberedJobSlug("support-2026-10-22", 101)).toBe(
+      "support-2026-10-22-101",
+    );
+  });
+  it("retains tracking without including personal or arbitrary query values", () => {
+    expect(
+      jobApplyHref(
+        { _id: "id", slug: "support-2026-10-22-01" },
+        { source: "linkedin", email: "secret@example.invalid", jobId: "other" },
+      ),
+    ).toBe("/apply/support-2026-10-22-01?source=linkedin");
+    expect(jobApplyHref({ _id: "id" }, { campaign: "october" })).toBe(
+      "/apply?jobId=id&campaign=october",
+    );
+  });
+  it("allocates unique publication slugs, preserves them and never reuses deleted URLs", async () => {
+    const t = setup(),
+      admin = await staff(t);
+    const ids = await Promise.all([
+      admin.mutation(api.jobs.save, { data }),
+      admin.mutation(api.jobs.save, { data }),
+    ]);
+    expect(
+      (await admin.query(api.jobs.staffDetail, { id: ids[0] }))?.slug,
+    ).toBeUndefined();
+    await Promise.all(
+      ids.map((id) =>
+        admin.mutation(api.jobs.setStatus, { id, status: "Published" }),
+      ),
+    );
+    const first = await admin.query(api.jobs.staffDetail, { id: ids[0] });
+    const second = await admin.query(api.jobs.staffDetail, { id: ids[1] });
+    expect(first!.slug).not.toBe(second!.slug);
+    expect(await t.query(api.jobs.detail, { id: first!.slug! })).toMatchObject({
+      _id: ids[0],
+    });
+    await admin.mutation(api.jobs.save, {
+      id: ids[0],
+      data: { ...data, title: "Renamed position" },
+      expectedUpdatedAt: first!.updatedAt,
+    });
+    await admin.mutation(api.jobs.setStatus, { id: ids[0], status: "Closed" });
+    expect(await t.query(api.jobs.detail, { id: first!.slug! })).toBeNull();
+    await admin.mutation(api.jobs.setStatus, {
+      id: ids[0],
+      status: "Published",
+    });
+    expect((await t.query(api.jobs.detail, { id: ids[0] }))!.slug).toBe(
+      first!.slug,
+    );
+    await admin.mutation(api.jobs.remove, { id: ids[1] });
+    const third = await admin.mutation(api.jobs.save, { data });
+    await admin.mutation(api.jobs.setStatus, {
+      id: third,
+      status: "Published",
+    });
+    expect((await t.query(api.jobs.detail, { id: third }))!.slug).not.toBe(
+      second!.slug,
+    );
+    expect(await t.query(api.jobs.detail, { id: second!.slug! })).toBeNull();
+    expect(await t.query(api.jobs.detail, { id: "x".repeat(1000) })).toBeNull();
+  });
+  it("backfills historical roles without altering revisions, skipping unpublished drafts", async () => {
+    const t = setup();
+    const ids = await t.run(async (ctx) => {
+      const a = await ctx.db.insert("jobs", {
+        ...data,
+        status: "Published",
+        publishedAt: Date.UTC(2026, 8, 1),
+        updatedAt: 123,
+      });
+      const b = await ctx.db.insert("jobs", {
+        ...data,
+        status: "Draft",
+        updatedAt: 124,
+      });
+      const c = await ctx.db.insert("jobs", {
+        ...data,
+        status: "Closed",
+        publishedAt: Date.UTC(2026, 8, 1),
+        updatedAt: 125,
+      });
+      return [a, b, c];
+    });
+    expect(
+      await t.mutation(internal.jobSlugs.backfill, { cursor: null }),
+    ).toEqual({ processed: 2, done: true });
+    const before = await t.run((ctx) => ctx.db.get(ids[0]));
+    expect(before!.slug).toBe("support-specialist-2026-09-01-01");
+    expect(before!.updatedAt).toBe(123);
+    expect((await t.run((ctx) => ctx.db.get(ids[1])))!.slug).toBeUndefined();
+    expect(
+      await t.mutation(internal.jobSlugs.backfill, { cursor: null }),
+    ).toEqual({ processed: 0, done: true });
+    expect((await t.run((ctx) => ctx.db.get(ids[0])))!.slug).toBe(before!.slug);
+  });
+});
+
+it("completes historical slug migration across bounded scheduled pages", async () => {
+  vi.useFakeTimers();
+  try {
+    const t = setup();
+    await t.run(async (ctx) => {
+      for (let i = 0; i < 51; i++)
+        await ctx.db.insert("jobs", {
+          ...data,
+          status: "Published",
+          publishedAt: Date.UTC(2026, 9, 22),
+          updatedAt: 1,
+        });
+    });
+    expect(
+      await t.mutation(internal.jobSlugs.backfill, { cursor: null }),
+    ).toEqual({ processed: 50, done: false });
+    await t.finishAllScheduledFunctions(vi.runAllTimers);
+    const rows = await t.run((ctx) => ctx.db.query("jobs").take(100));
+    expect(rows).toHaveLength(51);
+    expect(new Set(rows.map((row) => row.slug)).size).toBe(51);
+    expect(rows.every((row) => row.slug && row.updatedAt === 1)).toBe(true);
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+it("does not give never-published closed or archived drafts an early URL", async () => {
+  vi.useFakeTimers();
+  try {
+    vi.setSystemTime(new Date("2026-10-01T00:00:00Z"));
+    const t = setup(),
+      admin = await staff(t);
+    const ids = await t.run(async (ctx) => {
+      const ids = [];
+      for (const status of ["Closed", "Archived"] as const) {
+        ids.push(
+          await ctx.db.insert("jobs", {
+            ...data,
+            status,
+            updatedAt: Date.now(),
+          }),
+        );
+      }
+      return ids;
+    });
+    vi.setSystemTime(new Date("2026-10-21T16:00:00Z"));
+    expect(
+      await t.mutation(internal.jobSlugs.backfill, { cursor: null }),
+    ).toEqual({ processed: 0, done: true });
+    for (const id of ids) {
+      expect(
+        (await admin.query(api.jobs.staffDetail, { id }))!.slug,
+      ).toBeUndefined();
+      expect(await t.query(api.jobs.detail, { id })).toBeNull();
+      await admin.mutation(api.jobs.setStatus, { id, status: "Draft" });
+      await admin.mutation(api.jobs.setStatus, { id, status: "Published" });
+      expect((await t.query(api.jobs.detail, { id }))!.slug).toMatch(
+        /^support-specialist-2026-10-22-0[12]$/,
+      );
+    }
+  } finally {
+    vi.useRealTimers();
+  }
 });

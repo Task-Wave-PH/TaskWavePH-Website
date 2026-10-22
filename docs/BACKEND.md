@@ -837,3 +837,125 @@ are retained. Changing a formatted body without its matching document returns
 Revision conflicts continue to reject stale saves transactionally.
 Deploy this additive Convex change before the frontend. Development deployment
 and real-write verification require authorization; production is separate.
+
+## Application notification emails
+
+New real application saves can schedule a staff notification through the official
+Convex Resend component. The application transaction schedules an internal enqueue
+mutation; provider work happens afterward. Mail failures never roll back the
+application or change its success receipt. Unchanged submission retries reuse the
+saved reference and do not schedule another email. The component uses the
+application ID as its enqueue idempotency key and retries transient provider errors
+up to five times. Staff edits, seeds, historical records, and business enquiries
+never trigger notifications. An application deleted before enqueue is skipped.
+
+### Configure the sender
+
+1. Create a Resend account and add `notify.taskwaveph.com` as a sending domain.
+2. Add the exact DNS records Resend supplies in Cloudflare. Preserve the existing
+   Google Workspace and Clerk records; keep verification CNAME records DNS-only.
+3. Wait for Resend to show the domain as verified. Disable open/click tracking in
+   the Resend domain settings before enabling notifications.
+4. Create a sending API key restricted to the verified domain where supported.
+5. In the matching **Convex deployment's** environment settings, configure:
+
+```text
+APPLICATION_NOTIFICATIONS_ENABLED=false
+APPLICATION_NOTIFICATION_TO=franzhbataan@gmail.com
+APPLICATION_NOTIFICATION_FROM=TaskWavePH Recruitment <notifications@notify.taskwaveph.com>
+APPLICATION_NOTIFICATION_ADMIN_URL=https://admin.taskwaveph.com
+RESEND_API_KEY=<server-only sending key>
+RESEND_TEST_MODE=true
+RESEND_WEBHOOK_SECRET=<webhook signing secret>
+```
+
+For an isolated development test, use `delivered@resend.dev` as the recipient.
+Test mode rejects real recipient addresses. To intentionally deliver to Franz,
+set `RESEND_TEST_MODE=false` and enable notifications only after approval. Sender
+and recipients come from backend configuration, never form input. There is no
+new mailbox to create just to send mail; this sender does not provide an inbox.
+For localhost staff links, use `http://localhost:3000/admin` as the admin URL.
+
+For the approved `exuberant-lapwing-339` development setup, run
+`npm run convex:notifications:configure` to apply and read back the non-secret
+values above, using `http://localhost:3000/admin`, live-recipient mode, and
+notifications enabled. It disables scheduling during setup and enables it last.
+It rejects other development targets and verifies values before enabling sending.
+All notification scripts isolate CLI selection using a temporary, non-secret
+`--env-file`, so inherited deployment keys/tokens or workspace settings cannot
+redirect commands. Temporary target files are removed even on failure. It does not touch
+`RESEND_API_KEY` or webhook secrets, and sends no email itself. Add the API key
+manually in Convex and verify the sender domain before submitting a test; new
+applications can send real email once configured. This command never configures
+production.
+
+For the separately authorized production setup, run
+`npm run convex:notifications:configure:production`. This targets only
+`fabulous-crane-816`, applies the production admin URL and live-recipient mode,
+verifies non-secret settings, and reports whether credentials are present without
+printing them. It does not replace credentials or enable sending. Complete sender
+and production webhook verification before setting
+`APPLICATION_NOTIFICATIONS_ENABLED=true`. Re-running production setup deliberately
+disables new notifications; it is a setup command, not a health check.
+
+The development smoke script refuses to run while development sending is enabled;
+do not run it against an active mail configuration. It always attempts temporary
+staff deactivation even when record cleanup fails, and reports cleanup failures
+instead of claiming success.
+
+### Webhooks, operations, and rollout
+
+Create a Resend webhook pointing to
+`https://<matching-deployment>.convex.site/resend-webhook`, subscribe to `email.*`
+events, and copy its signing secret to `RESEND_WEBHOOK_SECRET` in that deployment.
+The webhook verifies the signature against the raw bytes before component work,
+bounds requests to 256 KiB/10 seconds, and returns private/no-store responses.
+It does not use the public intake secret or expose record reads. Invalid signatures
+or malformed JSON return 400; component/configuration outages return 503 so they
+are identifiable as operational failures without exposing diagnostics.
+
+The email includes only the application reference, role, Philippine timestamp,
+and an authenticated staff-detail link. No CV attachments, applicant contact
+information, screening responses, notes, or login tokens are included. The HTML
+uses escaped content, a public original logo, and inline brand styling; a plain-text
+alternative is included. Mail clients may block external images; the text and link
+remain usable. Clerk invitation/login emails are unaffected.
+
+Use Resend logs and Convex's `resend` component email/event views for operational
+checks. `sent` means the provider accepted it, not confirmed inbox delivery;
+verified webhook events report delivery/bounce/failure. Configuration errors log
+only `CONFIGURATION_INVALID`; fix configuration before new applications arrive.
+There is no automatic catch-up after enabling or correcting configuration, and no
+new admin delivery/retry screen. Quota exhaustion and exhausted retries require
+operator review; notifications supplement the dashboard rather than replacing it.
+
+Daily component cleanup uses the supported bounded operations: finalized email
+history older than seven days is removed in batches of 100; abandoned entries
+older than 28 days are removed in batches of 500. The
+component's enqueue deduplication lasts while its email row is retained. No routine
+workflow re-enqueues historical applications. Disable notifications to stop new
+scheduling; already queued mail can still run and must be cancelled separately
+through trusted component operations if necessary.
+
+Deploy the component and functions to development first; verify disposable saves
+with mail disabled, then request approval for a real email test. Production backend
+deployment, DNS changes, notification enablement, and real sends are separate
+explicit actions. No Vercel public mail variables are needed. The free Resend plan
+has provider quotas; do not enable paid overages implicitly. See
+[Resend pricing](https://resend.com/pricing) and the
+[official component guide](https://www.convex.dev/components/resend) and
+[source/API reference](https://github.com/convex/resend). The integration uses the
+component's queued `sendEmail`, explicit enqueue idempotency key, default-safe
+test mode, signed webhook handler, and supported cleanup functions. Provider
+acceptance, delivery and inbox placement are distinct; retries cannot guarantee
+inbox delivery or override free-plan quotas.
+
+### Production delivery verification — October 22, 2026
+
+The owner authorized deployment to `fabulous-crane-816` and production notification
+enablement. One clearly marked synthetic system email was accepted by Resend and
+its real signed webhook changed component status to `delivered`. No applicant
+record was created. The production notification flag was then enabled and read
+back. This verifies sender delivery and webhook processing; a full live browser
+application-to-notification test remains separate. Do not resend test emails or
+change live settings during a code-only review.

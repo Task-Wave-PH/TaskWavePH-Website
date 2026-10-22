@@ -296,3 +296,19 @@ noindex and do not appear in the sitemap. Slugs are server-managed, not form inp
   changes that omit existing formatting rather than silently removing it.
 - Deploy the additive backend field before releasing the editor; no historical
   backfill is needed. Keep revision checks and unsaved drafts intact.
+
+## Application notification emails
+
+- Real application intake schedules optional Resend notifications after save;
+  keep provider work outside the intake transaction. Mail failures never undo a
+  save or its success receipt. Deduplicate enqueueing by application ID.
+- Notifications default to disabled and test mode. Backend-only configuration
+  controls sender, recipient and admin URL; never accept these from public input.
+- Include reference, role, Philippine timestamp and an approval-protected dashboard
+  link only. No applicant contacts, CVs, screening answers, notes or auth tokens.
+- Staff edits, seeds, existing records and business enquiries send no notifications.
+- Keep the Resend webhook signature-verified, bounded, and private/no-store.
+  Monitor delivery through the component/provider; no delivery claims on enqueue.
+- Preserve existing DNS/email records, disable provider open/click tracking, and
+  require explicit authorization before real mail, production enablement or DNS
+  changes. See docs/BACKEND.md for configuration, quotas and cleanup behavior.

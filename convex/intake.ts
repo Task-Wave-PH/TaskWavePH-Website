@@ -186,6 +186,12 @@ export const save = internalMutation({
         ...(args.resumeFile ? { resumeFile: args.resumeFile } : {}),
       });
       await syncMetrics(ctx, "applications", null, await ctx.db.get(id));
+      if (process.env.APPLICATION_NOTIFICATIONS_ENABLED === "true")
+        await ctx.scheduler.runAfter(
+          0,
+          internal.applicationNotifications.enqueue,
+          { applicationId: id },
+        );
     } else if (args.kind === "businessLeads" && "company" in args.data) {
       const { website: _honeypot, ...data } = leadSchema.parse(args.data);
       void _honeypot;

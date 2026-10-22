@@ -1,3 +1,5 @@
+import { JobRichText } from "./job-rich-text";
+import { jobApplyHref } from "@/features/jobs/urls";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
@@ -15,11 +17,6 @@ export function JobDetails({
   query: TrackingQuery;
   preview?: boolean;
 }) {
-  const apply = new URL(
-    getTrackedHref(preview ? "/dev-preview/job-apply" : "/apply", query),
-    "https://taskwaveph.com",
-  );
-  apply.searchParams.set("jobId", job._id);
   return (
     <div className="flex flex-col items-start gap-8">
       <Link
@@ -55,20 +52,20 @@ export function JobDetails({
         {job.location}
         {job.salary ? ` · ${job.salary}` : ""}
       </p>
-      {[
-        ["About the role", job.description],
-        ["Responsibilities", job.responsibilities],
-        ["Requirements", job.requirements],
-      ].map(([title, text]) => (
+      {(
+        [
+          ["About the role", "description"],
+          ["Responsibilities", "responsibilities"],
+          ["Requirements", "requirements"],
+        ] as const
+      ).map(([title, field]) => (
         <section key={title} className="w-full min-w-0 max-w-3xl">
           <h2 className="text-2xl font-semibold">{title}</h2>
-          <p className="mt-4 whitespace-pre-wrap break-words leading-relaxed text-muted-foreground">
-            {text}
-          </p>
+          <JobRichText document={job.richText?.[field]} fallback={job[field]} />
         </section>
       ))}
       <Link
-        href={apply.pathname + apply.search}
+        href={jobApplyHref(job, query, preview)}
         className={buttonVariants({
           size: "lg",
           className: "min-h-12 w-full px-6 sm:w-auto",

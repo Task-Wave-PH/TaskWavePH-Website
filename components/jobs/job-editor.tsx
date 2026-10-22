@@ -1,10 +1,11 @@
 "use client";
+import { jobPath } from "@/features/jobs/urls";
 import { useUnsavedChanges } from "@/components/admin/use-unsaved-changes";
 import { CampaignBuilder } from "./campaign-builder";
 import { adminOperation } from "@/features/admin/operation-feedback";
 import { useState } from "react";
 import Link from "next/link";
-import { useForm, useWatch } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   jobSchema,
@@ -17,7 +18,11 @@ import {
 } from "@/features/jobs/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { JobRichEditor } from "./job-rich-editor";
+import {
+  jobRichDocumentSchema,
+  richTextPlain,
+} from "@/features/jobs/rich-text";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -67,6 +72,7 @@ export function JobEditor({
     handleSubmit,
     control,
     setValue,
+    getValues,
     reset,
     formState: { errors, isSubmitting, isDirty, dirtyFields },
   } = useForm<JobInput>({
@@ -109,6 +115,18 @@ export function JobEditor({
   return (
     <>
       {unsavedWarning}
+      {job?.slug && (
+        <Card>
+          <CardContent className="space-y-2 p-5">
+            <Label>Public job URL</Label>
+            <p className="break-all text-sm">{jobPath(job, preview)}</p>
+            <p className="text-sm text-muted-foreground">
+              Assigned on first publication. Editing the title does not change
+              this URL. Only published roles are publicly available.
+            </p>
+          </CardContent>
+        </Card>
+      )}
       <Link
         href={preview ? "/dev-preview/jobs" : "/admin/jobs"}
         className="inline-flex min-h-11 items-center self-start text-primary underline underline-offset-4"
@@ -150,7 +168,10 @@ export function JobEditor({
                   error instanceof Error &&
                     error.message.includes("EDIT_CONFLICT")
                     ? "This posting changed while you were editing. Copy your changes, refresh, and review the latest posting before saving."
-                    : "Unable to save. Check your access and try again.",
+                    : error instanceof Error &&
+                        error.message.includes("EDITOR_REFRESH_REQUIRED")
+                      ? "This posting uses updated formatting. Copy your changes and reload before editing its content."
+                      : "Unable to save. Check your access and try again.",
                 );
               }
             })}
@@ -241,25 +262,33 @@ export function JobEditor({
                 key={name}
                 className="min-w-0 space-y-3 rounded-xl border border-border/70 bg-muted/30 p-4 sm:p-6"
               >
-                <Label htmlFor={name}>{label}</Label>
-                <Textarea
-                  disabled={isSubmitting || busy}
-                  id={name}
-                  {...register(name)}
-                  rows={5}
-                  maxLength={10000}
-                  aria-invalid={!!errors[name]}
-                  aria-describedby={errors[name] ? `${name}-error` : undefined}
+                <Controller
+                  name={name}
+                  control={control}
+                  render={({ field }) => (
+                    <JobRichEditor
+                      id={name}
+                      label={label}
+                      value={field.value}
+                      richValue={
+                        jobRichDocumentSchema.safeParse(values.richText?.[name])
+                          .data
+                      }
+                      disabled={isSubmitting || busy}
+                      error={errors[name]?.message}
+                      onBlur={field.onBlur}
+                      inputRef={field.ref}
+                      onChange={(document) => {
+                        field.onChange(richTextPlain(document));
+                        setValue(
+                          "richText",
+                          { ...getValues("richText"), [name]: document },
+                          { shouldDirty: true },
+                        );
+                      }}
+                    />
+                  )}
                 />
-                {errors[name] && (
-                  <p
-                    id={`${name}-error`}
-                    role="alert"
-                    className="text-sm text-destructive"
-                  >
-                    {errors[name]?.message}
-                  </p>
-                )}
               </div>
             ))}
             <Button

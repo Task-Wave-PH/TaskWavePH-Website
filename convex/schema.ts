@@ -19,12 +19,18 @@ export default defineSchema({
     revision: v.number(),
     updatedAt: v.number(),
   }).index("by_key", ["key"]),
+  jobSlugCounters: defineTable({
+    base: v.string(),
+    sequence: v.number(),
+  }).index("by_base", ["base"]),
   jobs: defineTable({
+    slug: v.optional(v.string()),
     ...jobFields,
     status: jobStatus,
     publishedAt: v.optional(v.number()),
     updatedAt: v.number(),
   })
+    .index("by_slug", ["slug"])
     .index("by_status_published", ["status", "publishedAt"])
     .index("by_status_service_published", [
       "status",
@@ -42,7 +48,20 @@ export default defineSchema({
       "arrangement",
       "publishedAt",
     ]),
+  applicationNotificationBatches: defineTable({
+    state: v.union(
+      v.literal("collecting"),
+      v.literal("sealed"),
+      v.literal("queued"),
+      v.literal("skipped"),
+    ),
+    closesAt: v.number(),
+    applicationIds: v.array(v.id("applications")),
+  })
+    .index("by_state", ["state"])
+    .index("by_closesAt", ["closesAt"]),
   applications: defineTable({
+    notificationBatchId: v.optional(v.id("applicationNotificationBatches")),
     data: applicationData,
     ...baseFields,
     status: applicationStatus,

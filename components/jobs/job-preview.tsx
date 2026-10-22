@@ -195,7 +195,9 @@ export function PreviewJobDetail({
   query?: TrackingQuery;
 }) {
   const { jobs } = usePreviewJobs();
-  const job = jobs.find((row) => row._id === id && row.status === "Published");
+  const job = jobs.find(
+    (row) => (row._id === id || row.slug === id) && row.status === "Published",
+  );
   return (
     <div className="space-y-8">
       <PreviewNotice />
@@ -218,7 +220,9 @@ export function PreviewJobApplication({
   query?: TrackingQuery;
 }) {
   const { jobs } = usePreviewJobs();
-  const job = jobs.find((row) => row._id === id && row.status === "Published");
+  const job = jobs.find(
+    (row) => (row._id === id || row.slug === id) && row.status === "Published",
+  );
   return (
     <div className="space-y-8">
       <PreviewNotice />

@@ -23,7 +23,8 @@ on October 1, 2026. This supersedes the original Sheets-only MVP constraints.
 - Public forms POST through Next.js services to the authenticated Convex HTTP
   adapter. Keep the shared secret server-side. Backend functions validate again.
 - Tables: applications, businessLeads, jobs, adminUsers, staffInvitations, adminActivity, pendingUploads,
-  dashboardState (internal metric readiness), ownerSettings (QR and campaign defaults).
+  dashboardState (internal metric readiness), applicationNotificationBatches (private email grouping), ownerSettings (QR and campaign defaults),
+  jobSlugCounters (transactional publication URL sequence allocation).
   Convex rate-limiter supplies persistent throttling; aggregate components supply
   exact private dashboard counts. Synchronize all write paths, including seeds.
 - Administrative functions require verified Clerk identity AND active adminUsers
@@ -170,7 +171,7 @@ add noindex, and send private/no-store responses. Host routing is not authorizat
 - Leads support an optional priority star (missing means false), not custom CRM tags.
 - The admin overview uses full-table transactional aggregates and Philippine dates,
   independent of list pagination/filters. Backfill existing data before displaying totals.
-- Approved staff create/edit bounded plain-text postings and explicitly confirm
+- Approved staff create/edit bounded postings and explicitly confirm
   publication or closure. Preserve closed postings and existing applications.
 - Optional application job IDs are validated inside the save transaction; store
   the server-resolved title snapshot. Reject new applications for unavailable jobs,
@@ -271,3 +272,50 @@ to browser support and prior user interaction. Successful saves clear protection
 failed saves preserve it. Downloads, new-tab links, and same-page anchors are
 unaffected. Browser Back/Forward and programmatic redirects are not intercepted;
 do not patch Next.js router internals or insert synthetic history entries.
+
+## Readable job URLs
+
+Assign immutable title/date/sequence slugs on first publication, using Philippine
+calendar dates. Keep indexed slug lookup Published-only; admin routes and application
+associations retain internal IDs. Preserve counters after deletion so URLs cannot
+be reused. Public links use /careers/{slug} and /apply/{slug}; legacy ID links redirect
+only for available jobs and preserve allowlisted attribution. Backfill historical
+roles in bounded internal batches before frontend rollout. Application pages are
+noindex and do not appear in the sitemap. Slugs are server-managed, not form input.
+
+## Job content formatting
+
+- Description, responsibilities, and requirements support flat bullets, bold, italic,
+  paragraphs, and line breaks through the shared editor. Bold/italic use toolbar
+  controls or keyboard shortcuts; typed asterisks/underscores stay literal.
+- Store validated structured documents alongside server-derived plain text; never
+  store/render arbitrary HTML. Keep legacy plain text literal until edited.
+- Enforce 10,000 visible characters, 50 KB, and 1,000 document/mark objects per
+  field, with existing minimum lengths. Reject unsupported nodes/attributes.
+- Preserve formatted bodies on metadata-only older-client saves. Reject body
+  changes that omit existing formatting rather than silently removing it.
+- Deploy the additive backend field before releasing the editor; no historical
+  backfill is needed. Keep revision checks and unsaved drafts intact.
+
+## Application notification emails
+
+- Real application intake schedules optional Resend notifications after save;
+  keep provider work outside the intake transaction. Mail failures never undo a
+  save or its success receipt. Group new intake over five minutes, then send at
+  most three latest applicant names, a total/+N more, and a protected list link.
+  No new applications means no batch timer or email. Persist a private per-app
+  batch marker so retries/old arrivals cannot join another batch. Bound batches
+  to 250 IDs and keep provider enqueue idempotent by batch ID.
+- Notifications default to disabled and test mode. Backend-only configuration
+  controls sender, recipient and admin URL; never accept these from public input.
+- The owner approved including up to three full applicant names in grouped staff
+  emails on October 22, 2026. No applicant contacts, CVs, screening answers, notes,
+  or auth tokens. New means newly submitted in this batch, not status = New.
+  Skip deleted records; skip empty groups. Turning notifications off before the
+  five-minute deadline suppresses that group without historical catch-up.
+- Staff edits, seeds, existing records and business enquiries send no notifications.
+- Keep the Resend webhook signature-verified, bounded, and private/no-store.
+  Monitor delivery through the component/provider; no delivery claims on enqueue.
+- Preserve existing DNS/email records, disable provider open/click tracking, and
+  require explicit authorization before real mail, production enablement or DNS
+  changes. See docs/BACKEND.md for configuration, quotas and cleanup behavior.

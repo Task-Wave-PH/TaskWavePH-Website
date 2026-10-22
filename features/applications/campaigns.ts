@@ -34,7 +34,7 @@ export function campaignLink(
   const base = new URL(origin);
   if (!/^https?:$/.test(base.protocol) || base.username || base.password)
     throw new Error("INVALID_SITE_URL");
-  if (jobId !== undefined && !/^[a-zA-Z0-9_-]{1,100}$/.test(jobId))
+  if (jobId !== undefined && !/^[a-zA-Z0-9_-]{1,160}$/.test(jobId))
     throw new Error("INVALID_JOB_ID");
   return new URL(
     getTrackedHref(

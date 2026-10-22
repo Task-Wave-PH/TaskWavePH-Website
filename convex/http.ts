@@ -1,7 +1,8 @@
+import { Resend } from "@convex-dev/resend";
 import { httpRouter } from "convex/server";
 import { ConvexError } from "convex/values";
 import { httpAction } from "./_generated/server";
-import { internal } from "./_generated/api";
+import { components, internal } from "./_generated/api";
 
 import { applicationSchema } from "../features/applications/schema";
 import { leadSchema } from "../features/leads/schema";
@@ -14,6 +15,53 @@ import {
   SubmissionBodyError,
 } from "../features/submissions/request-body";
 const http = httpRouter();
+http.route({
+  path: "/resend-webhook",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    const headers = {
+      "Cache-Control": "private, no-store",
+      "X-Robots-Tag": "noindex",
+    };
+    if (!process.env.RESEND_WEBHOOK_SECRET)
+      return new Response("Unavailable", { status: 503, headers });
+    try {
+      const resend = new Resend(components.resend, {});
+      const bytes = await readSubmissionBody(request, 10000, 256 * 1024);
+      const signedRequest = new Request(request.url, {
+        method: "POST",
+        headers: request.headers,
+        body: bytes,
+      });
+      const response = await resend.handleResendEventWebhook(
+        ctx,
+        signedRequest,
+      );
+      const responseHeaders = new Headers(response.headers);
+      for (const [key, value] of Object.entries(headers))
+        responseHeaders.set(key, value);
+      return new Response(response.body, {
+        status: response.status,
+        headers: responseHeaders,
+      });
+    } catch (error) {
+      if (error instanceof SubmissionBodyError)
+        return new Response("Invalid webhook", {
+          status: error.status,
+          headers,
+        });
+      // The official handler verifies first, then updates component state.
+      // Distinguish rejected signatures/payloads from processing outages.
+      const invalid =
+        error instanceof Error &&
+        ["WebhookVerificationError", "SyntaxError"].includes(error.name);
+      return new Response(invalid ? "Invalid webhook" : "Webhook unavailable", {
+        status: invalid ? 400 : 503,
+        headers,
+      });
+    }
+  }),
+});
 http.route({
   path: "/qr-logo",
   method: "GET",

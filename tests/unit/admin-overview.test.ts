@@ -205,12 +205,13 @@ describe("Complete admin metrics and management", () => {
     await backfill(t);
     const {
       _id: _id,
+      slug: _slug,
       status: _status,
       publishedAt: _published,
       updatedAt: _updated,
       ...data
     } = previewJobs()[0];
-    void [_id, _status, _published, _updated];
+    void [_id, _slug, _status, _published, _updated];
     const id = await admin.mutation(api.jobs.save, { data });
     await admin.mutation(api.jobs.setStatus, { id, status: "Published" });
     await admin.mutation(api.jobs.setStatus, { id, status: "Archived" });

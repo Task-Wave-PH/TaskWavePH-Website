@@ -306,7 +306,9 @@ for (const width of [360, 390, 430, 768, 1024, 1440]) {
       .getByLabel("Shareable URL", { exact: true })
       .inputValue();
     const url = new URL(link);
-    expect(url.pathname).toBe("/dev-preview/careers/sample-job-001");
+    expect(url.pathname).toBe(
+      "/dev-preview/careers/sample-customer-support-role-1-2026-09-30-01",
+    );
     expect(url.searchParams.get("source")).toBe("linkedin");
     expect(url.searchParams.get("campaign")).toBe("linkedin-october-2026");
     const download = page.waitForEvent("download");
@@ -386,10 +388,20 @@ test("draft jobs have no campaign builder", async ({ page }) => {
   ).toHaveCount(0);
 });
 
-test("logo QR with a maximum-length campaign remains scannable", async ({
+test("logo QR with maximum-length campaign and job slug remains scannable", async ({
   page,
 }) => {
-  await page.goto("/dev-preview/jobs/sample-job-001");
+  await page.goto("/dev-preview/jobs/new");
+  await fillJob(page, "z".repeat(200));
+  await page.getByRole("button", { name: "Save Posting", exact: true }).click();
+  await expect(page).toHaveURL(/\/dev-preview\/jobs\/sample-job-/);
+  await page
+    .getByRole("button", { name: "Publish Posting", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Confirm", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Campaign link & QR", exact: true }),
+  ).toBeVisible();
   await page
     .getByRole("button", { name: "Campaign link & QR", exact: true })
     .click();
@@ -413,4 +425,195 @@ test("logo QR with a maximum-length campaign remains scannable", async ({
       320,
     )?.data,
   ).toBe(link);
+});
+
+test("sample readable URLs identify roles and preserve campaign attribution through Apply", async ({
+  page,
+}) => {
+  const slug = "sample-customer-support-role-1-2026-09-30-01";
+  await page.goto(
+    `/dev-preview/careers/${slug}?source=linkedin&campaign=slug-test&email=private@example.invalid`,
+  );
+  await expect(
+    page.getByRole("heading", {
+      name: "Sample Customer Support Role 1",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await page
+    .getByRole("link", { name: "Apply for This Role", exact: true })
+    .click();
+  await expect(page).toHaveURL(
+    new RegExp(
+      `/dev-preview/job-apply/${slug}\\?source=linkedin&campaign=slug-test$`,
+    ),
+  );
+  await expect(
+    page.getByLabel("Position Interested In", { exact: true }),
+  ).toHaveValue("Sample Customer Support Role 1");
+  await expect(page.locator('input[name="jobId"]')).toHaveValue(
+    "sample-job-001",
+  );
+  await expect(page.locator('input[name="source"]')).toHaveValue("linkedin");
+});
+
+test("job editor formats flat bullets and preserves literal markers on mobile and desktop", async ({
+  page,
+}) => {
+  await page.goto("/dev-preview/jobs/new");
+  await fillJob(page, "Formatted Sample Role");
+  const description = page.getByRole("textbox", {
+    name: "Description",
+    exact: true,
+  });
+  await description.fill("");
+  await description.pressSequentially("- ");
+  await description.pressSequentially("Help our customers every day.");
+  await expect(description.locator("ul li")).toHaveCount(1);
+  await description.press("Enter");
+  await description.pressSequentially("Communicate clearly with teammates.");
+  await expect(description.locator("ul li")).toHaveCount(2);
+  await description.press("Enter");
+  await description.press("Enter");
+  await page
+    .getByRole("group", { name: "Description formatting" })
+    .getByRole("button", { name: "Bold", exact: true })
+    .click();
+  await description.pressSequentially("Bold text");
+  await expect(description.locator("strong")).toHaveText("Bold text");
+  await page
+    .getByRole("group", { name: "Description formatting" })
+    .getByRole("button", { name: "Bold", exact: true })
+    .click();
+  await description.pressSequentially(" *literal* _literal_");
+  await description.press("ControlOrMeta+i");
+  await description.pressSequentially(" Italic text");
+  await description.press("ControlOrMeta+i");
+  await expect(description.locator("em")).toHaveText(" Italic text");
+  await description.evaluate((element) => {
+    const clipboardData = new DataTransfer();
+    clipboardData.setData(
+      "text/html",
+      '<p><strong>Pasted bold</strong><a href="https://example.com"> safe text</a><img src="invalid" /></p>',
+    );
+    element.dispatchEvent(
+      new ClipboardEvent("paste", {
+        bubbles: true,
+        cancelable: true,
+        clipboardData,
+      }),
+    );
+  });
+  await expect(description.locator("a, img")).toHaveCount(0);
+  await expect(description).toContainText("Pasted bold");
+  await description.evaluate((element) => {
+    const clipboardData = new DataTransfer();
+    clipboardData.setData("text/plain", "x".repeat(10001));
+    element.dispatchEvent(
+      new ClipboardEvent("paste", {
+        bubbles: true,
+        cancelable: true,
+        clipboardData,
+      }),
+    );
+  });
+  await expect(
+    page.getByRole("alert").filter({ hasText: "exceeds the content limit" }),
+  ).toBeVisible();
+  await expect(description).toContainText("Pasted bold");
+  for (const width of [360, 390, 430, 768, 1024, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+    ).toBe(true);
+  }
+  await page.getByRole("button", { name: "Save Posting", exact: true }).click();
+  await expect(page).toHaveURL(/\/dev-preview\/jobs\/sample-job-/);
+  await expect(description.locator("ul li")).toHaveCount(2);
+  await expect(description.locator("strong")).toHaveText([
+    "Bold text",
+    "Pasted bold",
+  ]);
+  await page
+    .getByRole("button", { name: "Publish Posting", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Confirm", exact: true }).click();
+  await page
+    .getByRole("link", { name: "Preview Careers", exact: true })
+    .click();
+  await page
+    .locator('[data-slot="card"]')
+    .filter({
+      has: page.getByRole("heading", {
+        name: "Formatted Sample Role",
+        exact: true,
+      }),
+    })
+    .getByRole("link", { name: /View Role/ })
+    .click();
+  const body = page.locator("section").filter({
+    has: page.getByRole("heading", { name: "About the role", exact: true }),
+  });
+  await expect(body.locator("ul li")).toHaveCount(2);
+  await expect(body.locator("strong")).toHaveText(["Bold text", "Pasted bold"]);
+  await expect(body.locator("em")).toHaveText(" Italic text");
+  await expect(body).toContainText("*literal* _literal_");
+});
+
+test("formatted edits preserve the caret and undo history inside existing text", async ({
+  page,
+}) => {
+  await page.goto("/dev-preview/jobs/new");
+  const description = page.getByRole("textbox", {
+    name: "Description",
+    exact: true,
+  });
+  await description.fill("ABCDEFGHIJKLMNOPQRSTUV");
+  await description.press("ControlOrMeta+a");
+  await page
+    .getByRole("group", { name: "Description formatting" })
+    .getByRole("button", { name: "Bold", exact: true })
+    .click();
+  await expect(description.locator("strong")).toHaveText(
+    "ABCDEFGHIJKLMNOPQRSTUV",
+  );
+  await description.evaluate(async (element) => {
+    // Let the toolbar's scheduled focus finish before placing a native text selection.
+    await new Promise(requestAnimationFrame);
+    await new Promise(requestAnimationFrame);
+    const range = document.createRange();
+    range.setStart(element.querySelector("strong")!.firstChild!, 1);
+    range.collapse(true);
+    const selection = window.getSelection()!;
+    selection.removeAllRanges();
+    selection.addRange(range);
+    document.dispatchEvent(new Event("selectionchange"));
+  });
+  await description.pressSequentially("xy", { delay: 80 });
+  await expect(description).toHaveText("AxyBCDEFGHIJKLMNOPQRSTUV");
+  await description.press("ControlOrMeta+z");
+  await expect(description).toHaveText("ABCDEFGHIJKLMNOPQRSTUV");
+  await page.getByRole("link", { name: "Back to jobs", exact: true }).click();
+  const warning = page.getByRole("alertdialog");
+  await expect(warning).toBeVisible();
+  await warning
+    .getByRole("button", { name: "Keep editing", exact: true })
+    .click();
+  await expect(description.locator("strong")).toHaveText(
+    "ABCDEFGHIJKLMNOPQRSTUV",
+  );
+});
+
+test("opening an untouched job editor does not create unsaved changes", async ({
+  page,
+}) => {
+  await page.goto("/dev-preview/jobs/new");
+  await expect(
+    page.getByRole("textbox", { name: "Description", exact: true }),
+  ).toBeVisible();
+  await page.getByRole("link", { name: "Back to jobs", exact: true }).click();
+  await expect(page).toHaveURL(/\/dev-preview\/jobs$/);
+  await expect(page.getByRole("alertdialog")).toHaveCount(0);
 });

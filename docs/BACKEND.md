@@ -563,7 +563,7 @@ variables or paid infrastructure were added.
 On **Admin → Jobs**, open a **Published** posting. Open **Campaign link & QR**. In the modal, choose the source (for example `linkedin` or `facebook`), placement (`social`,
 `paid-social`, `qr`, or `referral`), and a lowercase campaign code such as
 `customer-support-october-2026`. Create the link, copy it for your post, or download
-the 1024px PNG QR with the original TaskWavePH symbol centered on white backing.
+the approximately 1024px PNG QR with the original TaskWavePH symbol centered on white backing.
 It uses high error correction and retains the outer quiet zone. Scan the QR and test the role's application button
 before sharing it. Do not include applicant information or referrer names in URLs.
 
@@ -765,3 +765,218 @@ passed real saves without job IDs, exact channel/campaign filters, matching
 protected exports with QR attribution, current-status filtering, and anonymous
 access denial. Disposable records were removed and temporary CLI staff approval
 revoked. Real Clerk browser authentication remains unverified.
+
+## Readable job URLs
+
+New postings receive a stable title/date/sequence URL on first publication, such as
+`/careers/customer-support-2026-10-22-01` and `/apply/customer-support-2026-10-22-01`.
+The date is the Philippine publication date; sequences start at 01 and increase
+transactionally per normalized title/date. The indexed `jobSlugCounters` table
+retains allocations after job deletion, preventing old links from changing meaning.
+Editing titles or republishing never changes an existing slug. Admin routes,
+filters and application associations keep internal IDs. No new application environment values
+are needed. Staff see the URL read-only in the posting editor after publication.
+
+Deploy the additive schema/functions before the frontend. Then run this against
+the explicitly intended deployment (production requires separate authorization):
+
+```bash
+npx convex run jobSlugs:backfill '{"cursor":null}'
+```
+
+This internal migration scans 50 jobs per transaction and schedules the next page.
+It is repeatable and preserves job revisions and metrics. It only migrates
+currently Published jobs or jobs with a recorded publishedAt. Never-published
+Draft, Closed, and Archived postings keep no slug until first publication.
+Historical jobs use their stored publishedAt; currently Published legacy jobs
+without it use creation time.
+Older releases overwrote publishedAt on republication, so an earlier original
+publication date cannot be recovered from those records. The migration does not
+invent it. Legacy ID URLs remain a fallback until each record has its slug.
+
+Only Published records resolve publicly. Old `/careers/{id}` and
+`/apply?jobId={id}` links redirect permanently to readable URLs with source/campaign
+and UTM values only. Unknown/unpublished role application paths cannot fall back to
+a general submission. Role-specific form metadata is noindex; sitemaps contain
+only published detail URLs. Previously generated QR codes retain their legacy
+URLs and continue through these redirects. Closed jobs still reject new saves
+inside the intake transaction, including forms opened before closure.
+
+For an isolated preview server on a different local port, set
+`PLAYWRIGHT_PREVIEW_PORT=3001 npm run test:preview`. This does not change deployment
+URLs or any application environment settings.
+
+Development verification on October 22, 2026: the additive functions/schema were
+deployed to `exuberant-lapwing-339`; the bounded backfill completed for two existing
+jobs. Disposable job writes verified indexed slug resolution, unique title/date
+sequences, stable renamed/reopened URLs, closed-role denial, and non-reuse after
+deletion. Test jobs were deleted and the temporary CLI staff identity deactivated;
+synthetic sequence/audit metadata remains. This does not verify a real signed-in
+Clerk browser session or constitute a production deployment.
+
+Review follow-up: the historical backfill now requires publication evidence, so
+never-published Closed/Archived drafts receive their date only when first published.
+For dense codes (101+ modules per side), the QR renderer rounds its approximately
+1024px output to integer pixels per module, including quiet zones. Smaller codes
+retain their existing 1024px rendering. This avoids resampling artifacts for dense readable
+URLs at 320px without changing the saved logo size or the attribution link. No
+additional backend migration is required.
+
+### Structured job content
+
+Jobs optionally store `richText` documents for description, responsibilities, and
+requirements. The server validates an allowlist of paragraphs, flat bullet lists,
+text, line breaks, bold, and italic, then derives the existing plaintext fields.
+Limits per field: 10,000 visible characters, 50 KB serialized content, and 1,000
+objects including marks; existing minimum lengths still apply. No HTML or URLs
+are accepted as formatting. Legacy postings require no backfill.
+
+Older clients may save unchanged bodies with metadata edits; stored documents
+are retained. Changing a formatted body without its matching document returns
+`EDITOR_REFRESH_REQUIRED`; the UI preserves edits and asks staff to reload.
+Revision conflicts continue to reject stale saves transactionally.
+Deploy this additive Convex change before the frontend. Development deployment
+and real-write verification require authorization; production is separate.
+
+## Application notification emails
+
+New real application saves schedule an internal mutation that joins a five-minute
+batch through the official Convex Resend component. The first arrival starts the
+window. No arrivals means no timer or email. At the deadline, one email shows the
+latest one to three full applicant names, the number of new submissions, and
+`+N more` when needed, linking to the approval-protected applications list.
+The owner explicitly approved these limited names in staff email on October 22, 2026. “New” means newly submitted, independent of the current recruitment status.
+
+The private `applicationNotificationBatches` table stores only application IDs,
+deadline, and state. A private optional `notificationBatchId` marker on each
+application prevents duplicates even after batch history cleanup. Group collection,
+application marking, and scheduling are transactional. Batches hold at most 250 IDs;
+excess arrivals open another bounded window. Full/expired groups are sealed so
+there is at most one collecting group even under concurrent arrivals. Provider
+enqueue and the queued-state transition commit together using the batch ID as
+Resend's idempotency key. Provider retries remain bounded to five attempts.
+
+Email work happens after application save. Failures never undo the application or
+its success receipt. Identical intake retries, staff edits, seeds, historical
+records, and business enquiries do not generate additional notifications. Deleted
+records are excluded at flush; an empty group sends nothing. There is no backfill
+or historical email catch-up. Turning notifications off before a group flush
+skips that group; already enqueued provider mail can still run.
+
+This is an additive schema change: deploy before testing grouped email; existing
+applications require no migration. Previously queued individual emails may still
+complete after rollout; new intake uses five-minute grouping. Do not invoke the
+internal enqueue manually on historical real applicants.
+
+### Configure the sender
+
+1. Create a Resend account and add `notify.taskwaveph.com` as a sending domain.
+2. Add the exact DNS records Resend supplies in Cloudflare. Preserve the existing
+   Google Workspace and Clerk records; keep verification CNAME records DNS-only.
+3. Wait for Resend to show the domain as verified. Disable open/click tracking in
+   the Resend domain settings before enabling notifications.
+4. Create a sending API key restricted to the verified domain where supported.
+5. In the matching **Convex deployment's** environment settings, configure:
+
+```text
+APPLICATION_NOTIFICATIONS_ENABLED=false
+APPLICATION_NOTIFICATION_TO=franzhbataan@gmail.com
+APPLICATION_NOTIFICATION_FROM=TaskWavePH Recruitment <notifications@notify.taskwaveph.com>
+APPLICATION_NOTIFICATION_ADMIN_URL=https://admin.taskwaveph.com
+RESEND_API_KEY=<server-only sending key>
+RESEND_TEST_MODE=true
+RESEND_WEBHOOK_SECRET=<webhook signing secret>
+```
+
+For an isolated development test, use `delivered@resend.dev` as the recipient.
+Test mode rejects real recipient addresses. To intentionally deliver to Franz,
+set `RESEND_TEST_MODE=false` and enable notifications only after approval. Sender
+and recipients come from backend configuration, never form input. There is no
+new mailbox to create just to send mail; this sender does not provide an inbox.
+For localhost staff links, use `http://localhost:3000/admin` as the admin URL.
+
+For the approved `exuberant-lapwing-339` development setup, run
+`npm run convex:notifications:configure` to apply and read back the non-secret
+values above, using `http://localhost:3000/admin`, live-recipient mode, and
+notifications enabled. It disables scheduling during setup and enables it last.
+It rejects other development targets and verifies values before enabling sending.
+All notification scripts isolate CLI selection using a temporary, non-secret
+`--env-file`, so inherited deployment keys/tokens or workspace settings cannot
+redirect commands. Temporary target files are removed even on failure. It does not touch
+`RESEND_API_KEY` or webhook secrets, and sends no email itself. Add the API key
+manually in Convex and verify the sender domain before submitting a test; new
+applications can send real email once configured. This command never configures
+production.
+
+For the separately authorized production setup, run
+`npm run convex:notifications:configure:production`. This targets only
+`fabulous-crane-816`, applies the production admin URL and live-recipient mode,
+verifies non-secret settings, and reports whether credentials are present without
+printing them. It does not replace credentials or enable sending. Complete sender
+and production webhook verification before setting
+`APPLICATION_NOTIFICATIONS_ENABLED=true`. Re-running production setup deliberately
+disables new notifications; it is a setup command, not a health check.
+
+The development smoke script refuses to run while development sending is enabled;
+do not run it against an active mail configuration. It always attempts temporary
+staff deactivation even when record cleanup fails, and reports cleanup failures
+instead of claiming success.
+
+### Webhooks, operations, and rollout
+
+Create a Resend webhook pointing to
+`https://<matching-deployment>.convex.site/resend-webhook`, subscribe to `email.*`
+events, and copy its signing secret to `RESEND_WEBHOOK_SECRET` in that deployment.
+The webhook verifies the signature against the raw bytes before component work,
+bounds requests to 256 KiB/10 seconds, and returns private/no-store responses.
+It does not use the public intake secret or expose record reads. Invalid signatures
+or malformed JSON return 400; component/configuration outages return 503 so they
+are identifiable as operational failures without exposing diagnostics.
+
+The email includes only up to three latest applicant names, the new-submission
+count, and an authenticated applications-list link. No CV attachments, applicant contact
+information, screening responses, notes, or login tokens are included. The HTML
+uses escaped content, a public original logo, and inline brand styling; a plain-text
+alternative is included. Mail clients may block external images; the text and link
+remain usable. Clerk invitation/login emails are unaffected.
+
+Use Resend logs and Convex's `resend` component email/event views for operational
+checks. `sent` means the provider accepted it, not confirmed inbox delivery;
+verified webhook events report delivery/bounce/failure. Configuration errors log
+only `CONFIGURATION_INVALID`; fix configuration before new applications arrive.
+Skipped groups have no automatic catch-up after enabling or correcting configuration, and there is no
+new admin delivery/retry screen. Quota exhaustion and exhausted retries require
+operator review; notifications supplement the dashboard rather than replacing it.
+
+Daily component cleanup uses the supported bounded operations: finalized email
+history older than seven days is removed in batches of 100; abandoned entries
+older than 28 days are removed in batches of 500. The
+component's enqueue deduplication lasts while its email row is retained. Batch
+history older than seven days is removed in bounded groups of 100; the optional
+application marker remains so those records cannot be re-grouped. No routine
+workflow re-enqueues historical applications. Disable notifications to stop new
+scheduling; already queued mail can still run and must be cancelled separately
+through trusted component operations if necessary.
+
+Deploy the component and functions to development first; verify disposable saves
+with mail disabled, then request approval for a real email test. Production backend
+deployment, DNS changes, notification enablement, and real sends are separate
+explicit actions. No Vercel public mail variables are needed. The free Resend plan
+has provider quotas; do not enable paid overages implicitly. See
+[Resend pricing](https://resend.com/pricing) and the
+[official component guide](https://www.convex.dev/components/resend) and
+[source/API reference](https://github.com/convex/resend). The integration uses the
+component's queued `sendEmail`, explicit enqueue idempotency key, default-safe
+test mode, signed webhook handler, and supported cleanup functions. Provider
+acceptance, delivery and inbox placement are distinct; retries cannot guarantee
+inbox delivery or override free-plan quotas.
+
+### Production delivery verification — October 22, 2026
+
+The owner authorized deployment to `fabulous-crane-816` and production notification
+enablement. One clearly marked synthetic system email was accepted by Resend and
+its real signed webhook changed component status to `delivered`. No applicant
+record was created. The production notification flag was then enabled and read
+back. This verifies sender delivery and webhook processing; a full live browser
+application-to-notification test remains separate. Do not resend test emails or
+change live settings during a code-only review.

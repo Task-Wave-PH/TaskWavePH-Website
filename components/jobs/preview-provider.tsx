@@ -1,5 +1,6 @@
 "use client";
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useRef } from "react";
+import { jobSlugBase, numberedJobSlug } from "@/features/jobs/urls";
 import { previewJobs } from "@/features/jobs/preview-data";
 import type { JobInput, JobStatus, JobView } from "@/features/jobs/schema";
 type State = {
@@ -16,11 +17,25 @@ export function PreviewJobsProvider({
   children: React.ReactNode;
 }) {
   const [jobs, setJobs] = useState(previewJobs);
+  const counters = useRef(
+    new Map(
+      previewJobs()
+        .filter((j) => j.slug)
+        .map((j) => [j.slug!.slice(0, -3), 1]),
+    ),
+  );
   return (
     <Context.Provider
       value={{
         jobs,
-        reset: () => setJobs(previewJobs()),
+        reset: () => {
+          setJobs(previewJobs());
+          counters.current = new Map(
+            previewJobs()
+              .filter((j) => j.slug)
+              .map((j) => [j.slug!.slice(0, -3), 1]),
+          );
+        },
         remove: (id) => setJobs((rows) => rows.filter((row) => row._id !== id)),
         save: (data, id) => {
           const saved = id ?? `sample-job-${crypto.randomUUID()}`;
@@ -43,13 +58,22 @@ export function PreviewJobsProvider({
           );
           return saved;
         },
-        setStatus: (id, status) =>
+        setStatus: (id, status) => {
+          const job = jobs.find((row) => row._id === id);
+          let slug = job?.slug;
+          if (job && !slug && status === "Published") {
+            const base = jobSlugBase(job.title, job.publishedAt ?? Date.now());
+            const sequence = (counters.current.get(base) ?? 0) + 1;
+            counters.current.set(base, sequence);
+            slug = numberedJobSlug(base, sequence);
+          }
           setJobs((rows) =>
             rows.map((row) =>
               row._id === id
                 ? {
                     ...row,
                     status,
+                    ...(slug ? { slug } : {}),
                     updatedAt: Date.now(),
                     ...(status === "Published" && row.status !== "Published"
                       ? { publishedAt: Date.now() }
@@ -57,7 +81,8 @@ export function PreviewJobsProvider({
                   }
                 : row,
             ),
-          ),
+          );
+        },
       }}
     >
       {children}

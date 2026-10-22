@@ -13,11 +13,13 @@ import type * as adminAccess from "../adminAccess.js";
 import type * as adminMetrics from "../adminMetrics.js";
 import type * as adminRateLimits from "../adminRateLimits.js";
 import type * as applicationFilters from "../applicationFilters.js";
+import type * as applicationNotifications from "../applicationNotifications.js";
 import type * as crons from "../crons.js";
 import type * as downloads from "../downloads.js";
 import type * as exports from "../exports.js";
 import type * as http from "../http.js";
 import type * as intake from "../intake.js";
+import type * as jobSlugs from "../jobSlugs.js";
 import type * as jobValidators from "../jobValidators.js";
 import type * as jobs from "../jobs.js";
 import type * as overview from "../overview.js";
@@ -44,11 +46,13 @@ declare const fullApi: ApiFromModules<{
   adminMetrics: typeof adminMetrics;
   adminRateLimits: typeof adminRateLimits;
   applicationFilters: typeof applicationFilters;
+  applicationNotifications: typeof applicationNotifications;
   crons: typeof crons;
   downloads: typeof downloads;
   exports: typeof exports;
   http: typeof http;
   intake: typeof intake;
+  jobSlugs: typeof jobSlugs;
   jobValidators: typeof jobValidators;
   jobs: typeof jobs;
   overview: typeof overview;
@@ -91,6 +95,7 @@ export declare const internal: FilterApi<
 >;
 
 export declare const components: {
+  resend: import("@convex-dev/resend/_generated/component.js").ComponentApi<"resend">;
   rateLimiter: import("@convex-dev/rate-limiter/_generated/component.js").ComponentApi<"rateLimiter">;
   adminByTime: import("@convex-dev/aggregate/_generated/component.js").ComponentApi<"adminByTime">;
   adminByStatus: import("@convex-dev/aggregate/_generated/component.js").ComponentApi<"adminByStatus">;

@@ -1,3 +1,4 @@
+import { jobPath } from "@/features/jobs/urls";
 import { connection } from "next/server";
 import { publicJobsClient } from "@/features/jobs/server";
 import type { FunctionReturnType } from "convex/server";
@@ -20,7 +21,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           });
         jobs.push(
           ...result.page.map((job) => ({
-            url: new URL(`/careers/${job._id}`, getSiteUrl()).toString(),
+            url: new URL(jobPath(job), getSiteUrl()).toString(),
             lastModified: new Date(job.updatedAt),
           })),
         );

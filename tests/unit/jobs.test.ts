@@ -1,3 +1,4 @@
+import { plainTextDocument } from "../../features/jobs/rich-text";
 import {
   jobSlugBase,
   numberedJobSlug,
@@ -43,6 +44,33 @@ const data = jobSchema.parse({
 const page = { paginationOpts: { numItems: 12, cursor: null } };
 afterEach(() => vi.unstubAllEnvs());
 describe("Jobs", () => {
+  it("preserves formatted content on older metadata edits and rejects older body edits", async () => {
+    const t = setup();
+    const admin = await staff(t);
+    const richText = { description: plainTextDocument(data.description) };
+    const id = await admin.mutation(api.jobs.save, {
+      data: { ...data, richText },
+    });
+    const first = await admin.query(api.jobs.staffDetail, { id });
+    await admin.mutation(api.jobs.save, {
+      id,
+      data: { ...data, title: "Updated title" },
+      expectedUpdatedAt: first!.updatedAt,
+    });
+    const second = await admin.query(api.jobs.staffDetail, { id });
+    expect(second!.richText).toEqual(richText);
+    await expect(
+      admin.mutation(api.jobs.save, {
+        id,
+        data: { ...data, description: "Changed by an outdated editor client." },
+        expectedUpdatedAt: second!.updatedAt,
+      }),
+    ).rejects.toThrow("EDITOR_REFRESH_REQUIRED");
+    await admin.mutation(api.jobs.setStatus, { id, status: "Published" });
+    expect((await t.query(api.jobs.detail, { id }))!.richText).toEqual(
+      richText,
+    );
+  });
   it("rejects stale job edits and advances revisions within the same millisecond", async () => {
     vi.useFakeTimers();
     try {

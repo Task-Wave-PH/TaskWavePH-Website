@@ -755,3 +755,10 @@ zone. Smaller codes retain the existing 1024px output. This avoids fractional
 module rendering that can become unreadable when resized to 320px. Keep the
 saved logo proportions/size and test maximum-length readable slugs and campaign
 codes together; do not assume full-size decoding proves small-size readability.
+
+### Job content editor
+
+Use a compact branded shadcn toolbar for Bold, Italic, and Bullets above each
+long-form job field. Keep flat lists, visible keyboard focus, and mobile wrapping.
+The public renderer uses existing muted body typography, semantic lists, and
+comfortable paragraph spacing. Formatting adds no custom colors or fonts.

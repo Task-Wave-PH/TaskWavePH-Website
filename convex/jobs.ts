@@ -1,3 +1,4 @@
+import { jobBodyFields } from "../features/jobs/rich-text";
 import { allocateJobSlug } from "./jobSlugs";
 import { ConvexError, v } from "convex/values";
 import {
@@ -16,6 +17,7 @@ import type { Doc } from "./_generated/dataModel";
 import { syncMetrics } from "./adminMetrics";
 const project = (row: Doc<"jobs">) => ({
   _id: row._id,
+  ...(row.richText ? { richText: row.richText } : {}),
   ...(row.slug ? { slug: row.slug } : {}),
   title: row.title,
   serviceArea: row.serviceArea,
@@ -142,6 +144,18 @@ export const save = adminMutation({
       old.updatedAt !== expectedUpdatedAt
     )
       throw new ConvexError("EDIT_CONFLICT");
+    // Older clients may safely change metadata, but cannot silently erase rich text.
+    const richText = { ...old?.richText, ...parsed.data.richText };
+    for (const field of jobBodyFields) {
+      if (
+        old?.richText?.[field] &&
+        !parsed.data.richText?.[field] &&
+        parsed.data[field] !== old[field]
+      ) {
+        throw new ConvexError("EDITOR_REFRESH_REQUIRED");
+      }
+    }
+    if (Object.keys(richText).length) parsed.data.richText = richText;
     const timestamp = Math.max(Date.now(), (old?.updatedAt ?? 0) + 1);
     if (id) await ctx.db.patch(id, { ...parsed.data, updatedAt: timestamp });
     else

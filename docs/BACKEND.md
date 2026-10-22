@@ -821,3 +821,19 @@ For dense codes (101+ modules per side), the QR renderer rounds its approximatel
 retain their existing 1024px rendering. This avoids resampling artifacts for dense readable
 URLs at 320px without changing the saved logo size or the attribution link. No
 additional backend migration is required.
+
+### Structured job content
+
+Jobs optionally store `richText` documents for description, responsibilities, and
+requirements. The server validates an allowlist of paragraphs, flat bullet lists,
+text, line breaks, bold, and italic, then derives the existing plaintext fields.
+Limits per field: 10,000 visible characters, 50 KB serialized content, and 1,000
+objects including marks; existing minimum lengths still apply. No HTML or URLs
+are accepted as formatting. Legacy postings require no backfill.
+
+Older clients may save unchanged bodies with metadata edits; stored documents
+are retained. Changing a formatted body without its matching document returns
+`EDITOR_REFRESH_REQUIRED`; the UI preserves edits and asks staff to reload.
+Revision conflicts continue to reject stale saves transactionally.
+Deploy this additive Convex change before the frontend. Development deployment
+and real-write verification require authorization; production is separate.

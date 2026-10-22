@@ -171,7 +171,7 @@ add noindex, and send private/no-store responses. Host routing is not authorizat
 - Leads support an optional priority star (missing means false), not custom CRM tags.
 - The admin overview uses full-table transactional aggregates and Philippine dates,
   independent of list pagination/filters. Backfill existing data before displaying totals.
-- Approved staff create/edit bounded plain-text postings and explicitly confirm
+- Approved staff create/edit bounded postings and explicitly confirm
   publication or closure. Preserve closed postings and existing applications.
 - Optional application job IDs are validated inside the save transaction; store
   the server-resolved title snapshot. Reject new applications for unavailable jobs,
@@ -282,3 +282,17 @@ be reused. Public links use /careers/{slug} and /apply/{slug}; legacy ID links r
 only for available jobs and preserve allowlisted attribution. Backfill historical
 roles in bounded internal batches before frontend rollout. Application pages are
 noindex and do not appear in the sitemap. Slugs are server-managed, not form input.
+
+## Job content formatting
+
+- Description, responsibilities, and requirements support flat bullets, bold, italic,
+  paragraphs, and line breaks through the shared editor. Bold/italic use toolbar
+  controls or keyboard shortcuts; typed asterisks/underscores stay literal.
+- Store validated structured documents alongside server-derived plain text; never
+  store/render arbitrary HTML. Keep legacy plain text literal until edited.
+- Enforce 10,000 visible characters, 50 KB, and 1,000 document/mark objects per
+  field, with existing minimum lengths. Reject unsupported nodes/attributes.
+- Preserve formatted bodies on metadata-only older-client saves. Reject body
+  changes that omit existing formatting rather than silently removing it.
+- Deploy the additive backend field before releasing the editor; no historical
+  backfill is needed. Keep revision checks and unsaved drafts intact.

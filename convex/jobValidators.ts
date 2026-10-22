@@ -5,7 +5,48 @@ export const jobStatus = v.union(
   v.literal("Closed"),
   v.literal("Archived"),
 );
+const richMark = v.object({
+  type: v.union(v.literal("bold"), v.literal("italic")),
+});
+const richInline = v.union(
+  v.object({
+    type: v.literal("text"),
+    text: v.string(),
+    marks: v.optional(v.array(richMark)),
+  }),
+  v.object({
+    type: v.literal("hardBreak"),
+    marks: v.optional(v.array(richMark)),
+  }),
+);
+const richParagraph = v.object({
+  type: v.literal("paragraph"),
+  content: v.optional(v.array(richInline)),
+});
+const richDocument = v.object({
+  type: v.literal("doc"),
+  content: v.array(
+    v.union(
+      richParagraph,
+      v.object({
+        type: v.literal("bulletList"),
+        content: v.array(
+          v.object({
+            type: v.literal("listItem"),
+            content: v.array(richParagraph),
+          }),
+        ),
+      }),
+    ),
+  ),
+});
+const richText = v.object({
+  description: v.optional(richDocument),
+  responsibilities: v.optional(richDocument),
+  requirements: v.optional(richDocument),
+});
 export const jobFields = {
+  richText: v.optional(richText),
   title: v.string(),
   serviceArea: v.union(
     v.literal("Customer Support"),

@@ -1,3 +1,4 @@
+import { JobRichText } from "./job-rich-text";
 import { jobApplyHref } from "@/features/jobs/urls";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
@@ -51,16 +52,16 @@ export function JobDetails({
         {job.location}
         {job.salary ? ` · ${job.salary}` : ""}
       </p>
-      {[
-        ["About the role", job.description],
-        ["Responsibilities", job.responsibilities],
-        ["Requirements", job.requirements],
-      ].map(([title, text]) => (
+      {(
+        [
+          ["About the role", "description"],
+          ["Responsibilities", "responsibilities"],
+          ["Requirements", "requirements"],
+        ] as const
+      ).map(([title, field]) => (
         <section key={title} className="w-full min-w-0 max-w-3xl">
           <h2 className="text-2xl font-semibold">{title}</h2>
-          <p className="mt-4 whitespace-pre-wrap break-words leading-relaxed text-muted-foreground">
-            {text}
-          </p>
+          <JobRichText document={job.richText?.[field]} fallback={job[field]} />
         </section>
       ))}
       <Link

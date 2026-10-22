@@ -48,7 +48,20 @@ export default defineSchema({
       "arrangement",
       "publishedAt",
     ]),
+  applicationNotificationBatches: defineTable({
+    state: v.union(
+      v.literal("collecting"),
+      v.literal("sealed"),
+      v.literal("queued"),
+      v.literal("skipped"),
+    ),
+    closesAt: v.number(),
+    applicationIds: v.array(v.id("applications")),
+  })
+    .index("by_state", ["state"])
+    .index("by_closesAt", ["closesAt"]),
   applications: defineTable({
+    notificationBatchId: v.optional(v.id("applicationNotificationBatches")),
     data: applicationData,
     ...baseFields,
     status: applicationStatus,

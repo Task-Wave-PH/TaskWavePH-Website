@@ -76,6 +76,12 @@ await withNotificationTarget("development", async (cli) => {
     assert.equal(retry.reference, first.reference);
     const saved = records();
     assert.equal(saved.length, 1);
+    const detail = run(
+      "admin:detail",
+      { kind: "applications", id: saved[0].id },
+      true,
+    );
+    assert.equal(detail.notificationBatchId, undefined);
     assert.equal(
       run("applicationNotifications:enqueue", { applicationId: saved[0].id }),
       null,

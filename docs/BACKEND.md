@@ -840,14 +840,33 @@ and real-write verification require authorization; production is separate.
 
 ## Application notification emails
 
-New real application saves can schedule a staff notification through the official
-Convex Resend component. The application transaction schedules an internal enqueue
-mutation; provider work happens afterward. Mail failures never roll back the
-application or change its success receipt. Unchanged submission retries reuse the
-saved reference and do not schedule another email. The component uses the
-application ID as its enqueue idempotency key and retries transient provider errors
-up to five times. Staff edits, seeds, historical records, and business enquiries
-never trigger notifications. An application deleted before enqueue is skipped.
+New real application saves schedule an internal mutation that joins a five-minute
+batch through the official Convex Resend component. The first arrival starts the
+window. No arrivals means no timer or email. At the deadline, one email shows the
+latest one to three full applicant names, the number of new submissions, and
+`+N more` when needed, linking to the approval-protected applications list.
+The owner explicitly approved these limited names in staff email on October 22, 2026. “New” means newly submitted, independent of the current recruitment status.
+
+The private `applicationNotificationBatches` table stores only application IDs,
+deadline, and state. A private optional `notificationBatchId` marker on each
+application prevents duplicates even after batch history cleanup. Group collection,
+application marking, and scheduling are transactional. Batches hold at most 250 IDs;
+excess arrivals open another bounded window. Full/expired groups are sealed so
+there is at most one collecting group even under concurrent arrivals. Provider
+enqueue and the queued-state transition commit together using the batch ID as
+Resend's idempotency key. Provider retries remain bounded to five attempts.
+
+Email work happens after application save. Failures never undo the application or
+its success receipt. Identical intake retries, staff edits, seeds, historical
+records, and business enquiries do not generate additional notifications. Deleted
+records are excluded at flush; an empty group sends nothing. There is no backfill
+or historical email catch-up. Turning notifications off before a group flush
+skips that group; already enqueued provider mail can still run.
+
+This is an additive schema change: deploy before testing grouped email; existing
+applications require no migration. Previously queued individual emails may still
+complete after rollout; new intake uses five-minute grouping. Do not invoke the
+internal enqueue manually on historical real applicants.
 
 ### Configure the sender
 
@@ -914,8 +933,8 @@ It does not use the public intake secret or expose record reads. Invalid signatu
 or malformed JSON return 400; component/configuration outages return 503 so they
 are identifiable as operational failures without exposing diagnostics.
 
-The email includes only the application reference, role, Philippine timestamp,
-and an authenticated staff-detail link. No CV attachments, applicant contact
+The email includes only up to three latest applicant names, the new-submission
+count, and an authenticated applications-list link. No CV attachments, applicant contact
 information, screening responses, notes, or login tokens are included. The HTML
 uses escaped content, a public original logo, and inline brand styling; a plain-text
 alternative is included. Mail clients may block external images; the text and link
@@ -925,14 +944,16 @@ Use Resend logs and Convex's `resend` component email/event views for operationa
 checks. `sent` means the provider accepted it, not confirmed inbox delivery;
 verified webhook events report delivery/bounce/failure. Configuration errors log
 only `CONFIGURATION_INVALID`; fix configuration before new applications arrive.
-There is no automatic catch-up after enabling or correcting configuration, and no
+Skipped groups have no automatic catch-up after enabling or correcting configuration, and there is no
 new admin delivery/retry screen. Quota exhaustion and exhausted retries require
 operator review; notifications supplement the dashboard rather than replacing it.
 
 Daily component cleanup uses the supported bounded operations: finalized email
 history older than seven days is removed in batches of 100; abandoned entries
 older than 28 days are removed in batches of 500. The
-component's enqueue deduplication lasts while its email row is retained. No routine
+component's enqueue deduplication lasts while its email row is retained. Batch
+history older than seven days is removed in bounded groups of 100; the optional
+application marker remains so those records cannot be re-grouped. No routine
 workflow re-enqueues historical applications. Disable notifications to stop new
 scheduling; already queued mail can still run and must be cancelled separately
 through trusted component operations if necessary.

@@ -23,7 +23,7 @@ on October 1, 2026. This supersedes the original Sheets-only MVP constraints.
 - Public forms POST through Next.js services to the authenticated Convex HTTP
   adapter. Keep the shared secret server-side. Backend functions validate again.
 - Tables: applications, businessLeads, jobs, adminUsers, staffInvitations, adminActivity, pendingUploads,
-  dashboardState (internal metric readiness), ownerSettings (QR and campaign defaults),
+  dashboardState (internal metric readiness), applicationNotificationBatches (private email grouping), ownerSettings (QR and campaign defaults),
   jobSlugCounters (transactional publication URL sequence allocation).
   Convex rate-limiter supplies persistent throttling; aggregate components supply
   exact private dashboard counts. Synchronize all write paths, including seeds.
@@ -301,11 +301,18 @@ noindex and do not appear in the sitemap. Slugs are server-managed, not form inp
 
 - Real application intake schedules optional Resend notifications after save;
   keep provider work outside the intake transaction. Mail failures never undo a
-  save or its success receipt. Deduplicate enqueueing by application ID.
+  save or its success receipt. Group new intake over five minutes, then send at
+  most three latest applicant names, a total/+N more, and a protected list link.
+  No new applications means no batch timer or email. Persist a private per-app
+  batch marker so retries/old arrivals cannot join another batch. Bound batches
+  to 250 IDs and keep provider enqueue idempotent by batch ID.
 - Notifications default to disabled and test mode. Backend-only configuration
   controls sender, recipient and admin URL; never accept these from public input.
-- Include reference, role, Philippine timestamp and an approval-protected dashboard
-  link only. No applicant contacts, CVs, screening answers, notes or auth tokens.
+- The owner approved including up to three full applicant names in grouped staff
+  emails on October 22, 2026. No applicant contacts, CVs, screening answers, notes,
+  or auth tokens. New means newly submitted in this batch, not status = New.
+  Skip deleted records; skip empty groups. Turning notifications off before the
+  five-minute deadline suppresses that group without historical catch-up.
 - Staff edits, seeds, existing records and business enquiries send no notifications.
 - Keep the Resend webhook signature-verified, bounded, and private/no-store.
   Monitor delivery through the component/provider; no delivery claims on enqueue.

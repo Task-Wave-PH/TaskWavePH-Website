@@ -6,10 +6,8 @@ test("staff notification email wraps long content and keeps its protected link u
 }) => {
   await page.route("**/*", (route) => route.abort());
   const email = applicationEmail({
-    id: "synthetic-id",
-    reference: "TW-A-1792670400000-jh7xxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    role: "W".repeat(200),
-    submittedAt: Date.UTC(2026, 9, 22),
+    names: ["W".repeat(201), "Second Applicant", "Third Applicant"],
+    total: 5,
     adminUrl: "https://admin.taskwaveph.com",
   });
   await page.setContent(email.html);
@@ -21,16 +19,11 @@ test("staff notification email wraps long content and keeps its protected link u
       ),
     ).toBe(true);
     await expect(
-      page.getByRole("heading", { name: "New application received" }),
+      page.getByRole("heading", { name: "New applicants" }),
     ).toBeVisible();
     await expect(
-      page.getByRole("link", { name: "View Application" }),
-    ).toHaveAttribute(
-      "href",
-      "https://admin.taskwaveph.com/applications/synthetic-id",
-    );
+      page.getByRole("link", { name: "View Applications" }),
+    ).toHaveAttribute("href", "https://admin.taskwaveph.com/applications");
   }
-  await expect(page.locator("body")).toContainText(
-    "TW-A-1792670400000-jh7xxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-  );
+  await expect(page.locator("body")).toContainText("+2 more new applicants");
 });

@@ -52,28 +52,31 @@ function escapeHtml(value: string) {
   );
 }
 export function applicationEmail({
-  id,
-  reference,
-  role,
-  submittedAt,
+  names,
+  total,
   adminUrl,
 }: {
-  id: string;
-  reference: string;
-  role: string;
-  submittedAt: number;
+  names: string[];
+  total: number;
   adminUrl: string;
 }) {
+  const displayed = names.slice(0, 3);
+  if (
+    !Number.isSafeInteger(total) ||
+    total < 1 ||
+    !displayed.length ||
+    displayed.length > total
+  )
+    throw new Error(
+      "Cannot format an empty or invalid applicant notification.",
+    );
   const url = new URL(adminUrl);
-  url.pathname = `${url.pathname.replace(/\/$/, "")}/applications/${encodeURIComponent(id)}`;
+  url.pathname = `${url.pathname.replace(/\/$/, "")}/applications`;
   const href = url.toString();
-  const date = new Intl.DateTimeFormat("en-PH", {
-    timeZone: "Asia/Manila",
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(submittedAt);
-  const subject = "New application received — TaskWavePH";
-  const text = `A new application has been received.\n\nReference: ${reference}\nRole: ${role}\nSubmitted: ${date} (Philippine time)\n\nView application: ${href}\n\nSign in with your approved TaskWavePH staff account to review the application.`;
-  const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;padding:24px 12px;background:#F2F4F7;color:#0A1D3B;font-family:Arial,sans-serif"><table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td align="center"><table role="presentation" width="100%" cellspacing="0" cellpadding="24" style="table-layout:fixed;max-width:600px;background:#ffffff;border:1px solid #e1e8f0;border-radius:12px"><tr><td style="overflow-wrap:anywhere;word-wrap:break-word;word-break:break-word"><img src="https://www.taskwaveph.com/logo/taskwaveph-logo-on-white.png" width="220" alt="TaskWavePH" style="display:block;max-width:100%;height:auto"><h1 style="font-size:24px;line-height:1.3;margin:28px 0 16px">New application received</h1><p style="line-height:1.7">A new application is ready for your team to review.</p><p style="line-height:1.8"><strong>Reference:</strong> ${escapeHtml(reference)}<br><strong>Role:</strong> ${escapeHtml(role)}<br><strong>Submitted:</strong> ${escapeHtml(date)} (Philippine time)</p><p style="margin:28px 0"><a href="${escapeHtml(href)}" style="display:inline-block;background:#0D6EFD;color:#ffffff;padding:14px 22px;border-radius:6px;text-decoration:none;font-weight:bold">View Application</a></p><p style="color:#52627a;font-size:14px;line-height:1.6">Sign in with your approved TaskWavePH staff account to review the application.</p></td></tr></table></td></tr></table></body></html>`;
+  const count = `${total} new ${total === 1 ? "application" : "applications"}`;
+  const subject = `${count} — TaskWavePH`;
+  const more = total - displayed.length;
+  const text = `${count} received.\n\n${displayed.map((name) => `• ${name}`).join("\n")}${more ? `\n+${more} more new ${more === 1 ? "applicant" : "applicants"}` : ""}\n\nView applications: ${href}\n\nSign in with your approved TaskWavePH staff account to review all application details.`;
+  const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;padding:24px 12px;background:#F2F4F7;color:#0A1D3B;font-family:Arial,sans-serif"><table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td align="center"><table role="presentation" width="100%" cellspacing="0" cellpadding="24" style="table-layout:fixed;max-width:600px;background:#ffffff;border:1px solid #e1e8f0;border-radius:12px"><tr><td style="overflow-wrap:anywhere;word-wrap:break-word;word-break:break-word"><img src="https://www.taskwaveph.com/logo/taskwaveph-logo-on-white.png" width="220" alt="TaskWavePH" style="display:block;max-width:100%;height:auto"><h1 style="font-size:24px;line-height:1.3;margin:28px 0 16px">New applicants</h1><p style="line-height:1.7">${escapeHtml(count)} received. Here are the latest applicants:</p><ul style="padding-left:22px;line-height:1.8">${displayed.map((name) => `<li>${escapeHtml(name)}</li>`).join("")}</ul>${more ? `<p style="color:#52627a;line-height:1.7">+${more} more new ${more === 1 ? "applicant" : "applicants"}</p>` : ""}<p style="margin:28px 0"><a href="${escapeHtml(href)}" style="display:inline-block;background:#0D6EFD;color:#ffffff;padding:14px 22px;border-radius:6px;text-decoration:none;font-weight:bold">View Applications</a></p><p style="color:#52627a;font-size:14px;line-height:1.6">Sign in with your approved TaskWavePH staff account to review all application details.</p></td></tr></table></td></tr></table></body></html>`;
   return { subject, html, text };
 }

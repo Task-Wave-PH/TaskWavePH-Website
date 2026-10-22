@@ -21,6 +21,7 @@ import {
 } from "./validators";
 import { syncMetrics } from "./adminMetrics";
 const applicationDoc = v.object({
+  notificationBatchId: v.optional(v.id("applicationNotificationBatches")),
   _id: v.id("applications"),
   _creationTime: v.number(),
   data: applicationData,

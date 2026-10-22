@@ -173,7 +173,24 @@ test("visible service illustrations recover when native lazy loading stalls", as
   page,
 }) => {
   await page.addInitScript(() => {
-    // Simulate a browser leaving native lazy source selection deferred.
+    // Simulate responsive source selection staying stalled even after eager
+    // loading is set. Reapplying srcset must recover it without losing sizes.
+    const resumed = new WeakSet<HTMLImageElement>();
+    const setAttribute = HTMLImageElement.prototype.setAttribute;
+    HTMLImageElement.prototype.setAttribute = function (name, value) {
+      if (name === "srcset" && this.loading === "eager") resumed.add(this);
+      return setAttribute.call(this, name, value);
+    };
+    const source = Object.getOwnPropertyDescriptor(
+      HTMLImageElement.prototype,
+      "currentSrc",
+    )!;
+    Object.defineProperty(HTMLImageElement.prototype, "currentSrc", {
+      ...source,
+      get() {
+        return resumed.has(this) ? source.get!.call(this) : "";
+      },
+    });
     const descriptor = Object.getOwnPropertyDescriptor(
       HTMLImageElement.prototype,
       "complete",
@@ -181,7 +198,7 @@ test("visible service illustrations recover when native lazy loading stalls", as
     Object.defineProperty(HTMLImageElement.prototype, "complete", {
       ...descriptor,
       get() {
-        return this.loading === "eager" && descriptor.get!.call(this);
+        return resumed.has(this) && descriptor.get!.call(this);
       },
     });
   });

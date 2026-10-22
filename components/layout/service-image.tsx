@@ -13,8 +13,13 @@ export function ServiceImage({ src }: { src: string }) {
     const observer = new IntersectionObserver(
       (entries) => {
         if (!entries.some((entry) => entry.isIntersecting)) return;
-        // Changing loading starts native source selection without replacing srcset.
+        // Some browsers leave responsive source selection deferred even after
+        // changing loading. Reapply the existing srcset to trigger selection;
+        // retain sizes so mobile devices still request the correct rendition.
         image.loading = "eager";
+        if (!image.currentSrc && image.srcset) {
+          image.setAttribute("srcset", image.srcset);
+        }
         observer.disconnect();
       },
       { rootMargin: "200px" },

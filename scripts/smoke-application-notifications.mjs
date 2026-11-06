@@ -38,10 +38,10 @@ await withNotificationTarget("development", async (cli) => {
     position: "Synthetic notification test",
     privacyConsent: true,
   };
-  async function submit() {
+  async function submit(submissionToken = token, expectedStatus = 200) {
     const body = new FormData();
     body.set("kind", "applications");
-    body.set("submissionToken", token);
+    body.set("submissionToken", submissionToken);
     body.set("fields", JSON.stringify(fields));
     const result = await fetch(`${process.env.CONVEX_SITE_URL}/submit`, {
       method: "POST",
@@ -52,7 +52,7 @@ await withNotificationTarget("development", async (cli) => {
       body,
       signal: AbortSignal.timeout(20000),
     });
-    assert.equal(result.status, 200);
+    assert.equal(result.status, expectedStatus);
     return await result.json();
   }
   function records() {
@@ -74,6 +74,8 @@ await withNotificationTarget("development", async (cli) => {
     assert.equal(first.success, true);
     const retry = await submit();
     assert.equal(retry.reference, first.reference);
+    const repeat = await submit(randomUUID(), 409);
+    assert.equal(repeat.error, "RECENT_APPLICATION");
     const saved = records();
     assert.equal(saved.length, 1);
     const detail = run(
@@ -96,7 +98,7 @@ await withNotificationTarget("development", async (cli) => {
     );
     assert.ok([400, 503].includes(webhook.status));
     console.log(
-      "Development save, identical retry, disabled notification function, and unsigned webhook checks passed. No email sent.",
+      "Development save, identical retry, fresh-token repeat rejection, disabled notification function, and unsigned webhook checks passed. No email sent.",
     );
   } finally {
     if (provisioned) {

@@ -90,17 +90,19 @@ export function useSubmission(endpoint: string, successPath: string) {
       );
       setJobUnavailable(result.error === "JOB_UNAVAILABLE");
       setError(
-        result.error === "JOB_UNAVAILABLE"
-          ? "This role is no longer accepting applications. Your details are still here; you can continue as a general application."
-          : result.error === "RATE_LIMITED"
-            ? "Too many attempts. Please wait before trying again."
-            : result.error === "SUBMISSION_IN_PROGRESS"
-              ? "Your submission is still being processed. Please wait, then try again."
-              : result.error === "TOKEN_CONFLICT"
-                ? "Your details changed. Please review and submit again."
-                : result.error === "CHALLENGE_FAILED"
-                  ? "The security check expired or failed. Please complete it again."
-                  : "We couldn't submit your information right now. Please try again.",
+        result.error === "RECENT_APPLICATION"
+          ? "An application for this opportunity has already been received using this email within the last 24 hours. Please wait before applying again. You can still apply for other roles."
+          : result.error === "JOB_UNAVAILABLE"
+            ? "This role is no longer accepting applications. Your details are still here; you can continue as a general application."
+            : result.error === "RATE_LIMITED"
+              ? "Too many attempts. Please wait before trying again."
+              : result.error === "SUBMISSION_IN_PROGRESS"
+                ? "Your submission is still being processed. Please wait, then try again."
+                : result.error === "TOKEN_CONFLICT"
+                  ? "Your details changed. Please review and submit again."
+                  : result.error === "CHALLENGE_FAILED"
+                    ? "The security check expired or failed. Please complete it again."
+                    : "We couldn't submit your information right now. Please try again.",
       );
       if (result.error === "TOKEN_CONFLICT") fingerprint.current = undefined;
     } catch (error) {

@@ -50,6 +50,40 @@ function stubBackendFetch(backend: typeof fetch) {
 }
 describe("submission protections", () => {
   it.each([
+    { success: "true", action: "submission", hostname: "localhost" },
+    { success: true, action: "other-form", hostname: "localhost" },
+    { success: false, "error-codes": ["timeout-or-duplicate"] },
+    null,
+  ])("rejects invalid or replayed challenge results: %j", async (result) => {
+    configure();
+    const backend = vi.fn().mockResolvedValue(Response.json(result));
+    stubBackendFetch(backend);
+    const response = await submitRequest(request(), "applications");
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({
+      success: false,
+      error: "CHALLENGE_FAILED",
+    });
+    expect(response.headers.get("set-cookie")).toBeNull();
+    expect(backend).toHaveBeenCalledTimes(1);
+  });
+  it("does not trust a successful-looking challenge body on an HTTP error", async () => {
+    configure();
+    const backend = vi.fn().mockResolvedValue(
+      Response.json(
+        {
+          success: true,
+          action: "submission",
+          hostname: "localhost",
+        },
+        { status: 503 },
+      ),
+    );
+    stubBackendFetch(backend);
+    expect((await submitRequest(request(), "applications")).status).toBe(400);
+    expect(backend).toHaveBeenCalledTimes(1);
+  });
+  it.each([
     "1x0000000000000000000000000000000AA",
     "2x0000000000000000000000000000000AA",
     "3x0000000000000000000000000000000AA",
@@ -304,6 +338,7 @@ describe("early submission limits and error propagation", () => {
     configure();
     for (const [error, status] of [
       ["JOB_UNAVAILABLE", 409],
+      ["RECENT_APPLICATION", 409],
       ["RATE_LIMITED", 429],
     ] as const) {
       stubBackendFetch(

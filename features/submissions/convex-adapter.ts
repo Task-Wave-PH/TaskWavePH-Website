@@ -38,6 +38,7 @@ export async function appendSubmission(payload: FormData, rateKey: string) {
     "TOKEN_CONFLICT",
     "INVALID_SUBMISSION",
     "JOB_UNAVAILABLE",
+    "RECENT_APPLICATION",
   ];
   return {
     status: response.ok || response.status >= 500 ? 503 : response.status,

@@ -432,6 +432,23 @@ per hour and 30 globally per minute. Completed identical retries remain
 idempotent. A `429` response includes bounded `retryAfterSeconds` and `Retry-After`.
 Backend attempt denials return normally so limiter updates commit.
 
+Application saves also reject the same normalized email and job within a rolling
+24-hour window, regardless of recruitment status, using an indexed transactional
+check. General applications (without a job ID) share one window per email. Different
+job IDs remain eligible. Identical retries still return the existing reference;
+fresh-token repeats return `RECENT_APPLICATION` (409), without a success receipt
+or notification. Failed attempts release their reservation and any uploaded PDF.
+This does not verify email ownership or prevent submissions using other addresses.
+Deploy the additive email/job/date index and backend functions before the frontend;
+historical applications are covered without backfilling or modifying their data.
+
+Development verification on November 6, 2026: deployed the index/functions to
+`exuberant-lapwing-339`, verified a real synthetic save and identical retry, and
+confirmed a fresh-token repeat returns 409 without another row. Disposable data
+was removed and temporary staff approval revoked. Notification sending was disabled
+during verification and its original setting restored afterward; no email was sent.
+Production deployment and real Cloudflare browser-token verification remain pending.
+
 On Vercel only, the deployment-overwritten `x-forwarded-for` value is validated
 as an IP and HMAC-hashed using the server secret. Raw addresses are not stored or
 logged. Direct/self-hosted requests use a shared fallback bucket; arbitrary client
@@ -455,6 +472,11 @@ flexible sizing. Script/widget errors provide a retry without navigating away or
 saving entries in browser storage. The notice acknowledgment is separate from
 form consent. Public responses deny framing and objects and restrict base URLs;
 the CSP intentionally does not yet impose a strict script allowlist.
+Siteverify must return HTTP success and a boolean `success: true`, with the expected
+hostname/action. Expired and replayed tokens are rejected before database writes;
+every retry needs a fresh challenge. A fresh valid challenge does not bypass the
+24-hour repeat rule. Real-token acceptance/replay verification requires a browser
+and the matching development widget; mocked tests do not verify live Cloudflare.
 
 Careers lists bypass persistent fetch caching, just like role details, so a job
 changed to Draft, Closed, or Archived disappears on the next page request. Already

@@ -228,6 +228,8 @@ http.route({
       }
       if (error instanceof SubmissionBodyError)
         return json({ error: error.code }, error.status);
+      if (error instanceof ConvexError && error.data === "RECENT_APPLICATION")
+        return json({ error: "RECENT_APPLICATION" }, 409);
       if (error instanceof ConvexError && error.data === "JOB_UNAVAILABLE")
         return json({ error: "JOB_UNAVAILABLE" }, 409);
       if (

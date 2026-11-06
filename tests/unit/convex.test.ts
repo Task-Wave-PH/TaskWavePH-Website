@@ -57,6 +57,117 @@ const options = {
   paginationOpts: { numItems: 20, cursor: null },
 };
 describe("Convex intake and administration", () => {
+  it("releases a rejected repeat's PDF and reservation while preserving the saved application", async () => {
+    const t = setup();
+    vi.stubEnv("CONVEX_SERVER_SECRET", "repeat-check-secret");
+    vi.stubEnv("APPLICATION_NOTIFICATIONS_ENABLED", "false");
+    async function submit(token: string) {
+      const body = new FormData();
+      body.set("kind", "applications");
+      body.set("submissionToken", token);
+      body.set("fields", JSON.stringify(input));
+      body.set(
+        "resumeFile",
+        new Blob(["%PDF-test"], { type: "application/pdf" }),
+        "resume.pdf",
+      );
+      return t.fetch("/submit", {
+        method: "POST",
+        body,
+        headers: {
+          Authorization: "Bearer repeat-check-secret",
+          "x-rate-key": "a".repeat(64),
+        },
+      });
+    }
+    try {
+      const token = crypto.randomUUID();
+      const first = await submit(token);
+      expect(first.status).toBe(200);
+      const result = await first.json();
+      const repeat = await submit(crypto.randomUUID());
+      expect(repeat.status).toBe(409);
+      expect(await repeat.json()).toEqual({ error: "RECENT_APPLICATION" });
+      expect(repeat.headers.get("Cache-Control")).toContain("no-store");
+      const retry = await submit(token);
+      expect(retry.status).toBe(200);
+      expect(await retry.json()).toEqual(result);
+      const state = await t.run(async (ctx) => ({
+        applications: await ctx.db.query("applications").collect(),
+        uploads: await ctx.db.query("pendingUploads").collect(),
+        files: await ctx.db.system.query("_storage").collect(),
+        batches: await ctx.db.query("applicationNotificationBatches").collect(),
+      }));
+      expect(state.applications).toHaveLength(1);
+      expect(state.uploads).toHaveLength(0);
+      expect(state.files).toHaveLength(1);
+      expect(state.files[0]._id).toBe(
+        state.applications[0].resumeFile?.storageId,
+      );
+      expect(state.batches).toHaveLength(0);
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+  it("blocks repeat email/job applications for 24 hours, preserves retries, and allows other jobs", async () => {
+    vi.useFakeTimers();
+    const t = setup();
+    const { token, reference } = await save(t);
+    expect(
+      await t.mutation(internal.intake.reserve, {
+        kind: "applications",
+        token,
+        fingerprint: "fingerprint",
+        rateKey: "retry",
+      }),
+    ).toEqual({ state: "complete", reference });
+    const submit = async (jobId?: string) => {
+      const next = crypto.randomUUID();
+      await t.mutation(internal.intake.reserve, {
+        kind: "applications",
+        token: next,
+        fingerprint: next,
+        rateKey: next,
+      });
+      return t.mutation(internal.intake.save, {
+        kind: "applications",
+        token: `applications:${next}`,
+        fingerprint: next,
+        data: {
+          ...data,
+          email: "MARIA@EXAMPLE.COM",
+          ...(jobId ? { jobId } : {}),
+        },
+      });
+    };
+    await expect(submit()).rejects.toThrow("RECENT_APPLICATION");
+    const createJob = () =>
+      t.run((ctx) =>
+        ctx.db.insert("jobs", {
+          title: "Support",
+          serviceArea: "Customer Support",
+          location: "Dagupan",
+          arrangement: "Remote",
+          employmentType: "Full-time",
+          description: "Provide customer support to the team.",
+          responsibilities: "Answer customer enquiries.",
+          requirements: "Communication skills.",
+          salary: "",
+          status: "Published",
+          updatedAt: Date.now(),
+        }),
+      );
+    const firstJob = await createJob();
+    const secondJob = await createJob();
+    await submit(firstJob);
+    await expect(submit(firstJob)).rejects.toThrow("RECENT_APPLICATION");
+    await submit(secondJob);
+    vi.setSystemTime(Date.now() + 24 * 60 * 60 * 1000);
+    await submit();
+    expect(
+      await t.run((ctx) => ctx.db.query("applications").collect()),
+    ).toHaveLength(4);
+  });
   it("persists screening fields and returns them only to approved staff", async () => {
     const t = setup();
     const token = crypto.randomUUID();

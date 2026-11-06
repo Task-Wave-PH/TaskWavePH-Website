@@ -70,6 +70,11 @@ export default defineSchema({
   })
     .index("by_submissionToken", ["submissionToken"])
     .index("by_email", ["data.email"])
+    .index("by_email_jobId_submittedAt", [
+      "data.email",
+      "data.jobId",
+      "submittedAt",
+    ])
     .index("by_status", ["status"])
     .index("by_jobId", ["data.jobId"])
     .index("by_resumeStorage", ["resumeFile.storageId"])

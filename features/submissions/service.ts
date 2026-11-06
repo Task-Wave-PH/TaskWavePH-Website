@@ -1,4 +1,5 @@
 import "server-only";
+import { z } from "zod";
 import { NextResponse } from "next/server";
 import { confirmationRoutes, createReceipt, RECEIPT_MAX_AGE } from "./receipt";
 import { applicationSchema } from "@/features/applications/schema";
@@ -95,21 +96,25 @@ export async function submitRequest(
         signal: AbortSignal.timeout(10000),
       },
     );
-    const verified = (await verification.json()) as {
-      success?: boolean;
-      action?: string;
-      hostname?: string;
-    };
+    const verified = z
+      .object({
+        success: z.literal(true),
+        action: z.string().optional(),
+        hostname: z.string().optional(),
+      })
+      .safeParse(await verification.json());
     const host = new URL(process.env.NEXT_PUBLIC_SITE_URL ?? request.url)
       .hostname;
     if (
+      !verification.ok ||
       !verified.success ||
       (!(
         process.env.NODE_ENV !== "production" &&
         env.TURNSTILE_SECRET_KEY === "1x0000000000000000000000000000000AA" &&
         ["localhost", "127.0.0.1"].includes(host)
       ) &&
-        (verified.action !== "submission" || verified.hostname !== host))
+        (verified.data.action !== "submission" ||
+          verified.data.hostname !== host))
     )
       return json({ success: false, error: "CHALLENGE_FAILED" }, 400);
     const payload = new FormData();

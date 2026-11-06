@@ -179,6 +179,16 @@ export const save = internalMutation({
         jobTitle = job.title;
         normalized.position = job.title;
       }
+      const recent = await ctx.db
+        .query("applications")
+        .withIndex("by_email_jobId_submittedAt", (q) =>
+          q
+            .eq("data.email", normalized.email)
+            .eq("data.jobId", normalized.jobId)
+            .gt("submittedAt", submittedAt - 24 * 60 * 60 * 1000),
+        )
+        .first();
+      if (recent) throw new ConvexError("RECENT_APPLICATION");
       const id = await ctx.db.insert("applications", {
         ...common,
         searchText: applicantSearchText({ reference, data: normalized }),

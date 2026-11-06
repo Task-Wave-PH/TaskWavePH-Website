@@ -46,7 +46,7 @@ async function save(
     ...(jobId ? { jobId } : {}),
     firstName,
     lastName: "Applicant",
-    email: "synthetic@example.com",
+    email: `${token}@example.com`,
     phone: "09171234567",
     location: "Dagupan",
     position: "Support",

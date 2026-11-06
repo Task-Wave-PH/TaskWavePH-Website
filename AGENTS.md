@@ -38,6 +38,10 @@ on October 1, 2026. This supersedes the original Sheets-only MVP constraints.
   landing_page. Never put applicant information in URLs or logs.
 - Submissions require unselected consent, Turnstile, honeypot validation, length
   limits, server timestamps, and idempotency tokens. Success follows confirmed save.
+- Reject repeat applications for the same normalized email/job within 24 hours
+  transactionally using an index. General applications share one email window;
+  different jobs remain eligible. Preserve identical-token retries and release
+  failed upload reservations. Return the safe RECENT_APPLICATION code (409).
 - Confirmation pages require a signed, kind-specific HttpOnly receipt issued
   after save. Receipts expire after 10 minutes; direct access without one redirects
   to the matching form. Keep confirmation responses private/no-store and noindex.

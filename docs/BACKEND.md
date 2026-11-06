@@ -447,7 +447,10 @@ Development verification on November 6, 2026: deployed the index/functions to
 confirmed a fresh-token repeat returns 409 without another row. Disposable data
 was removed and temporary staff approval revoked. Notification sending was disabled
 during verification and its original setting restored afterward; no email was sent.
-Production deployment and real Cloudflare browser-token verification remain pending.
+The owner authorized the production backend release on November 6, 2026. The
+matching functions and additive index deployed successfully to `fabulous-crane-816`
+before the frontend merge. No production test records or emails were created.
+Real Cloudflare browser-token verification remains pending.
 
 On Vercel only, the deployment-overwritten `x-forwarded-for` value is validated
 as an IP and HMAC-hashed using the server secret. Raw addresses are not stored or
